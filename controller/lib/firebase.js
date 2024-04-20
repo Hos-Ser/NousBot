@@ -42,14 +42,10 @@ const initializeFirebaseApp = () => {
   }
 };
 
-const uploadProcessedData = async () => {
-  const tempDataToUpload = {
-    key1: "bruh",
-    key2: 123,
-  };
+const uploadProcessedData = async (DataToUpload) => {
   try {
     const document = doc(firestoreDb, "testin", "unique-id-for-the-doc");
-    let dataUpdated = await setDoc(document, tempDataToUpload);
+    let dataUpdated = await setDoc(document, DataToUpload);
     return dataUpdated;
   } catch (error) {
     errorHandler(error, "firebase- uploadProcessedData ");
