@@ -1,10 +1,8 @@
-const { sendMessage, handleMessage } = require("./lib/telegram");
+const { handleMessage } = require("./lib/telegram");
 const { errorHandler } = require("./lib/helper");
 const { uploadProcessedData, getTheData } = require("./lib/firebase");
 
 async function handler(req, method) {
-  let num = 1;
-  num = 2;
   try {
     if (method === "GET") {
       const path = req.path;

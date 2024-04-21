@@ -39,10 +39,9 @@ async function handleMessage(messageObj) {
       const command = messageText.substr(1);
       switch (command) {
         case "start":
-          return sendMessage(chatId, "salam man mame mikham");
+          return sendMessage(chatId, "salamp dokhtari?");
         case "test":
-          return sendMessage(chatId, "teste mame");
-
+          return sendMessage(chatId, "kermet khabid?");
         default:
           return sendMessage(chatId, "in che kososherie");
       }
@@ -51,8 +50,8 @@ async function handleMessage(messageObj) {
       const fileId = messageObj.photo[messageObj.photo.length - 1].file_id;
       const fileData = await getFile(fileId);
       if (fileData.data && fileData.data.result) {
-        const fileName = fileData.data.result.file_path;
-        const file_public_path = `https://api.telegram.org/file/bot${MY_TOKEN}/${fileName}`;
+        // const fileName = fileData.data.result.file_path;
+        // const file_public_path = `https://api.telegram.org/file/bot${MY_TOKEN}/${fileName}`;
         await uploadProcessedData({ key1: "asssssss" });
         sendMessage(chatId, "photo uploaded successfully");
         return "Success";
