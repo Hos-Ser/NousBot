@@ -17,10 +17,10 @@ function sendMessage(chatId, messageText) {
     });
 }
 
-function sendPhoto(messageObj, photoUrl, caption = "") {
+function sendPhoto(messageObj, caption = "") {
   return axiosInstance.post("sendPhoto", {
     chat_id: messageObj.chat.id,
-    photo: photoUrl,
+    photo: "https://source.unsplash.com/random",
     caption,
   });
 }
@@ -51,11 +51,11 @@ async function handleMessage(messageObj) {
       const command = messageText.substr(1);
       switch (command) {
         case "start":
-          return await sendMessage(chatId, "salamp pesari?");
+          return await sendMessage(chatId, "salamp pesari???");
         case "test":
           return await sendMessage(chatId, "kermet khabid?");
         case "gen":
-          return await sendPhoto(chatId, "https://source.unsplash.com/random");
+          return await sendPhoto(chatId);
         default:
           return await sendMessage(chatId, "in che kososherie");
       }
