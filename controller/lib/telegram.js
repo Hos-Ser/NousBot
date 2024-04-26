@@ -51,13 +51,13 @@ async function handleMessage(messageObj) {
       const command = messageText.substr(1);
       switch (command) {
         case "start":
-          return sendMessage(chatId, "salamp pesari?");
+          return await sendMessage(chatId, "salamp pesari?");
         case "test":
-          return sendMessage(chatId, "kermet khabid?");
+          return await sendMessage(chatId, "kermet khabid?");
         case "gen":
-          return sendPhoto(chatId, "https://source.unsplash.com/random");
+          return await sendPhoto(chatId, "https://source.unsplash.com/random");
         default:
-          return sendMessage(chatId, "in che kososherie");
+          return await sendMessage(chatId, "in che kososherie");
       }
     }
     if (messageObj.photo && messageObj.photo.length !== 0) {
@@ -67,7 +67,7 @@ async function handleMessage(messageObj) {
         // const fileName = fileData.data.result.file_path;
         // const file_public_path = `https://api.telegram.org/file/bot${MY_TOKEN}/${fileName}`;
         await uploadProcessedData({ key1: "asssssss" });
-        sendMessage(chatId, "photo uploaded successfully");
+        await sendMessage(chatId, "photo uploaded successfully");
         return "Success";
       }
     }

@@ -6,7 +6,7 @@ function getAxiosInstance(BASE_URL, headers = {}) {
       return axios.get(`/${method}`, {
         baseURL: BASE_URL,
         params,
-        headers,
+        ...headers,
       });
     },
     post(method, data) {
@@ -15,7 +15,7 @@ function getAxiosInstance(BASE_URL, headers = {}) {
         baseURL: BASE_URL,
         url: `/${method}`,
         data,
-        headers,
+        ...headers,
       });
     },
   };
