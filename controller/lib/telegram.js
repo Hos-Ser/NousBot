@@ -51,7 +51,7 @@ async function handleMessage(messageObj) {
       const command = messageText.substr(1);
       switch (command) {
         case "start":
-          return sendMessage(chatId, "salamp dokhtari?");
+          return sendMessage(chatId, "salamp pesari?");
         case "test":
           return sendMessage(chatId, "kermet khabid?");
         case "gen":
