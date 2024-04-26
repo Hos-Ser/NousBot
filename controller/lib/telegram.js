@@ -8,13 +8,25 @@ const axiosInstance = getAxiosInstance(BASE_URL);
 
 function sendMessage(chatId, messageText) {
   return axiosInstance
-    .get("sendMessage", {
+    .post("sendMessage", {
       chat_id: chatId || MY_GROUP_CHAT_ID,
       text: messageText,
     })
     .catch((ex) => {
       errorHandler(ex, "sendMessage", "axios");
     });
+}
+
+function sendPhoto(messageObj, photoUrl, caption = "") {
+  return axiosInstance.post("sendPhoto", {
+    chat_id: messageObj.chat.id,
+    photo: photoUrl,
+    caption,
+  });
+}
+
+function sendKeyboard(chatId, text, keyboard) {
+  return axiosInstance.post();
 }
 
 function getFile(fileId) {
@@ -42,6 +54,8 @@ async function handleMessage(messageObj) {
           return sendMessage(chatId, "salamp dokhtari?");
         case "test":
           return sendMessage(chatId, "kermet khabid?");
+        case "gen":
+          return sendPhoto(chatId, "https://source.unsplash.com/random");
         default:
           return sendMessage(chatId, "in che kososherie");
       }
