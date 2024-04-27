@@ -1,6 +1,7 @@
 const { getAxiosInstance } = require("./axios");
 const { uploadProcessedData } = require("./firebase");
 const { errorHandler } = require("./helper");
+const { genshinKb, startKb } = require("./keyboardOptions");
 
 const MY_TOKEN = process.env.TG_BOT_TOKEN;
 const BASE_URL = `https://api.telegram.org/bot${MY_TOKEN}`;
@@ -17,16 +18,19 @@ function sendMessage(chatId, messageText) {
     });
 }
 
-function sendPhoto(messageObj, caption = "") {
-  return axiosInstance.post("sendPhoto", {
-    chat_id: messageObj.chat.id,
-    photo: "https://source.unsplash.com/random",
-    caption,
-  });
-}
+// function sendPhoto(chatId, photoUrl, caption = "") {
+//   return axiosInstance.post("sendPhoto", {
+//     chat_id: chatId,
+//     photo: photoUrl,
+//     caption,
+//   });
+// }
 
-function sendKeyboard(chatId, text, keyboard) {
-  return axiosInstance.post();
+function sendKeyboard(chatId, keyboardOptions) {
+  return axiosInstance.post("sendMessage", {
+    chat_id: chatId,
+    ...keyboardOptions,
+  });
 }
 
 function getFile(fileId) {
@@ -41,35 +45,58 @@ function getFile(fileId) {
 
 async function handleMessage(messageObj) {
   const messageText = messageObj.text || "";
-  // if (!messageText) {
-  //   errorHandler("No message text", "handleMessage");
-  //   // return "";
-  // }
   try {
     const chatId = messageObj.chat.id;
+    // command handling:
     if (messageText.charAt(0) === "/") {
       const command = messageText.substr(1);
       switch (command) {
         case "start":
-          return await sendMessage(chatId, "salamp pesari???");
+          await sendKeyboard(chatId, startKb);
+          return;
         case "test":
-          return await sendMessage(chatId, "kermet khabid?");
-        case "gen":
-          return await sendPhoto(chatId);
+          await sendMessage(chatId, "kermet khabid?");
+          return;
         default:
-          return await sendMessage(chatId, "in che kososherie");
+          await sendMessage(chatId, "in che kososherie");
+          return;
       }
     }
-    if (messageObj.photo && messageObj.photo.length !== 0) {
-      const fileId = messageObj.photo[messageObj.photo.length - 1].file_id;
-      const fileData = await getFile(fileId);
-      if (fileData.data && fileData.data.result) {
-        // const fileName = fileData.data.result.file_path;
-        // const file_public_path = `https://api.telegram.org/file/bot${MY_TOKEN}/${fileName}`;
-        await uploadProcessedData({ key1: "asssssss" });
-        await sendMessage(chatId, "photo uploaded successfully");
-        return "Success";
-      }
+    // photo handling:
+    // if (messageObj.photo && messageObj.photo.length !== 0) {
+    //   const fileId = messageObj.photo[messageObj.photo.length - 1].file_id;
+    //   const fileData = await getFile(fileId);
+    //   if (fileData.data && fileData.data.result) {
+    //     // const fileName = fileData.data.result.file_path;
+    //     // const file_public_path = `https://api.telegram.org/file/bot${MY_TOKEN}/${fileName}`;
+    //     await uploadProcessedData({ key1: "asssssss" });
+    //     await sendMessage(chatId, "asdads");
+    //     return "Success";
+    //   }
+    // }
+    // text handling:
+    switch (messageText) {
+      case "🥂 Genshin Impact":
+        await sendKeyboard(chatId, genshinKb);
+        return;
+      case "💩 Honkai Star Rail":
+        await sendMessage(chatId, "sry this section is under maintenance");
+        return;
+      case "🐐 Wuthering Waves":
+        await sendMessage(chatId, "sry this section is under maintenance");
+        return;
+      case "⁉ Other BS":
+        await sendMessage(chatId, "sry this section is under maintenance");
+        return;
+      case "🥂 از کجا شروع کنم؟":
+        await sendMessage(chatId, "sry this section is under maintenance");
+        return;
+      case "♿ منوی اصلی":
+        await sendKeyboard(chatId, startKb);
+        return;
+      default:
+        await sendMessage(chatId, "sry this section is under maintenance");
+        break;
     }
   } catch (error) {
     errorHandler(error, "handleMessage");
