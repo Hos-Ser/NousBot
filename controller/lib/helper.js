@@ -15,6 +15,8 @@ function errorHandler(error, name, from) {
       loggerFunction("Error", error.message);
     }
     loggerFunction(error.toJSON());
+  } else {
+    loggerFunction(error);
   }
 
   loggerFunction("--------END----------");

@@ -1,7 +1,7 @@
 const { getAxiosInstance } = require("./axios");
-const { uploadProcessedData } = require("./firebase");
 const { errorHandler } = require("./helper");
-const { genshinKb, startKb } = require("./keyboardOptions");
+const { genshinKb, startKb } = require("./util/keyboardOptions");
+const processPrimoCode = require("./util/processPrimoCode");
 
 const MY_TOKEN = process.env.TG_BOT_TOKEN;
 const BASE_URL = `https://api.telegram.org/bot${MY_TOKEN}`;
@@ -74,6 +74,12 @@ async function handleMessage(messageObj) {
     //     return "Success";
     //   }
     // }
+    if (
+      messageObj.from.username === "kodokou" &&
+      messageText.toLowerCase().includes("primo")
+    ) {
+      await processPrimoCode(messageText);
+    }
     // text handling:
     switch (messageText) {
       case "🥂 Genshin Impact":
@@ -95,7 +101,6 @@ async function handleMessage(messageObj) {
         await sendKeyboard(chatId, startKb);
         return;
       default:
-        await sendMessage(chatId, "sry this section is under maintenance");
         break;
     }
   } catch (error) {

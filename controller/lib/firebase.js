@@ -4,6 +4,7 @@ const {
   doc,
   setDoc,
   getDocs,
+  addDoc,
   collection,
   query,
 } = require("firebase/firestore");
@@ -42,13 +43,18 @@ const initializeFirebaseApp = () => {
   }
 };
 
-const uploadProcessedData = async (DataToUpload) => {
+/**
+ *
+ * @param {"genshin_primo_code"} collectionId
+ * @returns
+ */
+const uploadProcessedData = async (DataToUpload, collectionId) => {
   try {
-    const document = doc(firestoreDb, "testin", "unique-id-for-the-doc");
-    let dataUpdated = await setDoc(document, DataToUpload);
-    return dataUpdated;
+    await addDoc(collection(firestoreDb, collectionId), DataToUpload);
+    // const document = doc(firestoreDb, "genshin", documentId);
+    // await setDoc(document, DataToUpload);
   } catch (error) {
-    errorHandler(error, "firebase- uploadProcessedData ");
+    errorHandler(error, "firebase-uploadProcessedData");
   }
 };
 
