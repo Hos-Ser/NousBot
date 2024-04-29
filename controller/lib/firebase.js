@@ -7,6 +7,8 @@ const {
   addDoc,
   collection,
   query,
+  where,
+  Timestamp,
 } = require("firebase/firestore");
 const { errorHandler } = require("./helper");
 
@@ -43,11 +45,6 @@ const initializeFirebaseApp = () => {
   }
 };
 
-/**
- *
- * @param {"genshin_primo_code"} collectionId
- * @returns
- */
 const uploadProcessedData = async (DataToUpload, collectionId) => {
   try {
     await addDoc(collection(firestoreDb, collectionId), DataToUpload);
@@ -55,6 +52,30 @@ const uploadProcessedData = async (DataToUpload, collectionId) => {
     // await setDoc(document, DataToUpload);
   } catch (error) {
     errorHandler(error, "firebase-uploadProcessedData");
+  }
+};
+
+/**
+ *
+ * @param {"genshin"|"honkai"|"wuthering"} game
+ */
+const getPrimoCode = async (game) => {
+  try {
+    const primoCodes = [];
+    const collectionRef = collection(firestoreDb, "primo_code");
+    const currentTime = Timestamp.now();
+    const q = query(
+      collectionRef,
+      where("expire_at", ">=", currentTime),
+      where("game", "==", game)
+    );
+    const expiredDocSnap = await getDocs(q);
+    expiredDocSnap.forEach((doc) => {
+      primoCodes.push(doc.data().code);
+    });
+    return primoCodes;
+  } catch (error) {
+    errorHandler(error, "firebase-getPrimoCode");
   }
 };
 
@@ -80,5 +101,5 @@ module.exports = {
   initializeFirebaseApp,
   getFirebaseApp,
   uploadProcessedData,
-  getTheData,
+  getPrimoCode,
 };

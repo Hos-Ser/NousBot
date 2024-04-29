@@ -1,4 +1,5 @@
 const { getAxiosInstance } = require("./axios");
+const { getPrimoCode } = require("./firebase");
 const { errorHandler } = require("./helper");
 const { genshinKb, startKb } = require("./util/keyboardOptions");
 const processPrimoCode = require("./util/processPrimoCode");
@@ -75,27 +76,35 @@ async function handleMessage(messageObj) {
     //   }
     // }
     if (
-      messageObj.from.username === "kodokou" &&
+      ["kodokou", "killgis"].includes(messageObj.from.username) &&
       messageText.toLowerCase().includes("primo")
     ) {
-      await processPrimoCode(messageText);
+      try {
+        await processPrimoCode(messageText);
+        sendMessage(chatId, "شد");
+      } catch (error) {
+        sendMessage(chatId, error.message);
+      }
     }
     // text handling:
     switch (messageText) {
-      case "🥂 Genshin Impact":
+      case "⋆˚₊⋆Genshin Impact๑⋆˚₊⊹":
         await sendKeyboard(chatId, genshinKb);
         return;
-      case "💩 Honkai Star Rail":
+      case "༶⋆˙⊹｡Honkai Starrail✩ ˛˚":
         await sendMessage(chatId, "sry this section is under maintenance");
         return;
-      case "🐐 Wuthering Waves":
+      case "˚⋆˙✧⋆Wuthering Waves˚ ⋆·˚":
         await sendMessage(chatId, "sry this section is under maintenance");
         return;
       case "⁉ Other BS":
         await sendMessage(chatId, "sry this section is under maintenance");
         return;
-      case "🥂 از کجا شروع کنم؟":
-        await sendMessage(chatId, "sry this section is under maintenance");
+      case "🥂 Redeem Codes":
+        const redeemCodes = await getPrimoCode("genshin");
+        let finalMessage = "کد های در دسترس";
+        redeemCodes.forEach((val) => (finalMessage += `\n${val}`));
+        await sendMessage(chatId, finalMessage);
         return;
       case "♿ منوی اصلی":
         await sendKeyboard(chatId, startKb);
