@@ -112,6 +112,7 @@ const getMyChatId = async () => {
     myCIDocSnap.forEach((doc) => {
       idk.push(parseInt(doc.data().chat_id));
     });
+    return idk[0];
   } catch (error) {
     errorHandler(error, "firebase-getMyChatId");
   }
