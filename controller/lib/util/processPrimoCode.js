@@ -25,6 +25,7 @@ const processPrimoCode = async (messageText) => {
           );
         }
       });
+    return;
   } else if (messageText.toLowerCase().includes("wuthering")) {
     const newlineIndex = messageText.indexOf("\n");
     const primoCodes = messageText.substring(newlineIndex + 1);
@@ -47,6 +48,7 @@ const processPrimoCode = async (messageText) => {
           );
         }
       });
+    return;
   } else if (messageText.toLowerCase().includes("honkai")) {
     const newlineIndex = messageText.indexOf("\n");
     const primoCodes = messageText.substring(newlineIndex + 1);
@@ -69,6 +71,7 @@ const processPrimoCode = async (messageText) => {
           );
         }
       });
+    return;
   } else {
     throw new Error("ندانم نشد");
   }

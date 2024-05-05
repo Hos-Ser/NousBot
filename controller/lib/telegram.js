@@ -1,8 +1,15 @@
 const { getAxiosInstance } = require("./axios");
-const { getPrimoCode } = require("./firebase");
+const { getPrimoCode, getMyChatId } = require("./firebase");
 const { errorHandler } = require("./helper");
-const { genshinKb, startKb } = require("./util/keyboardOptions");
+const {
+  genshinKb,
+  startKb,
+  honkaiKb,
+  wutheringKb,
+  inlinekeyboardTest,
+} = require("./util/keyboardOptions");
 const processPrimoCode = require("./util/processPrimoCode");
+const processSavingChatId = require("./util/processSavingChatId");
 
 const MY_TOKEN = process.env.TG_BOT_TOKEN;
 const BASE_URL = `https://api.telegram.org/bot${MY_TOKEN}`;
@@ -18,6 +25,22 @@ function sendMessage(chatId, messageText) {
       errorHandler(ex, "sendMessage", "axios");
     });
 }
+/**
+ *
+ * @param {"genshin"|"honkai"|"wuthering"} game
+ */
+const handlePrimoCode = async (chatId, game) => {
+  const redeemCodes = await getPrimoCode(game);
+  if (!redeemCodes || redeemCodes.length === 0) {
+    sendMessage(chatId, "همه کدا پوسیدن!");
+    return;
+  } else {
+    let finalMessage = "کد های در دسترس";
+    redeemCodes.forEach((val) => (finalMessage += `\n${val}`));
+    await sendMessage(chatId, finalMessage);
+    return;
+  }
+};
 
 // function sendPhoto(chatId, photoUrl, caption = "") {
 //   return axiosInstance.post("sendPhoto", {
@@ -55,8 +78,19 @@ async function handleMessage(messageObj) {
         case "start":
           await sendKeyboard(chatId, startKb);
           return;
-        case "test":
-          await sendMessage(chatId, "kermet khabid?");
+        case "subtonews":
+          try {
+            await processSavingChatId(chatId, "news");
+            await sendMessage(chatId, "okie dokie!");
+          } catch (error) {
+            await sendMessage(chatId, "نشد که بشه یه بار دیگه امتحان کن");
+          }
+          return;
+        case "about":
+          try {
+            const myChatId = await getMyChatId();
+            console.log(myChatId);
+          } catch (error) {}
           return;
         default:
           await sendMessage(chatId, "in che kososherie");
@@ -76,14 +110,26 @@ async function handleMessage(messageObj) {
     //   }
     // }
     if (
-      ["kodokou", "killgis"].includes(messageObj.from.username) &&
+      ["mentalissuesexe", "killgis"].includes(messageObj.from.username) &&
       messageText.toLowerCase().includes("primo")
     ) {
       try {
         await processPrimoCode(messageText);
-        sendMessage(chatId, "شد");
+        await sendMessage(chatId, "شد");
       } catch (error) {
-        sendMessage(chatId, error.message);
+        await sendMessage(chatId, error.message);
+      }
+    }
+    // saving my chat id
+    if (
+      messageObj.from.username === "mentalissuesexe" &&
+      messageText.toLowerCase().includes("save me")
+    ) {
+      try {
+        await processSavingChatId(chatId, "self");
+        await sendMessage(chatId, "done");
+      } catch (error) {
+        await sendMessage(chatId, "nashod");
       }
     }
     // text handling:
@@ -91,29 +137,32 @@ async function handleMessage(messageObj) {
       case "⋆˚₊⋆Genshin Impact๑⋆˚₊⊹":
         await sendKeyboard(chatId, genshinKb);
         return;
-      case "༶⋆˙⊹｡Honkai Starrail✩ ˛˚":
-        await sendMessage(chatId, "sry this section is under maintenance");
+      case "༶⋆˙⊹｡Honkai Starrail✯ ˛˚":
+        await sendKeyboard(chatId, honkaiKb);
         return;
       case "˚⋆˙✧⋆Wuthering Waves˚ ⋆·˚":
-        await sendMessage(chatId, "sry this section is under maintenance");
+        await sendKeyboard(chatId, wutheringKb);
         return;
       case "⁉ Other BS":
-        await sendMessage(chatId, "sry this section is under maintenance");
+        await sendKeyboard(chatId, inlinekeyboardTest);
         return;
-      case "🥂 Redeem Codes":
-        const redeemCodes = await getPrimoCode("genshin");
-        let finalMessage = "کد های در دسترس";
-        redeemCodes.forEach((val) => (finalMessage += `\n${val}`));
-        await sendMessage(chatId, finalMessage);
+      case "⚝ Redeem Codes":
+        await handlePrimoCode(chatId, "genshin");
         return;
-      case "♿ منوی اصلی":
+      case "✯ Redeem Codes":
+        await handlePrimoCode(chatId, "honkai");
+        return;
+      case "✧ Redeem Codes":
+        await handlePrimoCode(chatId, "wuthering");
+        return;
+      case "𓇻 منوی اصلی":
         await sendKeyboard(chatId, startKb);
         return;
       default:
-        break;
+        return;
     }
   } catch (error) {
     errorHandler(error, "handleMessage");
   }
 }
-module.exports = { sendMessage, handleMessage };
+module.exports = { handleMessage };

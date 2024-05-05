@@ -57,8 +57,43 @@ const uploadProcessedData = async (DataToUpload, collectionId) => {
 
 /**
  *
- * @param {"genshin"|"honkai"|"wuthering"} game
+ * @param {"news"|"self"} reason
+ * @param {boolean} filter
  */
+const getSavedChatId = async (reason, filter) => {
+  try {
+    const savedChatId = [];
+    const collectionRef = collection(firestoreDb, "saved_chat_id");
+    let q;
+    if (filter) {
+      q = query(collectionRef, where("reason", "==", reason));
+    } else {
+      q = query(collectionRef);
+    }
+    const savedCIDocSnap = await getDocs(q);
+    savedCIDocSnap.forEach((doc) => {
+      savedChatId.push(parseInt(doc.data().chat_id));
+    });
+    return savedChatId;
+  } catch (error) {
+    errorHandler(error, "firebase-getSavedChatId");
+  }
+};
+const getMyChatId = async () => {
+  try {
+    const idk = [];
+    const collectionRef = collection(firestoreDb, "saved_chat_id");
+    q = query(collectionRef, where("reason", "==", "self"));
+    const myCIDocSnap = await getDocs(q);
+    myCIDocSnap.forEach((doc) => {
+      idk.push(parseInt(doc.data().chat_id));
+    });
+    return idk[0];
+  } catch (error) {
+    errorHandler(error, "firebase-getMyChatId");
+  }
+};
+
 const getPrimoCode = async (game) => {
   try {
     const primoCodes = [];
@@ -102,4 +137,6 @@ module.exports = {
   getFirebaseApp,
   uploadProcessedData,
   getPrimoCode,
+  getSavedChatId,
+  getMyChatId,
 };
