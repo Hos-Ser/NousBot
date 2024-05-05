@@ -1,8 +1,9 @@
 const { initializeApp } = require("firebase/app");
 const {
+  deleteDoc,
   getFirestore,
   doc,
-  setDoc,
+  // setDoc,
   getDocs,
   addDoc,
   collection,
@@ -45,13 +46,34 @@ const initializeFirebaseApp = () => {
   }
 };
 
-const uploadProcessedData = async (DataToUpload, collectionId) => {
+const uploadProcessedData = async (DataToUpload, collectionName) => {
   try {
-    await addDoc(collection(firestoreDb, collectionId), DataToUpload);
-    // const document = doc(firestoreDb, "genshin", documentId);
-    // await setDoc(document, DataToUpload);
+    await addDoc(collection(firestoreDb, collectionName), DataToUpload);
   } catch (error) {
     errorHandler(error, "firebase-uploadProcessedData");
+  }
+};
+
+const removeSavedChatId = async (chatId) => {
+  try {
+    const idk = [];
+    const collectionRef = collection(firestoreDb, "saved_chat_id");
+    const q = query(
+      collectionRef,
+      where("reason", "==", "news"),
+      where("chat_id", "==", chatId)
+    );
+    const savedCIDocSnap = await getDocs(q);
+    savedCIDocSnap.forEach((doc) => {
+      idk.push(doc.id);
+    });
+    if (!savedCIDocSnap.empty) {
+      const docRef = doc(firestoreDb, "saved_chat_id", idk[0]);
+      deleteDoc(docRef);
+    }
+    return;
+  } catch (error) {
+    errorHandler(error, "firebase-removeSavedChatId");
   }
 };
 
@@ -71,6 +93,7 @@ const getSavedChatId = async (reason, filter) => {
       q = query(collectionRef);
     }
     const savedCIDocSnap = await getDocs(q);
+
     savedCIDocSnap.forEach((doc) => {
       savedChatId.push(parseInt(doc.data().chat_id));
     });
@@ -83,12 +106,12 @@ const getMyChatId = async () => {
   try {
     const idk = [];
     const collectionRef = collection(firestoreDb, "saved_chat_id");
-    q = query(collectionRef, where("reason", "==", "self"));
+    const q = query(collectionRef, where("reason", "==", "self"));
     const myCIDocSnap = await getDocs(q);
+
     myCIDocSnap.forEach((doc) => {
       idk.push(parseInt(doc.data().chat_id));
     });
-    return idk[0];
   } catch (error) {
     errorHandler(error, "firebase-getMyChatId");
   }
@@ -105,28 +128,13 @@ const getPrimoCode = async (game) => {
       where("game", "==", game)
     );
     const expiredDocSnap = await getDocs(q);
+
     expiredDocSnap.forEach((doc) => {
       primoCodes.push(doc.data().code);
     });
     return primoCodes;
   } catch (error) {
     errorHandler(error, "firebase-getPrimoCode");
-  }
-};
-
-const getTheData = async (from, to) => {
-  try {
-    const collectionRef = collection(firestoreDb, "testin");
-    const finalData = [];
-    const q = query(collectionRef);
-
-    const docSnap = await getDocs(q);
-    docSnap.forEach((doc) => {
-      finalData.push(doc.data());
-    });
-    return finalData;
-  } catch (error) {
-    errorHandler(error, "firebase-getTheData");
   }
 };
 
@@ -139,4 +147,5 @@ module.exports = {
   getPrimoCode,
   getSavedChatId,
   getMyChatId,
+  removeSavedChatId,
 };

@@ -1,5 +1,5 @@
 const { getAxiosInstance } = require("./axios");
-const { getPrimoCode, getMyChatId } = require("./firebase");
+const { getPrimoCode, getMyChatId, removeSavedChatId } = require("./firebase");
 const { errorHandler } = require("./helper");
 const {
   genshinKb,
@@ -31,7 +31,7 @@ function sendMessage(chatId, messageText) {
  */
 const handlePrimoCode = async (chatId, game) => {
   const redeemCodes = await getPrimoCode(game);
-  if (!redeemCodes || redeemCodes.length === 0) {
+  if (redeemCodes === 0) {
     sendMessage(chatId, "همه کدا پوسیدن!");
     return;
   } else {
@@ -62,8 +62,8 @@ function getFile(fileId) {
     .get("getFile", {
       file_id: fileId,
     })
-    .catch((ex) => {
-      errorHandler(ex, "getFile", "axios");
+    .catch((error) => {
+      errorHandler(error, "getFile", "axios");
     });
 }
 
@@ -86,11 +86,21 @@ async function handleMessage(messageObj) {
             await sendMessage(chatId, "نشد که بشه یه بار دیگه امتحان کن");
           }
           return;
-        case "about":
+        case "unsubtonews":
           try {
-            const myChatId = await getMyChatId();
-            console.log(myChatId);
-          } catch (error) {}
+            await removeSavedChatId(chatId);
+            await sendMessage(chatId, "باشه دیگه بهت خبر نمیدیم :(");
+          } catch (error) {
+            await sendMessage(chatId, "نشد که بشه یه بار دیگه امتحان کن");
+          }
+          return;
+        case "wannahelp":
+          return;
+        case "about":
+          await sendMessage(
+            chatId,
+            "نظرات و پیشنهاداتتو میتونی به این آیدی ارسال کنی\n@mentalissuesexe"
+          );
           return;
         default:
           await sendMessage(chatId, "in che kososherie");
