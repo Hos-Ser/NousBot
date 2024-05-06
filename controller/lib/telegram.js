@@ -14,6 +14,7 @@ const processSavingChatId = require("./util/processSavingChatId");
 const MY_TOKEN = process.env.TG_BOT_TOKEN;
 const BASE_URL = `https://api.telegram.org/bot${MY_TOKEN}`;
 const axiosInstance = getAxiosInstance(BASE_URL);
+let waitingForUser = false;
 
 function sendMessage(chatId, messageText) {
   return axiosInstance
@@ -71,6 +72,20 @@ async function handleMessage(messageObj) {
   const messageText = messageObj.text || "";
   try {
     const chatId = messageObj.chat.id;
+    // wanna help handling
+    if (waitingForUser) {
+      try {
+        const myCI = await getMyChatId();
+        if (myCI) {
+          await sendMessage(myCI, messageText);
+          waitingForUser = false;
+          return;
+        }
+        await sendMessage(chatId, "حله");
+      } catch (error) {
+        await sendMessage(chatId, "یه مشکلی پیش اومده یبار دیگه امتحان کن");
+      }
+    }
     // command handling:
     if (messageText.charAt(0) === "/") {
       const command = messageText.substr(1);
@@ -95,6 +110,12 @@ async function handleMessage(messageObj) {
           }
           return;
         case "wannahelp":
+          sendMessage(222, 222);
+          waitingForUser = true;
+          await sendMessage(
+            chatId,
+            "حالا برام uid، اسم بازی، رنک اکانتت و سرورت رو بنویس. یادت باشه اگه این اطلاعات رو ننویسی آیدیت تو بات ثبت نمیشه\n اگه چیز دیگه ای هست که باید بدونم بنویس"
+          );
           return;
         case "about":
           await sendMessage(
@@ -119,6 +140,7 @@ async function handleMessage(messageObj) {
     //     return "Success";
     //   }
     // }
+    // primo code handling
     if (
       ["mentalissuesexe", "killgis"].includes(messageObj.from.username) &&
       messageText.toLowerCase().includes("primo")

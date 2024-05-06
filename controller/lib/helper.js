@@ -1,4 +1,7 @@
 function errorHandler(error, name, from) {
+  if (process.env.ENV !== "DEV") {
+    return;
+  }
   let loggerFunction = console.log;
 
   loggerFunction("--------START--------");
