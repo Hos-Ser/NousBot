@@ -47,17 +47,38 @@ const wutheringKb = {
     one_time_keyboard: true,
   }),
 };
-const inlinekeyboardTest = {
-  text: "ikTest",
+
+const mainPanelKb = {
+  text: "پنل ادمین",
   reply_markup: JSON.stringify({
     inline_keyboard: [
-      [
-        { text: "Option 1", callback_data: "option1" },
-        { text: "Option 2", callback_data: "option2" },
-      ],
-      [{ text: "Option 3", callback_data: "option3" }],
+      [{ text: "Genshin related Content", callback_data: "genshin" }],
+      [{ text: "WuWa related Content", callback_data: "wuwa" }],
+      [{ text: "Honkai related Content", callback_data: "honkai" }],
+      [{ text: "Other Contents", callback_data: "other" }],
+      [{ text: "❌ Close", callback_data: "close" }],
     ],
   }),
+};
+/**
+ *
+ * @param {"genshin"|"wuwa"|"honkai"} game
+ * @returns keyboard object with specified game
+ */
+const gamesOptionKbFunction = (game) => {
+  return {
+    reply_markup: JSON.stringify({
+      inline_keyboard: [
+        [{ text: "Redeem Code", callback_data: `${game} primo` }],
+        [{ text: "Story", callback_data: `${game} story` }],
+        [{ text: "Build", callback_data: `${game} build` }],
+        [{ text: "Guide", callback_data: `${game} guide` }],
+        [{ text: "Abyss", callback_data: `${game} abyss` }],
+        [{ text: "Banner", callback_data: `${game} banner` }],
+        [{ text: "↩ Menu", callback_data: "menu" }],
+      ],
+    }),
+  };
 };
 
 module.exports = {
@@ -65,5 +86,6 @@ module.exports = {
   genshinKb,
   honkaiKb,
   wutheringKb,
-  inlinekeyboardTest,
+  mainPanelKb,
+  gamesOptionKbFunction,
 };

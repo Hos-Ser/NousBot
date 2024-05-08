@@ -1,6 +1,5 @@
-const { handleMessage } = require("./lib/telegram");
+const { handleMessage, handleCallbackQuery } = require("./lib/telegram");
 const { errorHandler } = require("./lib/helper");
-const { uploadProcessedData, getTheData } = require("./lib/firebase");
 
 async function handler(req, method) {
   try {
@@ -13,6 +12,14 @@ async function handler(req, method) {
       await handleMessage(messageObj);
       return "Success";
     }
+    if (body && body.callback_query) {
+      const cbqObj = body.callback_query;
+      await handleCallbackQuery(cbqObj);
+      return "Success";
+    }
+    // can handle edited messages this way
+    // if (body && body.edited_message) {
+    // }
 
     return "Unknown request";
   } catch (error) {
