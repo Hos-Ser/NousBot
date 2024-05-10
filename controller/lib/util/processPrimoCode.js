@@ -27,7 +27,7 @@ const processPrimoCode = async (messageText) => {
       if (str && days && !isNaN(parseInt(days))) {
         await uploadProcessedData(
           {
-            game: gameType,
+            game_type: gameType,
             code: str,
             expire_at: Timestamp.fromDate(currentDate),
           },

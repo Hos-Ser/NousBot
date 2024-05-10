@@ -1,11 +1,12 @@
-const { handleMessage, handleCallbackQuery } = require("./lib/telegram");
+const {
+  handleMessage,
+  handleCallbackQuery,
+  handleChannelPost,
+} = require("./lib/telegram");
 const { errorHandler } = require("./lib/helper");
 
 async function handler(req, method) {
   try {
-    if (method === "GET") {
-      return "get fucked";
-    }
     const { body } = req;
     if (body && body.message) {
       const messageObj = body.message;
@@ -17,9 +18,11 @@ async function handler(req, method) {
       await handleCallbackQuery(cbqObj);
       return "Success";
     }
-    // can handle edited messages this way
-    // if (body && body.edited_message) {
-    // }
+    if (body && body.channel_post) {
+      const postObj = body.channel_post;
+      await handleChannelPost(postObj);
+      return "Success";
+    }
 
     return "Unknown request";
   } catch (error) {

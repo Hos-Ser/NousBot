@@ -117,8 +117,7 @@ const getMyChatId = async () => {
     errorHandler(error, "firebase-getMyChatId");
   }
 };
-
-const getPrimoCode = async (game) => {
+const getPrimoCode = async (gameType) => {
   try {
     const resultArray = [];
     const collectionRef = collection(firestoreDb, "primo_code");
@@ -126,7 +125,7 @@ const getPrimoCode = async (game) => {
     const q = query(
       collectionRef,
       where("expire_at", ">=", currentTime),
-      where("game", "==", game)
+      where("game_type", "==", gameType)
     );
     const docSnap = await getDocs(q);
 
@@ -138,7 +137,6 @@ const getPrimoCode = async (game) => {
     errorHandler(error, "firebase-getPrimoCode");
   }
 };
-
 const getAdminList = async () => {
   const resultArray = [];
   const collectionRef = collection(firestoreDb, "admin_username");

@@ -5,6 +5,7 @@ const processSavingChatId = async (chatId, reason, userFirstName) => {
   if (!savedBefore.includes(chatId)) {
     await uploadProcessedData(
       {
+        game_type: "",
         reason,
         chat_id: chatId,
         name: userFirstName,

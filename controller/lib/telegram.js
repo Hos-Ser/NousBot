@@ -22,8 +22,19 @@ const processSavingContent = require("./util/processSavingContent");
 const MY_TOKEN = process.env.TG_BOT_TOKEN;
 const BASE_URL = `https://api.telegram.org/bot${MY_TOKEN}`;
 const axiosInstance = getAxiosInstance(BASE_URL);
-let waitingForUser = false;
 let waitingForAdmin = "";
+const sessions = {};
+
+//sesson management
+const addSession = (chatId, valueString) => {
+  sessions[chatId] = valueString;
+};
+const deleteSession = (chatId) => {
+  delete sessions[chatId];
+};
+const mustWaitForUser = (chatId) => {
+  return sessions.hasOwnProperty(chatId);
+};
 
 // axios things
 async function sendMessage(chatId, messageText, isParseMode = false) {
@@ -37,7 +48,6 @@ async function sendMessage(chatId, messageText, isParseMode = false) {
       errorHandler(ex, "sendMessage", "axios");
     });
 }
-
 async function updateMessage(chatId, messageId, newText) {
   return axiosInstance
     .post("editMessageText", {
@@ -49,7 +59,6 @@ async function updateMessage(chatId, messageId, newText) {
       errorHandler(ex, "updateMessage", "axios");
     });
 }
-
 async function deleteMessage(chatId, messageId) {
   return axiosInstance
     .post("deleteMessage", {
@@ -60,7 +69,6 @@ async function deleteMessage(chatId, messageId) {
       errorHandler(ex, "deleteMessage", "axios");
     });
 }
-
 async function sendKeyboard(chatId, keyboardOptions) {
   return axiosInstance
     .post("sendMessage", {
@@ -71,7 +79,6 @@ async function sendKeyboard(chatId, keyboardOptions) {
       errorHandler(ex, "sendKeyboard", "axios");
     });
 }
-
 async function updateInlineKeyboard(chatId, messageId, newKeyboard) {
   return axiosInstance
     .post("editMessageReplyMarkup", {
@@ -83,7 +90,6 @@ async function updateInlineKeyboard(chatId, messageId, newKeyboard) {
       errorHandler(ex, "updateInlineKeyboard", "axios");
     });
 }
-
 /**
  *
  * @param {"genshin"|"honkai"|"wuthering"} game
@@ -100,7 +106,6 @@ const handlePrimoCode = async (chatId, game) => {
     return;
   }
 };
-
 const handleSendingPhoto = async (chatId, photoUrl, caption = "") => {
   return axiosInstance
     .post("sendPhoto", {
@@ -113,34 +118,34 @@ const handleSendingPhoto = async (chatId, photoUrl, caption = "") => {
     });
 };
 
-// handling inputes
+// handling bot PM
 async function handleMessage(messageObj) {
   const messageText = messageObj.text || "";
+  const chatId = messageObj.chat.id;
   try {
-    const chatId = messageObj.chat.id;
-    // wanna help handling
-    if (waitingForUser) {
-      waitingForUser = false;
-      try {
-        const myCI = await getMyChatId();
-        await sendMessage(myCI, messageText);
-        await sendMessage(chatId, "تامام");
-        return;
-      } catch (error) {
-        await sendMessage(chatId, "یه مشکلی پیش اومده یبار دیگه امتحان کن");
-        return;
+    // waiting for session handling
+    if (mustWaitForUser(chatId)) {
+      if (sessions[chatId] === "user") {
+        deleteSession(chatId);
+        try {
+          const myChatId = await getMyChatId();
+          await sendMessage(myChatId, messageText);
+          await sendMessage(chatId, "تامام");
+          return;
+        } catch (error) {
+          await sendMessage(chatId, "یه مشکلی پیش اومده یبار دیگه امتحان کن");
+        }
+      } else {
+        const [gameType, contentType] = sessions[chatId].split(" ");
+        deleteSession(chatId);
+        try {
+          await processSavingContent(messageText, gameType, contentType);
+          return;
+        } catch (error) {
+          sendMessage(chatId, error.message);
+        }
       }
-    }
-    if (waitingForAdmin) {
-      const [gameType, contentType] = waitingForAdmin.split(" ");
-      waitingForAdmin = "";
-      try {
-        await processSavingContent(messageText, gameType, contentType);
-        return;
-      } catch (error) {
-        sendMessage(chatId, error.message);
-        return;
-      }
+      return;
     }
     // command handling:
     if (messageText.charAt(0) === "/") {
@@ -170,7 +175,7 @@ async function handleMessage(messageObj) {
           }
           return;
         case "wannahelp":
-          waitingForUser = true;
+          addSession(chatId, "user");
           await sendMessage(
             chatId,
             "حالا برام uid، اسم بازی، رنک اکانتت و سرورت رو بنویس. یادت باشه اگه این اطلاعات رو کامل ننویسی آیدیت تو بات ثبت نمیشه\n اگه چیز دیگه ای هست که باید بدونم بنویس"
@@ -284,12 +289,13 @@ async function handleMessage(messageObj) {
     errorHandler(error, "handleMessage");
   }
 }
+// handling bot inline keyboards
 async function handleCallbackQuery(cbqObj) {
+  const messageText = cbqObj.message.text;
+  const chatId = cbqObj.message.chat.id;
+  const messageId = cbqObj.message.message_id;
+  const cbqData = cbqObj.data;
   try {
-    const messageText = cbqObj.message.text;
-    const chatId = cbqObj.message.chat.id;
-    const messageId = cbqObj.message.message_id;
-    const cbqData = cbqObj.data;
     if (messageText === "پنل ادمین") {
       switch (cbqData) {
         case "wuwa":
@@ -334,7 +340,7 @@ async function handleCallbackQuery(cbqObj) {
               `send ${cbqData} in this format:\nTitle Of Content You're Sending\nPost's Link`
             );
           }
-          waitingForAdmin = cbqData;
+          addSession(chatId, cbqData);
           return;
       }
     }
@@ -344,4 +350,49 @@ async function handleCallbackQuery(cbqObj) {
     errorHandler(error, "handleCallbackQuery");
   }
 }
-module.exports = { handleMessage, handleCallbackQuery };
+// handling channel messages
+async function handleChannelPost(postObj) {
+  const messageText = postObj.text;
+  const archiveChannelChatId = -1002011760206;
+  try {
+    if (
+      [
+        "noonegonnafindthischannel",
+        "IRWutheringWaves",
+        "IRStarRail",
+        "IRImpact",
+      ].includes(postObj.chat.username)
+    ) {
+      const head = messageText.substring(0, messageText.indexOf("\n"));
+      const meh = messageText.substring(messageText.indexOf("\n") + 1).trim();
+      const title = meh.substring(0, meh.indexOf("\n"));
+      let gameType = "";
+      switch (postObj.chat.username) {
+        case "IRWutheringWaves":
+          gameType = "👆 wuthering";
+          break;
+        case "IRStarRail":
+          gameType = "👆 honkai";
+          break;
+        case "IRImpact":
+          gameType = "👆 genshin";
+          break;
+        default:
+          gameType = "👆 sup channel";
+          break;
+      }
+      if (head.includes("#𝐆𝐔𝐈𝐃𝐄") || head.includes("#𝐒𝐓𝐎𝐑𝐘")) {
+        await sendMessage(
+          archiveChannelChatId,
+          `${title}\nhttps://t.me/${postObj.chat.username}/${postObj.message_id}`,
+          true
+        );
+        await sendMessage(archiveChannelChatId, gameType);
+      }
+    }
+    return;
+  } catch (error) {
+    errorHandler(error, "handleChannelPost");
+  }
+}
+module.exports = { handleMessage, handleCallbackQuery, handleChannelPost };
