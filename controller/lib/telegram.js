@@ -94,9 +94,9 @@ async function updateInlineKeyboard(chatId, messageId, newKeyboard) {
  *
  * @param {"genshin"|"honkai"|"wuthering"} game
  */
-const handlePrimoCode = async (chatId, game) => {
-  const redeemCodes = await getPrimoCode(game);
-  if (redeemCodes === 0) {
+const handlePrimoCode = async (chatId, gameType) => {
+  const redeemCodes = await getPrimoCode(gameType);
+  if (redeemCodes.length === 0) {
     await sendMessage(chatId, "همه کدا پوسیدن!");
     return;
   } else {
@@ -139,7 +139,14 @@ async function handleMessage(messageObj) {
         const [gameType, contentType] = sessions[chatId].split(" ");
         deleteSession(chatId);
         try {
+          if (contentType === "primo") {
+            await processPrimoCode(messageText, gameType);
+            await sendMessage(chatId, "done");
+            return;
+          }
           await processSavingContent(messageText, gameType, contentType);
+          await sendMessage(chatId, "done");
+
           return;
         } catch (error) {
           sendMessage(chatId, error.message);
@@ -171,7 +178,7 @@ async function handleMessage(messageObj) {
             await removeSavedChatId(chatId);
             await sendMessage(chatId, "باشه دیگه بهت خبر نمیدیم :(");
           } catch (error) {
-            await sendMessage(chatId, "نشد که بشه یه بار دیگه امتحان کن");
+            await sendMessage(chatId, error.message);
           }
           return;
         case "wannahelp":
@@ -277,7 +284,7 @@ async function handleMessage(messageObj) {
         await handlePrimoCode(chatId, "honkai");
         return;
       case "✧ Redeem Codes":
-        await handlePrimoCode(chatId, "wuthering");
+        await handlePrimoCode(chatId, "wuwa");
         return;
       case "𓇻 منوی اصلی":
         await sendKeyboard(chatId, startKb);

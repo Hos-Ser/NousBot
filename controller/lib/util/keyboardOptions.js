@@ -80,6 +80,22 @@ const gamesOptionKbFunction = (game) => {
     }),
   };
 };
+const otherPanelKb = {
+  reply_markup: JSON.stringify({
+    inline_keyboard: [[{ text: "Save Helper Uid", callback_data: "save uid" }]],
+  }),
+};
+
+const contentKbFunction = () => {
+  return {
+    text: "",
+    reply_markup: JSON.stringify({
+      inline_keyboard: [
+        [{ text: "Save Helper Uid", callback_data: "save uid" }],
+      ],
+    }),
+  };
+};
 
 module.exports = {
   startKb,

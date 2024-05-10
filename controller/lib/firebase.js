@@ -70,6 +70,8 @@ const removeSavedChatId = async (chatId) => {
     if (!docSnap.empty) {
       const docRef = doc(firestoreDb, "saved_chat_id", resultArray[0]);
       deleteDoc(docRef);
+    } else {
+      throw new Error("اصلا ثبت نام نکردی!");
     }
     return;
   } catch (error) {

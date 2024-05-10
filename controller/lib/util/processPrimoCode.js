@@ -1,20 +1,7 @@
 const { uploadProcessedData } = require("../firebase");
 const { Timestamp } = require("firebase/firestore");
 
-const processPrimoCode = async (messageText) => {
-  let gameType = "";
-  if (messageText.toLowerCase().includes("genshin")) {
-    gameType = "genshin";
-  } else if (messageText.toLowerCase().includes("wuthering")) {
-    // change this to wuwa
-    gameType = "wuthering";
-  } else if (messageText.toLowerCase().includes("honkai")) {
-    gameType = "honkai";
-  } else {
-    throw new Error("اسم گیمو اشتبا زدی");
-  }
-  const newlineIndex = messageText.indexOf("\n");
-  const primoCodes = messageText.substring(newlineIndex + 1);
+const processPrimoCode = async (primoCodes, gameType) => {
   primoCodes
     .trim()
     .split("\n")
