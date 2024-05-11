@@ -1,11 +1,11 @@
 const { uploadProcessedData, getSavedChatId } = require("../firebase");
 
-const processSavingChatId = async (chatId, reason, userFirstName) => {
-  const savedBefore = await getSavedChatId(reason, true);
+const processSavingChatId = async (chatId, reason, userFirstName, gameType) => {
+  const savedBefore = await getSavedChatId(reason, gameType);
   if (!savedBefore.includes(chatId)) {
     await uploadProcessedData(
       {
-        game_type: "",
+        game_type: gameType,
         reason,
         chat_id: chatId,
         name: userFirstName,

@@ -56,7 +56,6 @@ const uploadProcessedData = async (DataToUpload, collectionName) => {
 
 const removeSavedChatId = async (chatId) => {
   try {
-    const resultArray = [];
     const collectionRef = collection(firestoreDb, "saved_chat_id");
     const q = query(
       collectionRef,
@@ -64,16 +63,15 @@ const removeSavedChatId = async (chatId) => {
       where("chat_id", "==", chatId)
     );
     const docSnap = await getDocs(q);
-    docSnap.forEach((doc) => {
-      resultArray.push(doc.id);
-    });
     if (!docSnap.empty) {
-      const docRef = doc(firestoreDb, "saved_chat_id", resultArray[0]);
-      deleteDoc(docRef);
+      docSnap.forEach((data) => {
+        const docRef = doc(firestoreDb, "saved_chat_id", data.id);
+        deleteDoc(docRef);
+      });
+      return;
     } else {
-      throw new Error("اصلا ثبت نام نکردی!");
+      return "اصلا ثبت نام نکردی";
     }
-    return;
   } catch (error) {
     errorHandler(error, "firebase-removeSavedChatId");
   }
@@ -84,16 +82,15 @@ const removeSavedChatId = async (chatId) => {
  * @param {"news"|"self"} reason
  * @param {boolean} filter
  */
-const getSavedChatId = async (reason, filter) => {
+const getSavedChatId = async (reason, gameType) => {
   try {
     const resultArray = [];
     const collectionRef = collection(firestoreDb, "saved_chat_id");
-    let q;
-    if (filter) {
-      q = query(collectionRef, where("reason", "==", reason));
-    } else {
-      q = query(collectionRef);
-    }
+    const q = query(
+      collectionRef,
+      where("reason", "==", reason),
+      where("game_type", "==", gameType)
+    );
     const docSnap = await getDocs(q);
 
     docSnap.forEach((doc) => {
@@ -130,7 +127,6 @@ const getPrimoCode = async (gameType) => {
       where("game_type", "==", gameType)
     );
     const docSnap = await getDocs(q);
-
     docSnap.forEach((doc) => {
       resultArray.push(doc.data().code);
     });
@@ -150,6 +146,20 @@ const getAdminList = async () => {
   });
   return resultArray;
 };
+const getContentList = async (gameType, contentType) => {
+  try {
+    const resultArray = [];
+    const collectionRef = collection(firestoreDb, gameType);
+    const q = query(collectionRef, where("content_type", ">=", contentType));
+    const docSnap = await getDocs(q);
+    docSnap.forEach((doc) => {
+      resultArray.push([doc.data().title, doc.data().post_url]);
+    });
+    return resultArray;
+  } catch (error) {
+    errorHandler(error, "firebase-getContentList");
+  }
+};
 
 const getFirebaseApp = () => app;
 
@@ -159,6 +169,7 @@ module.exports = {
   uploadProcessedData,
   getPrimoCode,
   getSavedChatId,
+  getContentList,
   getMyChatId,
   removeSavedChatId,
   getAdminList,

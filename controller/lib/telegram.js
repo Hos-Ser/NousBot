@@ -4,15 +4,17 @@ const {
   getMyChatId,
   removeSavedChatId,
   getAdminList,
+  getContentList,
 } = require("./firebase");
 const { errorHandler } = require("./helper");
 const {
-  genshinKb,
   startKb,
-  honkaiKb,
-  wutheringKb,
   mainPanelKb,
   gamesOptionKbFunction,
+  wannaHelpKb,
+  subToNewsKb,
+  contentKbFunction,
+  gameMenuKbFunction,
 } = require("./util/keyboardOptions");
 const processPrimoCode = require("./util/processPrimoCode");
 const { processSavingAdmin } = require("./util/processSavingAdmin");
@@ -22,7 +24,6 @@ const processSavingContent = require("./util/processSavingContent");
 const MY_TOKEN = process.env.TG_BOT_TOKEN;
 const BASE_URL = `https://api.telegram.org/bot${MY_TOKEN}`;
 const axiosInstance = getAxiosInstance(BASE_URL);
-let waitingForAdmin = "";
 const sessions = {};
 
 //sesson management
@@ -106,6 +107,20 @@ const handlePrimoCode = async (chatId, gameType) => {
     return;
   }
 };
+/**
+ *
+ * @param {*} chatId
+ * @param {"genshin"|"wuwa"|"honkai"} gameType
+ * @param {"story"|"build"|"abyss"|"guide"|"banner"} contentType
+ */
+const handleContents = async (chatId, gameType, contentType) => {
+  const contentKbList = await getContentList(gameType, contentType);
+  if (contentKbList.length !== 0) {
+    await sendKeyboard(chatId, contentKbFunction("contents:", contentKbList));
+  } else {
+    throw new Error("محتوایی برای این بخش وجود نداره :'(");
+  }
+};
 const handleSendingPhoto = async (chatId, photoUrl, caption = "") => {
   return axiosInstance
     .post("sendPhoto", {
@@ -125,12 +140,15 @@ async function handleMessage(messageObj) {
   try {
     // waiting for session handling
     if (mustWaitForUser(chatId)) {
-      if (sessions[chatId] === "user") {
+      if (sessions[chatId].includes("user")) {
         deleteSession(chatId);
         try {
           const myChatId = await getMyChatId();
-          await sendMessage(myChatId, messageText);
-          await sendMessage(chatId, "تامام");
+          await sendMessage(
+            myChatId,
+            `@${messageObj.chat.username} wants to help:\n${messageText}`
+          );
+          await sendMessage(chatId, "یوزرت بعد از تایید ادمین اضافه میشه");
           return;
         } catch (error) {
           await sendMessage(chatId, "یه مشکلی پیش اومده یبار دیگه امتحان کن");
@@ -162,36 +180,24 @@ async function handleMessage(messageObj) {
           await sendKeyboard(chatId, startKb);
           return;
         case "subtonews":
-          try {
-            await processSavingChatId(
-              chatId,
-              "news",
-              messageObj.from.first_name
-            );
-            await sendMessage(chatId, "okie dokie!");
-          } catch (error) {
-            await sendMessage(chatId, error.message);
-          }
+          sendKeyboard(chatId, subToNewsKb);
           return;
         case "unsubtonews":
           try {
-            await removeSavedChatId(chatId);
+            const err = await removeSavedChatId(chatId);
+            if (err) throw new Error(err);
             await sendMessage(chatId, "باشه دیگه بهت خبر نمیدیم :(");
           } catch (error) {
             await sendMessage(chatId, error.message);
           }
           return;
         case "wannahelp":
-          addSession(chatId, "user");
-          await sendMessage(
-            chatId,
-            "حالا برام uid، اسم بازی، رنک اکانتت و سرورت رو بنویس. یادت باشه اگه این اطلاعات رو کامل ننویسی آیدیت تو بات ثبت نمیشه\n اگه چیز دیگه ای هست که باید بدونم بنویس"
-          );
+          await sendKeyboard(chatId, wannaHelpKb);
           return;
         case "about":
           await sendMessage(
             chatId,
-            "نظرات و پیشنهاداتتو میتونی به این آیدی ارسال کنی\n@mentalissuesexe"
+            "❜❜ این ربات هر اطلاعاتی درباره گیم‌های\n⌗ Genshin Impact - ⌗ Honkai Starrail - ⌗ Wuthering Waves\nرو لازم داشته باشید در اختیارتون میزاره~ ❛❛\n❨ @IRImpactTeam ❩\n\nنظرات و پیشنهاداتت رو میتونی به این آیدی بفرستی @mentalissuesexe"
           );
           return;
         default:
@@ -226,18 +232,6 @@ async function handleMessage(messageObj) {
     //     errorHandler(error, "error occured in admin task");
     //   }
     // }
-    // if (
-    //   ["mentalissuesexe", "killgis"].includes(messageObj.from.username) &&
-    //   messageText.toLowerCase().includes("primo")
-    // ) {
-    //   try {
-    //     await processPrimoCode(messageText);
-    //     await sendMessage(chatId, "شد");
-    //     return;
-    //   } catch (error) {
-    //     await sendMessage(chatId, error.message);
-    //   }
-    // }
     // hadnling my commands
     if (messageObj.from.username === "mentalissuesexe") {
       if (messageText === "admin" || messageText === "ادمین") {
@@ -245,7 +239,12 @@ async function handleMessage(messageObj) {
       }
       if (messageText === "save me") {
         try {
-          await processSavingChatId(chatId, "self", messageObj.from.first_name);
+          await processSavingChatId(
+            chatId,
+            "self",
+            messageObj.from.first_name,
+            "me king"
+          );
           await sendMessage(chatId, "done");
           return;
         } catch (error) {
@@ -267,13 +266,13 @@ async function handleMessage(messageObj) {
     // text handling:
     switch (messageText) {
       case "⋆˚₊⋆Genshin Impact๑⋆˚₊⊹":
-        await sendKeyboard(chatId, genshinKb);
+        await sendKeyboard(chatId, gameMenuKbFunction("⚝"));
         return;
       case "༶⋆˙⊹｡Honkai Starrail✯ ˛˚":
-        await sendKeyboard(chatId, honkaiKb);
+        await sendKeyboard(chatId, gameMenuKbFunction("✯"));
         return;
       case "˚⋆˙✧⋆Wuthering Waves˚ ⋆·˚":
-        await sendKeyboard(chatId, wutheringKb);
+        await sendKeyboard(chatId, gameMenuKbFunction("✧"));
         return;
       case "⁉ Other BS":
         return;
@@ -288,6 +287,13 @@ async function handleMessage(messageObj) {
         return;
       case "𓇻 منوی اصلی":
         await sendKeyboard(chatId, startKb);
+        return;
+      case "✧ Guide":
+        try {
+          await handleContents(chatId, "wuwa", "guide");
+        } catch (error) {
+          await sendMessage(chatId, error.message);
+        }
         return;
       default:
         return;
@@ -332,7 +338,8 @@ async function handleCallbackQuery(cbqObj) {
         case "other":
           await sendMessage(chatId, "هیچ");
           return;
-
+        case "close":
+          break;
         default:
           if (cbqData.includes("primo")) {
             await updateMessage(
@@ -349,6 +356,32 @@ async function handleCallbackQuery(cbqObj) {
           }
           addSession(chatId, cbqData);
           return;
+      }
+    }
+    if (cbqData.includes("help")) {
+      const [help, gameType] = cbqData.split(" ");
+      if (gameType !== "close") {
+        await updateMessage(
+          chatId,
+          messageId,
+          "حالا برام uid، اسم بازی، رنک اکانتت و سرورت رو بنویس.\nیادت باشه اگه این اطلاعات رو کامل ننویسی آیدیت تو بات ثبت نمیشه\n اگه چیز دیگه ای هست که دوست داری اضافه کنی مثل اینکه معمولا چه ساعتایی تو بازی هستی یا ... هم بنویس"
+        );
+        addSession(chatId, `user ${gameType}`);
+      }
+    }
+    if (cbqData.includes("news")) {
+      const [news, gameType] = cbqData.split(" ");
+
+      try {
+        await processSavingChatId(
+          chatId,
+          "news",
+          cbqObj.from.first_name,
+          gameType
+        );
+        await updateMessage(chatId, messageId, "okie dokie!");
+      } catch (error) {
+        await sendMessage(chatId, error.message);
       }
     }
 
@@ -391,8 +424,7 @@ async function handleChannelPost(postObj) {
       if (head.includes("#𝐆𝐔𝐈𝐃𝐄") || head.includes("#𝐒𝐓𝐎𝐑𝐘")) {
         await sendMessage(
           archiveChannelChatId,
-          `${title}\nhttps://t.me/${postObj.chat.username}/${postObj.message_id}`,
-          true
+          `${title}\nhttps://t.me/${postObj.chat.username}/${postObj.message_id}`
         );
         await sendMessage(archiveChannelChatId, gameType);
       }

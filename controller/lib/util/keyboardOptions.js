@@ -11,40 +11,47 @@ const startKb = {
     one_time_keyboard: true,
   }),
 };
-const genshinKb = {
-  text: "کدوم قسمت",
+/**
+ *
+ * @param {"⚝"|"✯"|"✧"} gameIcon
+ * @returns
+ */
+const gameMenuKbFunction = (gameIcon) => {
+  return {
+    text: "کدوم بخش",
+    reply_markup: JSON.stringify({
+      keyboard: [
+        [{ text: `${gameIcon} آموزش` }, { text: `${gameIcon} داستان` }],
+        [{ text: `${gameIcon} بنر` }, { text: `${gameIcon} ابیس و متا` }],
+        [{ text: `${gameIcon} بیلد کرکتر` }, { text: `${gameIcon} ریدیم کد` }],
+        [{ text: "𓇻 منوی اصلی" }],
+      ],
+      resize_keyboard: true,
+      one_time_keyboard: true,
+    }),
+  };
+};
+
+const wannaHelpKb = {
+  text: "بازی که میخوای توش به بقیه کمک کنی رو انتخاب کن",
   reply_markup: JSON.stringify({
-    keyboard: [
-      [{ text: "⚝ Story" }, { text: "⚝ Characters Builds" }],
-      [{ text: "⚝ Redeem Codes" }, { text: "⚝ از کجا شروع کنم؟" }],
-      [{ text: "𓇻 منوی اصلی" }],
+    inline_keyboard: [
+      [{ text: "⚝ Genshin Impact", callback_data: "help genshin" }],
+      [{ text: "✯ Honkai Starrail", callback_data: "help honkai" }],
+      [{ text: "✧ Wuthering Waves", callback_data: "help wuwa" }],
+      [{ text: "❌ Close", callback_data: "close" }],
     ],
-    resize_keyboard: true,
-    one_time_keyboard: true,
   }),
 };
-const honkaiKb = {
-  text: "کدوم قسمت",
+const subToNewsKb = {
+  text: "بازی که میخوای اخبارشو بگیری انتخاب کن",
   reply_markup: JSON.stringify({
-    keyboard: [
-      [{ text: "✯ Story" }, { text: "✯ Characters Builds" }],
-      [{ text: "✯ Redeem Codes" }, { text: "✯ از کجا شروع کنم؟" }],
-      [{ text: "𓇻 منوی اصلی" }],
+    inline_keyboard: [
+      [{ text: "⚝ Genshin Impact", callback_data: "news genshin" }],
+      [{ text: "✯ Honkai Starrail", callback_data: "news honkai" }],
+      [{ text: "✧ Wuthering Waves", callback_data: "news wuwa" }],
+      [{ text: "❌ Close", callback_data: "close" }],
     ],
-    resize_keyboard: true,
-    one_time_keyboard: true,
-  }),
-};
-const wutheringKb = {
-  text: "کدوم قسمت",
-  reply_markup: JSON.stringify({
-    keyboard: [
-      [{ text: "✧ Story" }, { text: "✧ Characters Builds" }],
-      [{ text: "✧ Redeem Codes" }, { text: "✧ از کجا شروع کنم؟" }],
-      [{ text: "𓇻 منوی اصلی" }],
-    ],
-    resize_keyboard: true,
-    one_time_keyboard: true,
   }),
 };
 
@@ -82,26 +89,30 @@ const gamesOptionKbFunction = (game) => {
 };
 const otherPanelKb = {
   reply_markup: JSON.stringify({
-    inline_keyboard: [[{ text: "Save Helper Uid", callback_data: "save uid" }]],
+    inline_keyboard: [
+      [{ text: "Save Helper Uid", callback_data: "other uid" }],
+      [{ text: "↩ Menu", callback_data: "menu" }],
+    ],
   }),
 };
 
-const contentKbFunction = () => {
+const contentKbFunction = (text, arrayOfkeyboards) => {
   return {
-    text: "",
+    text,
     reply_markup: JSON.stringify({
-      inline_keyboard: [
-        [{ text: "Save Helper Uid", callback_data: "save uid" }],
-      ],
+      inline_keyboard: arrayOfkeyboards.map((kb) => [
+        { text: kb[0], url: kb[1] },
+      ]),
     }),
   };
 };
 
 module.exports = {
   startKb,
-  genshinKb,
-  honkaiKb,
-  wutheringKb,
+  gameMenuKbFunction,
+  wannaHelpKb,
   mainPanelKb,
+  subToNewsKb,
   gamesOptionKbFunction,
+  contentKbFunction,
 };

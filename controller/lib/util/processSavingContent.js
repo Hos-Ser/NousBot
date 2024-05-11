@@ -2,7 +2,7 @@ const { uploadProcessedData } = require("../firebase");
 /**
  *
  * @param {*} messageObj
- * @param {"story"|"build"|"abyss"|"guide"|"banner"|"build"} contentType
+ * @param {"story"|"build"|"abyss"|"guide"|"banner"} contentType
  */
 const processSavingContent = async (messageText, gameType, contentType) => {
   const nextlineIndex = messageText.indexOf("\n");
