@@ -141,12 +141,13 @@ async function handleMessage(messageObj) {
     // waiting for session handling
     if (mustWaitForUser(chatId)) {
       if (sessions[chatId].includes("user")) {
+        const [user, gameType] = sessions[chatId].split(" ");
         deleteSession(chatId);
         try {
           const myChatId = await getMyChatId();
           await sendMessage(
             myChatId,
-            `@${messageObj.chat.username} wants to help:\n${messageText}`
+            `@${messageObj.chat.username} wants to help in ${gameType}:\n${messageText}`
           );
           await sendMessage(chatId, "یوزرت بعد از تایید ادمین اضافه میشه");
           return;
@@ -276,24 +277,38 @@ async function handleMessage(messageObj) {
         return;
       case "⁉ Other BS":
         return;
-      case "⚝ Redeem Codes":
+      case "⚝ ریدیم کد":
         await handlePrimoCode(chatId, "genshin");
         return;
-      case "✯ Redeem Codes":
+      case "✯ ریدیم کد":
         await handlePrimoCode(chatId, "honkai");
         return;
-      case "✧ Redeem Codes":
+      case "✧ ریدیم کد":
         await handlePrimoCode(chatId, "wuwa");
         return;
-      case "𓇻 منوی اصلی":
-        await sendKeyboard(chatId, startKb);
+      case "⚝ آموزش":
+        try {
+          await handleContents(chatId, "genshin", "guide");
+        } catch (error) {
+          await sendMessage(chatId, error.message);
+        }
         return;
-      case "✧ Guide":
+      case "✯ آموزش":
+        try {
+          await handleContents(chatId, "honkai", "guide");
+        } catch (error) {
+          await sendMessage(chatId, error.message);
+        }
+        return;
+      case "✧ آموزش":
         try {
           await handleContents(chatId, "wuwa", "guide");
         } catch (error) {
           await sendMessage(chatId, error.message);
         }
+        return;
+      case "𓇻 منوی اصلی":
+        await sendKeyboard(chatId, startKb);
         return;
       default:
         return;
@@ -309,6 +324,7 @@ async function handleCallbackQuery(cbqObj) {
   const messageId = cbqObj.message.message_id;
   const cbqData = cbqObj.data;
   try {
+    if (cbqData === "close") await deleteMessage(chatId, messageId);
     if (messageText === "پنل ادمین") {
       switch (cbqData) {
         case "wuwa":
@@ -338,8 +354,6 @@ async function handleCallbackQuery(cbqObj) {
         case "other":
           await sendMessage(chatId, "هیچ");
           return;
-        case "close":
-          break;
         default:
           if (cbqData.includes("primo")) {
             await updateMessage(
@@ -360,18 +374,16 @@ async function handleCallbackQuery(cbqObj) {
     }
     if (cbqData.includes("help")) {
       const [help, gameType] = cbqData.split(" ");
-      if (gameType !== "close") {
-        await updateMessage(
-          chatId,
-          messageId,
-          "حالا برام uid، اسم بازی، رنک اکانتت و سرورت رو بنویس.\nیادت باشه اگه این اطلاعات رو کامل ننویسی آیدیت تو بات ثبت نمیشه\n اگه چیز دیگه ای هست که دوست داری اضافه کنی مثل اینکه معمولا چه ساعتایی تو بازی هستی یا ... هم بنویس"
-        );
-        addSession(chatId, `user ${gameType}`);
-      }
+      await updateMessage(
+        chatId,
+        messageId,
+        "حالا برام uid، اسم بازی، رنک اکانتت و سرورت رو بنویس.\nیادت باشه اگه این اطلاعات رو کامل ننویسی آیدیت تو بات ثبت نمیشه\n اگه چیز دیگه ای هست که دوست داری اضافه کنی مثل اینکه معمولا چه ساعتایی تو بازی هستی یا ... هم بنویس"
+      );
+      addSession(chatId, `user ${gameType}`);
+      return;
     }
     if (cbqData.includes("news")) {
       const [news, gameType] = cbqData.split(" ");
-
       try {
         await processSavingChatId(
           chatId,
@@ -380,12 +392,12 @@ async function handleCallbackQuery(cbqObj) {
           gameType
         );
         await updateMessage(chatId, messageId, "okie dokie!");
+        return;
       } catch (error) {
         await sendMessage(chatId, error.message);
       }
     }
-
-    if (cbqData === "close") await deleteMessage(chatId, messageId);
+    return;
   } catch (error) {
     errorHandler(error, "handleCallbackQuery");
   }
