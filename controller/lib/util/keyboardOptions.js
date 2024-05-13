@@ -22,7 +22,7 @@ const gameMenuKbFunction = (gameIcon) => {
     reply_markup: JSON.stringify({
       keyboard: [
         [{ text: `${gameIcon} آموزش` }, { text: `${gameIcon} داستان` }],
-        [{ text: `${gameIcon} بنر` }, { text: `${gameIcon} ابیس و متا` }],
+        [{ text: `${gameIcon} بنر` }, { text: `${gameIcon} اند گیم` }],
         [{ text: `${gameIcon} بیلد کرکتر` }, { text: `${gameIcon} ریدیم کد` }],
         [{ text: "𓇻 منوی اصلی" }],
       ],

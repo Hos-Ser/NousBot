@@ -132,10 +132,13 @@ const handlePrimoCode = async (chatId, gameType) => {
  * @param {"genshin"|"wuwa"|"honkai"} gameType
  * @param {"story"|"build"|"abyss"|"guide"|"banner"} contentType
  */
-const handleContents = async (chatId, gameType, contentType) => {
+const handleContents = async (chatId, gameType, contentType, enteredText) => {
   const contentKbList = await getContentList(gameType, contentType);
   if (contentKbList.length !== 0) {
-    await sendKeyboard(chatId, contentKbFunction("contents:", contentKbList));
+    await sendKeyboard(
+      chatId,
+      contentKbFunction(`${enteredText.substring(1)} ها`, contentKbList)
+    );
   } else {
     throw new Error("محتوایی برای این بخش وجود نداره :'(");
   }
@@ -371,21 +374,21 @@ async function handleMessage(messageObj) {
           await sendMessage(chatId, error.message);
         }
         return;
-      case "⚝ ابیس و متا":
+      case "⚝ اند گیم":
         try {
           await handleContents(chatId, "genshin", "abyss");
         } catch (error) {
           await sendMessage(chatId, error.message);
         }
         return;
-      case "✯ ابیس و متا":
+      case "✯ اند گیم":
         try {
           await handleContents(chatId, "honkai", "abyss");
         } catch (error) {
           await sendMessage(chatId, error.message);
         }
         return;
-      case "✧ ابیس و متا":
+      case "✧ اند گیم":
         try {
           await handleContents(chatId, "wuwa", "abyss");
         } catch (error) {
@@ -601,42 +604,51 @@ async function handleCallbackQuery(cbqObj) {
 }
 // handling channel messages
 async function handleChannelPost(postObj) {
-  const messageText = postObj.text;
-  const archiveChannelChatId = -1002011760206;
+  let messageText;
+  if (postObj.text) {
+    messageText = postObj.text;
+  }
+  if (postObj.caption) {
+    messageText = postObj.caption;
+  }
+  const archiveChannelChatId = -1002119532371;
   try {
     if (
-      [
-        "noonegonnafindthischannel",
-        "IRWutheringWaves",
-        "IRStarRail",
-        "IRImpact",
-      ].includes(postObj.chat.username)
+      ["IRWutheringWaves", "IRStarRail", "IRImpact"].includes(
+        postObj.chat.username
+      )
     ) {
       const head = messageText.substring(0, messageText.indexOf("\n"));
-      const meh = messageText.substring(messageText.indexOf("\n") + 1).trim();
-      const title = meh.substring(0, meh.indexOf("\n"));
-      let gameType = "";
-      switch (postObj.chat.username) {
-        case "IRWutheringWaves":
-          gameType = "👆 wuthering";
-          break;
-        case "IRStarRail":
-          gameType = "👆 honkai";
-          break;
-        case "IRImpact":
-          gameType = "👆 genshin";
-          break;
-        default:
-          gameType = "👆 sup channel";
-          break;
-      }
-      if (head.includes("#𝐆𝐔𝐈𝐃𝐄") || head.includes("#𝐒𝐓𝐎𝐑𝐘")) {
+      if (
+        head.includes("#𝐆𝐔𝐈𝐃𝐄") ||
+        head.includes("#𝐒𝐓𝐎𝐑𝐘") ||
+        head.includes("#𝐂𝐇𝐀𝐑𝐀𝐂𝐓𝐄𝐑𝐒")
+      ) {
+        const meh = messageText.substring(messageText.indexOf("\n") + 1).trim();
+        const title = meh.substring(0, meh.indexOf("\n"));
         await sendMessage(
           archiveChannelChatId,
           `${title}\nhttps://t.me/${postObj.chat.username}/${postObj.message_id}`
         );
-        await sendMessage(archiveChannelChatId, gameType);
       }
+    }
+    if (postObj.chat.username === "noonegonnafindthischannel") {
+      if (postObj.forward_from_chat) {
+        const meh = messageText.substring(messageText.indexOf("\n") + 1).trim();
+        const title = meh.substring(0, meh.indexOf("\n"));
+        await sendMessage(
+          archiveChannelChatId,
+          `${title}\nhttps://t.me/${postObj.forward_from_chat.username}/${postObj.forward_from_message_id}`
+        );
+        await deleteMessage(postObj.chat.id, postObj.message_id);
+      }
+      return;
+    }
+    if (postObj.chat.username === "NousTheBot_Archive") {
+      await sendMessage(
+        archiveChannelChatId,
+        `${messageText}\nhttps://t.me/${postObj.chat.username}/${postObj.message_id}`
+      );
     }
     return;
   } catch (error) {
