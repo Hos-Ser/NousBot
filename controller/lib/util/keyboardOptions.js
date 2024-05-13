@@ -5,7 +5,7 @@ const startKb = {
       [{ text: "⋆˚₊⋆Genshin Impact๑⋆˚₊⊹" }],
       [{ text: "༶⋆˙⊹｡Honkai Starrail✯ ˛˚" }],
       [{ text: "˚⋆˙✧⋆Wuthering Waves˚ ⋆·˚" }],
-      [{ text: "⁉ Other BS" }],
+      [{ text: "دنبال یکی میگردی که تو بازیت بهت کمک کنه؟" }],
     ],
     resize_keyboard: true,
     one_time_keyboard: true,
@@ -31,17 +31,39 @@ const gameMenuKbFunction = (gameIcon) => {
     }),
   };
 };
-
-const wannaHelpKb = {
-  text: "بازی که میخوای توش به بقیه کمک کنی رو انتخاب کن",
+const lookingForHelpKb = {
+  text: "اینجا یه لیست از پلیرهایی که ایدیشون رو واس کمک گذاشتن هست که میتونی بگردی و به هرکدوم که دوست داری درخواست دوستی بدی داخل بازی.\nاگه توهم دوست داری آیدیت رو ثبت کنی رو این /wannahelp کلیک کن.\n تو کدوم بازی و سرور دنبال کمک میگردی:",
   reply_markup: JSON.stringify({
     inline_keyboard: [
-      [{ text: "⚝ Genshin Impact", callback_data: "help genshin" }],
-      [{ text: "✯ Honkai Starrail", callback_data: "help honkai" }],
-      [{ text: "✧ Wuthering Waves", callback_data: "help wuwa" }],
+      [{ text: "⚝ Genshin Impact", callback_data: "genshin" }],
+      [{ text: "✯ Honkai Starrail", callback_data: "honkai" }],
+      [{ text: "✧ Wuthering Waves", callback_data: "wuwa" }],
       [{ text: "❌ Close", callback_data: "close" }],
     ],
   }),
+};
+const wannaHelpKb = {
+  text: "اسم بازی و سرور اکانتت رو انتخاب کن",
+  reply_markup: JSON.stringify({
+    inline_keyboard: [
+      [{ text: "⚝ Genshin Impact", callback_data: "genshin" }],
+      [{ text: "✯ Honkai Starrail", callback_data: "honkai" }],
+      [{ text: "✧ Wuthering Waves", callback_data: "wuwa" }],
+      [{ text: "❌ Close", callback_data: "close" }],
+    ],
+  }),
+};
+const chooseServerKbFunction = (gameType) => {
+  return {
+    reply_markup: JSON.stringify({
+      inline_keyboard: [
+        [{ text: "🌍 Europa/EU", callback_data: `${gameType} eu` }],
+        [{ text: "🌎 America/NA", callback_data: `${gameType} na` }],
+        [{ text: "🌏 Asia/AS", callback_data: `${gameType} as` }],
+        [{ text: "↩ Back", callback_data: "back" }],
+      ],
+    }),
+  };
 };
 const subToNewsKb = {
   text: "بازی که میخوای اخبارشو بگیری انتخاب کن",
@@ -76,12 +98,18 @@ const gamesOptionKbFunction = (game) => {
   return {
     reply_markup: JSON.stringify({
       inline_keyboard: [
-        [{ text: "Redeem Code", callback_data: `${game} primo` }],
-        [{ text: "Story", callback_data: `${game} story` }],
-        [{ text: "Build", callback_data: `${game} build` }],
-        [{ text: "Guide", callback_data: `${game} guide` }],
-        [{ text: "Abyss", callback_data: `${game} abyss` }],
-        [{ text: "Banner", callback_data: `${game} banner` }],
+        [
+          { text: "Story", callback_data: `${game} story` },
+          { text: "Guide", callback_data: `${game} guide` },
+        ],
+        [
+          { text: "Banner", callback_data: `${game} banner` },
+          { text: "Abyss", callback_data: `${game} abyss` },
+        ],
+        [
+          { text: "Build", callback_data: `${game} build` },
+          { text: "Redeem Code", callback_data: `${game} primo` },
+        ],
         [{ text: "↩ Menu", callback_data: "menu" }],
       ],
     }),
@@ -89,20 +117,39 @@ const gamesOptionKbFunction = (game) => {
 };
 const otherPanelKb = {
   reply_markup: JSON.stringify({
-    inline_keyboard: [
-      [{ text: "Save Helper Uid", callback_data: "other uid" }],
-      [{ text: "↩ Menu", callback_data: "menu" }],
-    ],
+    inline_keyboard: [[{ text: "↩ Menu", callback_data: "menu" }]],
   }),
 };
 
+const helperKbFunction = (arrayOfkeyboards) => {
+  return {
+    reply_markup: JSON.stringify({
+      inline_keyboard: arrayOfkeyboards.map((kb) => [
+        { text: kb.description, callback_data: kb.description },
+      ]),
+    }),
+  };
+};
 const contentKbFunction = (text, arrayOfkeyboards) => {
   return {
     text,
     reply_markup: JSON.stringify({
       inline_keyboard: arrayOfkeyboards.map((kb) => [
-        { text: kb[0], url: kb[1] },
+        { text: kb.title, url: kb.post_url },
       ]),
+    }),
+  };
+};
+const adminApprovalKbFunction = (text) => {
+  return {
+    text,
+    reply_markup: JSON.stringify({
+      inline_keyboard: [
+        [
+          { text: "✅", callback_data: "yes" },
+          { text: "❌", callback_data: "no" },
+        ],
+      ],
     }),
   };
 };
@@ -110,9 +157,13 @@ const contentKbFunction = (text, arrayOfkeyboards) => {
 module.exports = {
   startKb,
   gameMenuKbFunction,
+  lookingForHelpKb,
   wannaHelpKb,
+  chooseServerKbFunction,
   mainPanelKb,
   subToNewsKb,
+  helperKbFunction,
   gamesOptionKbFunction,
   contentKbFunction,
+  adminApprovalKbFunction,
 };

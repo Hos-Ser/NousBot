@@ -5,6 +5,8 @@ const {
   removeSavedChatId,
   getAdminList,
   getContentList,
+  getHelperList,
+  getSavedChatId,
 } = require("./firebase");
 const { errorHandler } = require("./helper");
 const {
@@ -15,11 +17,16 @@ const {
   subToNewsKb,
   contentKbFunction,
   gameMenuKbFunction,
+  chooseServerKbFunction,
+  adminApprovalKbFunction,
+  lookingForHelpKb,
+  helperKbFunction,
 } = require("./util/keyboardOptions");
 const processPrimoCode = require("./util/processPrimoCode");
 const { processSavingAdmin } = require("./util/processSavingAdmin");
 const processSavingChatId = require("./util/processSavingChatId");
 const processSavingContent = require("./util/processSavingContent");
+const processSavingHelperUser = require("./util/processSavingHelperUser");
 
 const MY_TOKEN = process.env.TG_BOT_TOKEN;
 const BASE_URL = `https://api.telegram.org/bot${MY_TOKEN}`;
@@ -49,12 +56,13 @@ async function sendMessage(chatId, messageText, isParseMode = false) {
       errorHandler(ex, "sendMessage", "axios");
     });
 }
-async function updateMessage(chatId, messageId, newText) {
+async function updateMessage(chatId, messageId, newText, inlineKb) {
   return axiosInstance
     .post("editMessageText", {
       chat_id: chatId,
       message_id: messageId,
       text: newText,
+      ...inlineKb,
     })
     .catch((ex) => {
       errorHandler(ex, "updateMessage", "axios");
@@ -104,6 +112,17 @@ const handlePrimoCode = async (chatId, gameType) => {
     let finalMessage = "کد های در دسترس";
     redeemCodes.forEach((val) => (finalMessage += `\n\`${val}\``));
     await sendMessage(chatId, finalMessage, true);
+    const subedChatIdList = await getSavedChatId("news", gameType);
+    if (subedChatIdList.length !== 0) {
+      await Promise.all(
+        subedChatIdList.map(async (subedCI) => {
+          await sendMessage(
+            subedCI,
+            `${gameType.toUpperCase()} ریدیم کد جدید داریم`
+          );
+        })
+      );
+    }
     return;
   }
 };
@@ -141,19 +160,21 @@ async function handleMessage(messageObj) {
     // waiting for session handling
     if (mustWaitForUser(chatId)) {
       if (sessions[chatId].includes("user")) {
-        const [user, gameType] = sessions[chatId].split(" ");
+        const [user, gameType, server] = sessions[chatId].split(" ");
         deleteSession(chatId);
         try {
           const myChatId = await getMyChatId();
-          await sendMessage(
+          await sendKeyboard(
             myChatId,
-            `@${messageObj.chat.username} wants to help in ${gameType}:\n${messageText}`
+            adminApprovalKbFunction(
+              `@${messageObj.chat.username} wants to help:\n${gameType} ${server}\n${messageText}`
+            )
           );
           await sendMessage(chatId, "یوزرت بعد از تایید ادمین اضافه میشه");
-          return;
         } catch (error) {
           await sendMessage(chatId, "یه مشکلی پیش اومده یبار دیگه امتحان کن");
         }
+        return;
       } else {
         const [gameType, contentType] = sessions[chatId].split(" ");
         deleteSession(chatId);
@@ -181,7 +202,7 @@ async function handleMessage(messageObj) {
           await sendKeyboard(chatId, startKb);
           return;
         case "subtonews":
-          sendKeyboard(chatId, subToNewsKb);
+          await sendKeyboard(chatId, subToNewsKb);
           return;
         case "unsubtonews":
           try {
@@ -275,7 +296,8 @@ async function handleMessage(messageObj) {
       case "˚⋆˙✧⋆Wuthering Waves˚ ⋆·˚":
         await sendKeyboard(chatId, gameMenuKbFunction("✧"));
         return;
-      case "⁉ Other BS":
+      case "دنبال یکی میگردی که تو بازیت بهت کمک کنه؟":
+        await sendKeyboard(chatId, lookingForHelpKb);
         return;
       case "⚝ ریدیم کد":
         await handlePrimoCode(chatId, "genshin");
@@ -307,6 +329,90 @@ async function handleMessage(messageObj) {
           await sendMessage(chatId, error.message);
         }
         return;
+      case "⚝ داستان":
+        try {
+          await handleContents(chatId, "genshin", "story");
+        } catch (error) {
+          await sendMessage(chatId, error.message);
+        }
+        return;
+      case "✯ داستان":
+        try {
+          await handleContents(chatId, "honkai", "story");
+        } catch (error) {
+          await sendMessage(chatId, error.message);
+        }
+        return;
+      case "✧ داستان":
+        try {
+          await handleContents(chatId, "wuwa", "story");
+        } catch (error) {
+          await sendMessage(chatId, error.message);
+        }
+        return;
+      case "⚝ بنر":
+        try {
+          await handleContents(chatId, "genshin", "banner");
+        } catch (error) {
+          await sendMessage(chatId, error.message);
+        }
+        return;
+      case "✯ بنر":
+        try {
+          await handleContents(chatId, "honkai", "banner");
+        } catch (error) {
+          await sendMessage(chatId, error.message);
+        }
+        return;
+      case "✧ بنر":
+        try {
+          await handleContents(chatId, "wuwa", "banner");
+        } catch (error) {
+          await sendMessage(chatId, error.message);
+        }
+        return;
+      case "⚝ ابیس و متا":
+        try {
+          await handleContents(chatId, "genshin", "abyss");
+        } catch (error) {
+          await sendMessage(chatId, error.message);
+        }
+        return;
+      case "✯ ابیس و متا":
+        try {
+          await handleContents(chatId, "honkai", "abyss");
+        } catch (error) {
+          await sendMessage(chatId, error.message);
+        }
+        return;
+      case "✧ ابیس و متا":
+        try {
+          await handleContents(chatId, "wuwa", "abyss");
+        } catch (error) {
+          await sendMessage(chatId, error.message);
+        }
+        return;
+      case "⚝ بیلد کرکتر":
+        try {
+          await handleContents(chatId, "genshin", "build");
+        } catch (error) {
+          await sendMessage(chatId, error.message);
+        }
+        return;
+      case "✯ بیلد کرکتر":
+        try {
+          await handleContents(chatId, "honkai", "build");
+        } catch (error) {
+          await sendMessage(chatId, error.message);
+        }
+        return;
+      case "✧ بیلد کرکتر":
+        try {
+          await handleContents(chatId, "wuwa", "build");
+        } catch (error) {
+          await sendMessage(chatId, error.message);
+        }
+        return;
       case "𓇻 منوی اصلی":
         await sendKeyboard(chatId, startKb);
         return;
@@ -324,7 +430,23 @@ async function handleCallbackQuery(cbqObj) {
   const messageId = cbqObj.message.message_id;
   const cbqData = cbqObj.data;
   try {
-    if (cbqData === "close") await deleteMessage(chatId, messageId);
+    if (cbqData === "close") {
+      await deleteMessage(chatId, messageId);
+      return;
+    }
+    if (cbqData === "yes") {
+      try {
+        await processSavingHelperUser(messageText);
+        await updateMessage(chatId, messageId, `${messageText}\nAPPROVED`);
+      } catch (error) {
+        await sendMessage(chatId, "نشد کینگ");
+      }
+      return;
+    }
+    if (cbqData === "no") {
+      await updateMessage(chatId, messageId, `${messageText}\nREJECTED`);
+      return;
+    }
     if (messageText === "پنل ادمین") {
       switch (cbqData) {
         case "wuwa":
@@ -372,15 +494,90 @@ async function handleCallbackQuery(cbqObj) {
           return;
       }
     }
-    if (cbqData.includes("help")) {
-      const [help, gameType] = cbqData.split(" ");
-      await updateMessage(
-        chatId,
-        messageId,
-        "حالا برام uid، اسم بازی، رنک اکانتت و سرورت رو بنویس.\nیادت باشه اگه این اطلاعات رو کامل ننویسی آیدیت تو بات ثبت نمیشه\n اگه چیز دیگه ای هست که دوست داری اضافه کنی مثل اینکه معمولا چه ساعتایی تو بازی هستی یا ... هم بنویس"
-      );
-      addSession(chatId, `user ${gameType}`);
-      return;
+    if (messageText === "اسم بازی و سرور اکانتت رو انتخاب کن") {
+      switch (cbqData) {
+        case "genshin":
+          await updateInlineKeyboard(
+            chatId,
+            messageId,
+            chooseServerKbFunction(cbqData)
+          );
+          return;
+        case "honkai":
+          await updateInlineKeyboard(
+            chatId,
+            messageId,
+            chooseServerKbFunction(cbqData)
+          );
+          return;
+        case "wuwa":
+          await updateInlineKeyboard(
+            chatId,
+            messageId,
+            chooseServerKbFunction(cbqData)
+          );
+          return;
+        case "back":
+          await updateInlineKeyboard(chatId, messageId, wannaHelpKb);
+          return;
+        default:
+          await updateMessage(
+            chatId,
+            messageId,
+            "حالا برام UID و هر اطلاعات اضافه ای مثل رنکت یا چه ساعت های معمولا تو گیمی یا ... که میخوای رو بفرست"
+          );
+          addSession(chatId, `user ${cbqData}`);
+          return;
+      }
+    }
+    if (messageText.includes("/wannahelp")) {
+      switch (cbqData) {
+        case "genshin":
+          await updateInlineKeyboard(
+            chatId,
+            messageId,
+            chooseServerKbFunction(cbqData)
+          );
+          return;
+        case "honkai":
+          await updateInlineKeyboard(
+            chatId,
+            messageId,
+            chooseServerKbFunction(cbqData)
+          );
+          return;
+        case "wuwa":
+          await updateInlineKeyboard(
+            chatId,
+            messageId,
+            chooseServerKbFunction(cbqData)
+          );
+          return;
+        case "back":
+          await updateInlineKeyboard(chatId, messageId, lookingForHelpKb);
+          return;
+        default:
+          const [gameType, server] = cbqData.split(" ");
+          try {
+            const helpersList = await getHelperList(gameType, server);
+            if (helpersList.length !== 0) {
+              await updateMessage(
+                chatId,
+                messageId,
+                `لیست پلیر های بازی ${gameType} سرور ${server.toUpperCase()}`,
+                helperKbFunction(helpersList)
+              );
+            } else {
+              throw new Error("هنوز کسی واس این سرور نداریم :(");
+            }
+          } catch (error) {
+            await sendMessage(chatId, error.message);
+          }
+          return;
+      }
+    }
+    if (messageText.includes("لیست پلیر های بازی")) {
+      await sendMessage(chatId, cbqData);
     }
     if (cbqData.includes("news")) {
       const [news, gameType] = cbqData.split(" ");

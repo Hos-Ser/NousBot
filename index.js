@@ -12,9 +12,6 @@ app.post("*", async (req, res) => {
   console.log(req.body);
   res.send(await handler(req, "POST"));
 });
-app.get("*", async (req, res) => {
-  res.send(await handler(req, "GET"));
-});
 
 app.listen(PORT, (err) => {
   if (err) console.log(err);

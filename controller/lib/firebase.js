@@ -150,14 +150,32 @@ const getContentList = async (gameType, contentType) => {
   try {
     const resultArray = [];
     const collectionRef = collection(firestoreDb, gameType);
-    const q = query(collectionRef, where("content_type", ">=", contentType));
+    const q = query(collectionRef, where("content_type", "==", contentType));
     const docSnap = await getDocs(q);
     docSnap.forEach((doc) => {
-      resultArray.push([doc.data().title, doc.data().post_url]);
+      resultArray.push(doc.data());
     });
     return resultArray;
   } catch (error) {
     errorHandler(error, "firebase-getContentList");
+  }
+};
+const getHelperList = async (gameType, server) => {
+  try {
+    const resultArray = [];
+    const collectionRef = collection(firestoreDb, "helper_user");
+    const q = query(
+      collectionRef,
+      where("game_type", "==", gameType),
+      where("server", "==", server)
+    );
+    const docSnap = await getDocs(q);
+    docSnap.forEach((doc) => {
+      resultArray.push(doc.data());
+    });
+    return resultArray;
+  } catch (error) {
+    errorHandler(error, "firebase-getHelperList");
   }
 };
 
@@ -173,4 +191,5 @@ module.exports = {
   getMyChatId,
   removeSavedChatId,
   getAdminList,
+  getHelperList,
 };
