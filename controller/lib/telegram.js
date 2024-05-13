@@ -313,105 +313,105 @@ async function handleMessage(messageObj) {
         return;
       case "⚝ آموزش":
         try {
-          await handleContents(chatId, "genshin", "guide");
+          await handleContents(chatId, "genshin", "guide", messageText);
         } catch (error) {
           await sendMessage(chatId, error.message);
         }
         return;
       case "✯ آموزش":
         try {
-          await handleContents(chatId, "honkai", "guide");
+          await handleContents(chatId, "honkai", "guide", messageText);
         } catch (error) {
           await sendMessage(chatId, error.message);
         }
         return;
       case "✧ آموزش":
         try {
-          await handleContents(chatId, "wuwa", "guide");
+          await handleContents(chatId, "wuwa", "guide", messageText);
         } catch (error) {
           await sendMessage(chatId, error.message);
         }
         return;
       case "⚝ داستان":
         try {
-          await handleContents(chatId, "genshin", "story");
+          await handleContents(chatId, "genshin", "story", messageText);
         } catch (error) {
           await sendMessage(chatId, error.message);
         }
         return;
       case "✯ داستان":
         try {
-          await handleContents(chatId, "honkai", "story");
+          await handleContents(chatId, "honkai", "story", messageText);
         } catch (error) {
           await sendMessage(chatId, error.message);
         }
         return;
       case "✧ داستان":
         try {
-          await handleContents(chatId, "wuwa", "story");
+          await handleContents(chatId, "wuwa", "story", messageText);
         } catch (error) {
           await sendMessage(chatId, error.message);
         }
         return;
       case "⚝ بنر":
         try {
-          await handleContents(chatId, "genshin", "banner");
+          await handleContents(chatId, "genshin", "banner", messageText);
         } catch (error) {
           await sendMessage(chatId, error.message);
         }
         return;
       case "✯ بنر":
         try {
-          await handleContents(chatId, "honkai", "banner");
+          await handleContents(chatId, "honkai", "banner", messageText);
         } catch (error) {
           await sendMessage(chatId, error.message);
         }
         return;
       case "✧ بنر":
         try {
-          await handleContents(chatId, "wuwa", "banner");
+          await handleContents(chatId, "wuwa", "banner", messageText);
         } catch (error) {
           await sendMessage(chatId, error.message);
         }
         return;
       case "⚝ اند گیم":
         try {
-          await handleContents(chatId, "genshin", "abyss");
+          await handleContents(chatId, "genshin", "abyss", messageText);
         } catch (error) {
           await sendMessage(chatId, error.message);
         }
         return;
       case "✯ اند گیم":
         try {
-          await handleContents(chatId, "honkai", "abyss");
+          await handleContents(chatId, "honkai", "abyss", messageText);
         } catch (error) {
           await sendMessage(chatId, error.message);
         }
         return;
       case "✧ اند گیم":
         try {
-          await handleContents(chatId, "wuwa", "abyss");
+          await handleContents(chatId, "wuwa", "abyss", messageText);
         } catch (error) {
           await sendMessage(chatId, error.message);
         }
         return;
       case "⚝ بیلد کرکتر":
         try {
-          await handleContents(chatId, "genshin", "build");
+          await handleContents(chatId, "genshin", "build", messageText);
         } catch (error) {
           await sendMessage(chatId, error.message);
         }
         return;
       case "✯ بیلد کرکتر":
         try {
-          await handleContents(chatId, "honkai", "build");
+          await handleContents(chatId, "honkai", "build", messageText);
         } catch (error) {
           await sendMessage(chatId, error.message);
         }
         return;
       case "✧ بیلد کرکتر":
         try {
-          await handleContents(chatId, "wuwa", "build");
+          await handleContents(chatId, "wuwa", "build", messageText);
         } catch (error) {
           await sendMessage(chatId, error.message);
         }
@@ -631,6 +631,7 @@ async function handleChannelPost(postObj) {
           `${title}\nhttps://t.me/${postObj.chat.username}/${postObj.message_id}`
         );
       }
+      return;
     }
     if (postObj.chat.username === "noonegonnafindthischannel") {
       if (postObj.forward_from_chat) {
@@ -649,6 +650,7 @@ async function handleChannelPost(postObj) {
         archiveChannelChatId,
         `${messageText}\nhttps://t.me/${postObj.chat.username}/${postObj.message_id}`
       );
+      return;
     }
     return;
   } catch (error) {
