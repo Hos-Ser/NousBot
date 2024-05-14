@@ -112,17 +112,6 @@ const handlePrimoCode = async (chatId, gameType) => {
     let finalMessage = "کد های در دسترس";
     redeemCodes.forEach((val) => (finalMessage += `\n\`${val}\``));
     await sendMessage(chatId, finalMessage, true);
-    const subedChatIdList = await getSavedChatId("news", gameType);
-    if (subedChatIdList.length !== 0) {
-      await Promise.all(
-        subedChatIdList.map(async (subedCI) => {
-          await sendMessage(
-            subedCI,
-            `${gameType.toUpperCase()} ریدیم کد جدید داریم`
-          );
-        })
-      );
-    }
     return;
   }
 };
@@ -185,11 +174,21 @@ async function handleMessage(messageObj) {
           if (contentType === "primo") {
             await processPrimoCode(messageText, gameType);
             await sendMessage(chatId, "done");
+            const subedChatIdList = await getSavedChatId("news", gameType);
+            if (subedChatIdList.length !== 0) {
+              await Promise.all(
+                subedChatIdList.map(async (subedCI) => {
+                  await sendMessage(
+                    subedCI,
+                    `ریدیم کد جدید داریم ${gameType.toUpperCase()}`
+                  );
+                })
+              );
+            }
             return;
           }
           await processSavingContent(messageText, gameType, contentType);
           await sendMessage(chatId, "done");
-
           return;
         } catch (error) {
           sendMessage(chatId, error.message);
