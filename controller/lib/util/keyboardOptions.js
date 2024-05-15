@@ -91,25 +91,26 @@ const mainPanelKb = {
 };
 /**
  *
- * @param {"genshin"|"wuwa"|"honkai"} game
+ * @param {"genshin"|"wuwa"|"honkai"} gameType
  * @returns keyboard object with specified game
  */
-const gamesOptionKbFunction = (game) => {
+const gamesOptionKbFunction = (gameType) => {
   return {
     reply_markup: JSON.stringify({
       inline_keyboard: [
         [
-          { text: "Story", callback_data: `${game} story` },
-          { text: "Guide", callback_data: `${game} guide` },
+          { text: "Story", callback_data: `${gameType} story` },
+          { text: "Guide", callback_data: `${gameType} guide` },
         ],
         [
-          { text: "Banner", callback_data: `${game} banner` },
-          { text: "Abyss", callback_data: `${game} abyss` },
+          { text: "Banner", callback_data: `${gameType} banner` },
+          { text: "Abyss", callback_data: `${gameType} abyss` },
         ],
         [
-          { text: "Build", callback_data: `${game} build` },
-          { text: "Redeem Code", callback_data: `${game} primo` },
+          { text: "Build", callback_data: `${gameType} build` },
+          { text: "Redeem Code", callback_data: `${gameType} primo` },
         ],
+        [{ text: "Delete Content", callback_data: `${gameType} delete` }],
         [{ text: "↩ Menu", callback_data: "menu" }],
       ],
     }),
@@ -131,15 +132,26 @@ const helperKbFunction = (arrayOfkeyboards) => {
   };
 };
 const contentKbFunction = (text, arrayOfkeyboards) => {
+  let i = 1;
   return {
     text,
     reply_markup: JSON.stringify({
       inline_keyboard: arrayOfkeyboards.map((kb) => [
-        { text: kb.title, url: kb.post_url },
+        { text: `${i++}. ${kb.title}`, url: kb.post_url },
       ]),
     }),
   };
 };
+const deleteSelectionKbFunction = (cbqData, arrayOfkeyboards) => {
+  return {
+    reply_markup: JSON.stringify({
+      inline_keyboard: arrayOfkeyboards.map((kb) => [
+        { text: kb.title, callback_data: `${cbqData} ${kb.post_url}` },
+      ]),
+    }),
+  };
+};
+
 const adminApprovalKbFunction = (text) => {
   return {
     text,
@@ -166,4 +178,5 @@ module.exports = {
   gamesOptionKbFunction,
   contentKbFunction,
   adminApprovalKbFunction,
+  deleteSelectionKbFunction,
 };

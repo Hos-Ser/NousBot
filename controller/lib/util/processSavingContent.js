@@ -1,4 +1,4 @@
-const { uploadProcessedData } = require("../firebase");
+const { uploadProcessedData, getContentList } = require("../firebase");
 /**
  *
  * @param {*} messageObj
@@ -10,6 +10,9 @@ const processSavingContent = async (messageText, gameType, contentType) => {
   const postUrl = messageText.substring(nextlineIndex + 1);
   const urlRegex = /https:\/\/t\.me\//;
   if (urlRegex.test(postUrl)) {
+    const listOfContens = await getContentList(gameType, contentType);
+    if (listOfContens.some((obj) => obj.post_url === postUrl))
+      throw new Error("tekrarie eshqe dadash");
     await uploadProcessedData(
       {
         title,

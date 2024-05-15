@@ -2,11 +2,12 @@ const { getAxiosInstance } = require("./axios");
 const {
   getPrimoCode,
   getMyChatId,
-  removeSavedChatId,
+  deleteSavedChatId,
   getAdminList,
   getContentList,
   getHelperList,
   getSavedChatId,
+  deleteContent,
 } = require("./firebase");
 const { errorHandler } = require("./helper");
 const {
@@ -21,6 +22,7 @@ const {
   adminApprovalKbFunction,
   lookingForHelpKb,
   helperKbFunction,
+  deleteSelectionKbFunction,
 } = require("./util/keyboardOptions");
 const processPrimoCode = require("./util/processPrimoCode");
 const { processSavingAdmin } = require("./util/processSavingAdmin");
@@ -124,9 +126,22 @@ const handlePrimoCode = async (chatId, gameType) => {
 const handleContents = async (chatId, gameType, contentType, enteredText) => {
   const contentKbList = await getContentList(gameType, contentType);
   if (contentKbList.length !== 0) {
+    const emotesArray = [
+      "(⌒▽⌒)☆",
+      "(＠＾◡＾)",
+      "(─‿‿─)",
+      "<(￣︶￣)>",
+      "ヽ(*⌒▽⌒*)ﾉ",
+      "(╯✧▽✧)╯",
+    ];
     await sendKeyboard(
       chatId,
-      contentKbFunction(`${enteredText.substring(1)} ها`, contentKbList)
+      contentKbFunction(
+        `${enteredText.substring(1)} ها ${
+          emotesArray[Math.floor(Math.random() * emotesArray.length)]
+        }`,
+        contentKbList
+      )
     );
   } else {
     throw new Error("محتوایی برای این بخش وجود نداره :'(");
@@ -208,7 +223,7 @@ async function handleMessage(messageObj) {
           return;
         case "unsubtonews":
           try {
-            const err = await removeSavedChatId(chatId);
+            const err = await deleteSavedChatId(chatId);
             if (err) throw new Error(err);
             await sendMessage(chatId, "باشه دیگه بهت خبر نمیدیم :(");
           } catch (error) {
@@ -485,6 +500,15 @@ async function handleCallbackQuery(cbqObj) {
               messageId,
               `send ${cbqData} codes in this format:\nCode DaysTillExpiration\ne.g.:\ncodeX 7\ncodeZ 12`
             );
+          } else if (cbqData.includes("delete")) {
+            const [gameType, meh] = cbqData.split(" ");
+            await updateMessage(
+              chatId,
+              messageId,
+              "which content?",
+              gamesOptionKbFunction(gameType)
+            );
+            return;
           } else {
             await updateMessage(
               chatId,
@@ -596,6 +620,32 @@ async function handleCallbackQuery(cbqObj) {
         await sendMessage(chatId, error.message);
       }
     }
+    if (messageText === "which content?") {
+      switch (cbqData) {
+        case "menu":
+          updateMessage(chatId, messageId, "پنل ادمین", mainPanelKb);
+          return;
+        default:
+          if (cbqData.includes("delete") || cbqData.includes("primo")) {
+            return;
+          } else {
+            const [gameType, contentType] = cbqData.split(" ");
+            const listOfContens = await getContentList(gameType, contentType);
+            await updateMessage(
+              chatId,
+              messageId,
+              "select content to delete",
+              deleteSelectionKbFunction(cbqData, listOfContens)
+            );
+          }
+          return;
+      }
+    }
+    if (messageText === "select content to delete") {
+      const [gameType, contentType, postUrl] = cbqData.split(" ");
+      await deleteContent(gameType, contentType, postUrl);
+      await updateMessage(chatId, messageId, "Done!");
+    }
     return;
   } catch (error) {
     errorHandler(error, "handleCallbackQuery");
@@ -621,6 +671,7 @@ async function handleChannelPost(postObj) {
       if (
         head.includes("#𝐆𝐔𝐈𝐃𝐄") ||
         head.includes("#𝐒𝐓𝐎𝐑𝐘") ||
+        head.includes("#𝐂𝐎𝐃𝐄") ||
         head.includes("#𝐂𝐇𝐀𝐑𝐀𝐂𝐓𝐄𝐑𝐒")
       ) {
         const meh = messageText.substring(messageText.indexOf("\n") + 1).trim();

@@ -54,7 +54,29 @@ const uploadProcessedData = async (DataToUpload, collectionName) => {
   }
 };
 
-const removeSavedChatId = async (chatId) => {
+const deleteContent = async (gameType, contentType, postUrl) => {
+  try {
+    const collectionRef = collection(firestoreDb, gameType);
+    const q = query(
+      collectionRef,
+      where("content_type", "==", contentType),
+      where("post_url", "==", postUrl)
+    );
+    const docSnap = await getDocs(q);
+    if (!docSnap.empty) {
+      docSnap.forEach(async (data) => {
+        const docRef = doc(firestoreDb, gameType, data.id);
+        await deleteDoc(docRef);
+        return;
+      });
+    }
+    return;
+  } catch (error) {
+    errorHandler(error, "firebase-deleteContent");
+  }
+};
+
+const deleteSavedChatId = async (chatId) => {
   try {
     const collectionRef = collection(firestoreDb, "saved_chat_id");
     const q = query(
@@ -64,16 +86,18 @@ const removeSavedChatId = async (chatId) => {
     );
     const docSnap = await getDocs(q);
     if (!docSnap.empty) {
-      docSnap.forEach((data) => {
-        const docRef = doc(firestoreDb, "saved_chat_id", data.id);
-        deleteDoc(docRef);
-      });
+      await Promise.all(
+        docSnap.map(async (data) => {
+          const docRef = doc(firestoreDb, "saved_chat_id", data.id);
+          await deleteDoc(docRef);
+        })
+      );
       return;
     } else {
       return "اصلا ثبت نام نکردی";
     }
   } catch (error) {
-    errorHandler(error, "firebase-removeSavedChatId");
+    errorHandler(error, "firebase-deleteSavedChatId");
   }
 };
 
@@ -189,7 +213,8 @@ module.exports = {
   getSavedChatId,
   getContentList,
   getMyChatId,
-  removeSavedChatId,
+  deleteSavedChatId,
   getAdminList,
   getHelperList,
+  deleteContent,
 };
