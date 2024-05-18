@@ -23,7 +23,6 @@ const {
   lookingForHelpKb,
   helperKbFunction,
   deleteSelectionKbFunction,
-  redoKb,
 } = require("./util/keyboardOptions");
 const processPrimoCode = require("./util/processPrimoCode");
 const { processSavingAdmin } = require("./util/processSavingAdmin");
@@ -465,10 +464,10 @@ async function handleCallbackQuery(cbqObj) {
       await updateMessage(chatId, messageId, `${messageText}\nREJECTED`);
       return;
     }
-    if (messageText === "this again?") {
-      addSession(chatId, cbqData);
-      return;
-    }
+    // if (messageText === "this again?") {
+    //   addSession(chatId, cbqData);
+    //   return;
+    // }
     if (messageText === "پنل ادمین") {
       switch (cbqData) {
         case "wuwa":
@@ -518,8 +517,7 @@ async function handleCallbackQuery(cbqObj) {
             await updateMessage(
               chatId,
               messageId,
-              `send ${cbqData} in this format:\nTitle Of Content You're Sending\nPost's Link`,
-              redoKb(cbqData)
+              `send ${cbqData} in this format:\nTitle Of Content You're Sending\nPost's Link`
             );
           }
           addSession(chatId, cbqData);
