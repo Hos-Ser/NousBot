@@ -133,21 +133,27 @@ const helperKbFunction = (arrayOfkeyboards) => {
 };
 const contentKbFunction = (text, arrayOfkeyboards) => {
   let i = 1;
+  const finalKb = arrayOfkeyboards.map((kb) => [
+    { text: `${i++}. ${kb.title}`, url: kb.post_url },
+  ]);
+  finalKb.push([{ text: "❌ Close", callback_data: "close" }]);
+
   return {
     text,
     reply_markup: JSON.stringify({
-      inline_keyboard: arrayOfkeyboards.map((kb) => [
-        { text: `${i++}. ${kb.title}`, url: kb.post_url },
-      ]),
+      inline_keyboard: finalKb,
     }),
   };
 };
 const deleteSelectionKbFunction = (cbqData, arrayOfkeyboards) => {
+  const finalKb = arrayOfkeyboards.map((kb) => [
+    { text: kb.title, callback_data: `${cbqData} ${kb.post_url}` },
+  ]);
+  finalKb.push([{ text: "❌ Close", callback_data: "close" }]);
+
   return {
     reply_markup: JSON.stringify({
-      inline_keyboard: arrayOfkeyboards.map((kb) => [
-        { text: kb.title, callback_data: `${cbqData} ${kb.post_url}` },
-      ]),
+      inline_keyboard: finalKb,
     }),
   };
 };
