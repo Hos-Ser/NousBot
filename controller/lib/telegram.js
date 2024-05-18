@@ -499,9 +499,8 @@ async function handleCallbackQuery(cbqObj) {
           return;
         default:
           if (cbqData.includes("primo")) {
-            await updateMessage(
+            await sendMessage(
               chatId,
-              messageId,
               `send ${cbqData} codes in this format:\nCode DaysTillExpiration\ne.g.:\ncodeX 7\ncodeZ 12`
             );
           } else if (cbqData.includes("delete")) {
@@ -514,9 +513,8 @@ async function handleCallbackQuery(cbqObj) {
             );
             return;
           } else {
-            await updateMessage(
+            await sendMessage(
               chatId,
-              messageId,
               `send ${cbqData} in this format:\nTitle Of Content You're Sending\nPost's Link`
             );
           }
