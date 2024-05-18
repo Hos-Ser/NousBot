@@ -172,6 +172,16 @@ const adminApprovalKbFunction = (text) => {
   };
 };
 
+const redoKb = (gameInfo) => {
+  return {
+    reply_markup: JSON.stringify({
+      inline_keyboard: [
+        [{ text: "this again?", callback_data: `${gameInfo}` }],
+      ],
+    }),
+  };
+};
+
 module.exports = {
   startKb,
   gameMenuKbFunction,
@@ -185,4 +195,5 @@ module.exports = {
   contentKbFunction,
   adminApprovalKbFunction,
   deleteSelectionKbFunction,
+  redoKb,
 };
