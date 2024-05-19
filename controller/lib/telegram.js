@@ -469,10 +469,6 @@ async function handleCallbackQuery(cbqObj) {
       await updateMessage(chatId, messageId, `${messageText}\nREJECTED`);
       return;
     }
-    // if (messageText === "this again?") {
-    //   addSession(chatId, cbqData);
-    //   return;
-    // }
     if (messageText === "پنل ادمین") {
       switch (cbqData) {
         case "wuwa":
@@ -557,7 +553,7 @@ async function handleCallbackQuery(cbqObj) {
           await updateMessage(
             chatId,
             messageId,
-            "حالا برام UID و هر اطلاعات اضافه ای مثل رنکت یا چه ساعت های معمولا تو گیمی یا ... که میخوای رو بفرست"
+            "حالا برام UID، رنک و اطلاعات دیگه ای رو اگه لازم میدونی بفرست برام"
           );
           addSession(chatId, `user ${cbqData}`);
           return;
