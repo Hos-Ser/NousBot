@@ -164,6 +164,11 @@ async function handleMessage(messageObj) {
   const messageText = messageObj.text || "";
   const chatId = messageObj.chat.id;
   try {
+    if (messageObj.from.username === "killgis") {
+      const myChatId = await getMyChatId();
+      sendMessage(myChatId, messageText);
+      return;
+    }
     // waiting for session handling
     if (mustWaitForUser(chatId)) {
       if (sessions[chatId].includes("user")) {
