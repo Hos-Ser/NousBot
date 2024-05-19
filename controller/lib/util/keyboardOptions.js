@@ -38,7 +38,7 @@ const lookingForHelpKb = {
       [{ text: "⚝ Genshin Impact", callback_data: "genshin" }],
       [{ text: "✯ Honkai Starrail", callback_data: "honkai" }],
       [{ text: "✧ Wuthering Waves", callback_data: "wuwa" }],
-      [{ text: "❌ Close", callback_data: "close" }],
+      [{ text: "❌ بستن لیست", callback_data: "close" }],
     ],
   }),
 };
@@ -49,7 +49,7 @@ const wannaHelpKb = {
       [{ text: "⚝ Genshin Impact", callback_data: "genshin" }],
       [{ text: "✯ Honkai Starrail", callback_data: "honkai" }],
       [{ text: "✧ Wuthering Waves", callback_data: "wuwa" }],
-      [{ text: "❌ Close", callback_data: "close" }],
+      [{ text: "❌ بستن لیست", callback_data: "close" }],
     ],
   }),
 };
@@ -72,7 +72,7 @@ const subToNewsKb = {
       [{ text: "⚝ Genshin Impact", callback_data: "news genshin" }],
       [{ text: "✯ Honkai Starrail", callback_data: "news honkai" }],
       [{ text: "✧ Wuthering Waves", callback_data: "news wuwa" }],
-      [{ text: "❌ Close", callback_data: "close" }],
+      [{ text: "❌ بستن لیست", callback_data: "close" }],
     ],
   }),
 };
@@ -136,7 +136,7 @@ const contentKbFunction = (text, arrayOfkeyboards) => {
   const finalKb = arrayOfkeyboards.map((kb) => [
     { text: `${i++}. ${kb.title}`, url: kb.post_url },
   ]);
-  finalKb.push([{ text: "❌ Close", callback_data: "close" }]);
+  finalKb.push([{ text: "❌ بستن لیست", callback_data: "close" }]);
 
   return {
     text,
@@ -149,7 +149,7 @@ const deleteSelectionKbFunction = (cbqData, arrayOfkeyboards) => {
   const finalKb = arrayOfkeyboards.map((kb) => [
     { text: kb.title, callback_data: `${cbqData} ${kb.post_url}` },
   ]);
-  finalKb.push([{ text: "❌ Close", callback_data: "close" }]);
+  finalKb.push([{ text: "❌ بستن لیست", callback_data: "close" }]);
 
   return {
     reply_markup: JSON.stringify({
