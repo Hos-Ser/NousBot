@@ -29,6 +29,8 @@ const { processSavingAdmin } = require("./util/processSavingAdmin");
 const processSavingChatId = require("./util/processSavingChatId");
 const processSavingContent = require("./util/processSavingContent");
 const processSavingHelperUser = require("./util/processSavingHelperUser");
+const processSavingMedia = require("./util/processSavingMedia");
+const { wuwaMedia } = require("./util/mediaUniqueIds");
 
 const MY_TOKEN = process.env.TG_BOT_TOKEN;
 const BASE_URL = `https://api.telegram.org/bot${MY_TOKEN}`;
@@ -50,12 +52,36 @@ const mustWaitForUser = (chatId) => {
 async function sendMessage(chatId, messageText, isParseMode = false) {
   return axiosInstance
     .post("sendMessage", {
-      chat_id: chatId || MY_GROUP_CHAT_ID,
+      chat_id: chatId,
       text: messageText,
       ...(isParseMode && { parse_mode: "Markdown" }),
     })
     .catch((ex) => {
       errorHandler(ex, "sendMessage", "axios");
+    });
+}
+async function sendPhoto(chatId, photoUrl, caption = "", replyToMessageId) {
+  return axiosInstance
+    .post("sendPhoto", {
+      chat_id: chatId,
+      photo: photoUrl,
+      caption,
+      reply_to_message_id: replyToMessageId,
+    })
+    .catch((ex) => {
+      errorHandler(ex, "sendPhoto", "axios");
+    });
+}
+async function sendVideo(chatId, videoUrl, caption = "", replyToMessageId) {
+  return axiosInstance
+    .post("sendVideo", {
+      chat_id: chatId,
+      video: videoUrl,
+      caption,
+      reply_to_message_id: replyToMessageId,
+    })
+    .catch((ex) => {
+      errorHandler(ex, "sendVideo", "axios");
     });
 }
 async function updateMessage(chatId, messageId, newText, inlineKb) {
@@ -147,22 +173,12 @@ const handleContents = async (chatId, gameType, contentType, enteredText) => {
     throw new Error("محتوایی برای این بخش وجود نداره :'(");
   }
 };
-const handleSendingPhoto = async (chatId, photoUrl, caption = "") => {
-  return axiosInstance
-    .post("sendPhoto", {
-      chat_id: chatId,
-      photo: photoUrl,
-      caption,
-    })
-    .catch((ex) => {
-      errorHandler(ex, "sendingPhoto", "axios");
-    });
-};
 
 // handling messages
 async function handleMessage(messageObj) {
   const messageText = messageObj.text || "";
   const chatId = messageObj.chat.id;
+  const messageId = messageObj.message_id;
   if (messageObj.chat.type === "private") {
     try {
       if (messageObj.from.username === "killgis") {
@@ -250,20 +266,6 @@ async function handleMessage(messageObj) {
             return;
         }
       }
-      // photo handling:
-      // if (
-      //   !messageObj.media_group_id &&
-      //   messageObj.caption &&
-      //   messageObj.photo &&
-      //   messageObj.photo.length
-      // ) {
-      //   try {
-      //     await processSavingPhoto(messageObj);
-      //     await sendMessage(chatId, "شد");
-      //   } catch (error) {
-      //     await sendMessage(chatId, "نشد دابش");
-      //   }
-      // }
       // admin tasks handling
       // if (messageText === "admin" || messageText === "ادمین") {
       //   try {
@@ -279,7 +281,7 @@ async function handleMessage(messageObj) {
       // }
       // hadnling my commands
       if (messageObj.from.username === "AMereSoul") {
-        if (messageText === "admin" || messageText === "ادمین") {
+        if (messageText.toLowerCase() === "admin" || messageText === "ادمین") {
           await sendKeyboard(chatId, mainPanelKb);
         }
         if (messageText === "save me") {
@@ -292,6 +294,47 @@ async function handleMessage(messageObj) {
             );
             await sendMessage(chatId, "done");
             return;
+          } catch (error) {
+            await sendMessage(chatId, error.message);
+          }
+        }
+        if (messageText.toLowerCase().startsWith("add")) {
+          try {
+            if (messageObj.reply_to_message) {
+              // const nextThingIndex = messageText.indexOf(" ");
+              const [add, uniqueId] = messageText.split(" ");
+              if (wuwaMedia.hasOwnProperty(uniqueId)) {
+                let mediaType = "";
+                let fileId = "";
+                if (messageObj.reply_to_message.photo) {
+                  mediaType = "photo";
+                  fileId =
+                    messageObj.reply_to_message.photo[
+                      messageObj.reply_to_message.photo.length - 1
+                    ].file_id;
+                } else if (messageObj.reply_to_message.video) {
+                  mediaType = "video";
+                  fileId = messageObj.reply_to_message.video.file_id;
+                } else {
+                  throw new Error("chie in akhe koni??????????");
+                }
+                const caption = messageObj.reply_to_message.caption
+                  ? messageObj.reply_to_message.caption
+                  : "";
+                await processSavingMedia(
+                  mediaType,
+                  fileId,
+                  caption,
+                  uniqueId,
+                  "wuwa"
+                );
+                await sendMessage(chatId, "DONE");
+              } else {
+                throw new Error("uidish tarif nashode");
+              }
+            } else {
+              throw new Error("reply nakardi");
+            }
           } catch (error) {
             await sendMessage(chatId, error.message);
           }
@@ -448,7 +491,15 @@ async function handleMessage(messageObj) {
     }
   } else if (messageObj.chat.type === "supergroup") {
     try {
-      return;
+      if (messageText.startsWith("/m")) {
+      }
+
+      switch (messageText) {
+        case "map":
+          return;
+        default:
+          return;
+      }
     } catch (error) {
       errorHandler(error, "handleMessage");
       return;

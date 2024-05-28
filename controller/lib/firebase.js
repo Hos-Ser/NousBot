@@ -202,6 +202,20 @@ const getHelperList = async (gameType, server) => {
     errorHandler(error, "firebase-getHelperList");
   }
 };
+const getMedia = async (gameType, uniqueId) => {
+  try {
+    const resultArray = [];
+    const collectionRef = collection(firestoreDb, `${gameType}_gp`);
+    const q = query(collectionRef, where("unique_id", "==", uniqueId));
+    const docSnap = await getDocs(q);
+    docSnap.forEach((doc) => {
+      resultArray.push(doc.data());
+    });
+    return resultArray[0];
+  } catch (error) {
+    errorHandler(error, "firebase-getMedia");
+  }
+};
 
 const getFirebaseApp = () => app;
 
@@ -217,4 +231,5 @@ module.exports = {
   getAdminList,
   getHelperList,
   deleteContent,
+  getMedia,
 };
