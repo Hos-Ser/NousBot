@@ -241,7 +241,7 @@ async function handleMessage(messageObj) {
         case "about":
           await sendMessage(
             chatId,
-            "❜❜ این ربات هر اطلاعاتی درباره گیم‌های\n⌗ Genshin Impact - ⌗ Honkai Starrail - ⌗ Wuthering Waves\nرو لازم داشته باشید در اختیارتون میزاره~ ❛❛\n❨ @IRImpactTeam ❩\n\nنظرات و پیشنهاداتت رو میتونی به این آیدی بفرستی @mentalissuesexe"
+            "❜❜ این ربات هر اطلاعاتی درباره گیم‌های\n⌗ Genshin Impact - ⌗ Honkai Starrail - ⌗ Wuthering Waves\nرو لازم داشته باشید در اختیارتون میزاره~ ❛❛\n❨ @IRImpactTeam ❩\n\nنظرات و پیشنهاداتت رو میتونی به این آیدی بفرستی @AMereSoul"
           );
           return;
         default:
@@ -553,7 +553,7 @@ async function handleCallbackQuery(cbqObj) {
           await updateMessage(
             chatId,
             messageId,
-            "حالا برام UID، رنک اکانتت رو بفرست"
+            "حالا برام UID و رنک اکانتت رو بفرست"
           );
           addSession(chatId, `user ${cbqData}`);
           return;
