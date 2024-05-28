@@ -519,8 +519,12 @@ async function handleMessage(messageObj) {
       return;
     }
     try {
-      if (wuwaMedia.hasOwnProperty(messageText)) {
-        const theMedia = await getMedia("wuwa", messageText);
+      if (messageText.startsWith("سالمی؟")) {
+        await sendReply(chatId, messageId, "گوه خوری؟");
+        return;
+      }
+      if (wuwaMedia.hasOwnProperty(messageText.toLowerCase())) {
+        const theMedia = await getMedia("wuwa", messageText.toLowerCase());
         if (theMedia) {
           const { caption, file_id, unique_id, media_type } = theMedia;
           if (media_type === "video") {
