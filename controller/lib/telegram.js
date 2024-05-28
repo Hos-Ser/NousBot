@@ -8,6 +8,7 @@ const {
   getHelperList,
   getSavedChatId,
   deleteContent,
+  getMedia,
 } = require("./firebase");
 const { errorHandler } = require("./helper");
 const {
@@ -314,6 +315,7 @@ async function handleMessage(messageObj) {
           } catch (error) {
             await sendMessage(chatId, error.message);
           }
+          return;
         }
         if (messageText.toLowerCase().startsWith("add")) {
           try {
@@ -346,6 +348,7 @@ async function handleMessage(messageObj) {
                   "wuwa"
                 );
                 await sendMessage(chatId, "DONE");
+                return;
               } else {
                 throw new Error("uidish tarif nashode");
               }
@@ -355,6 +358,7 @@ async function handleMessage(messageObj) {
           } catch (error) {
             await sendMessage(chatId, error.message);
           }
+          return;
         } else if (
           messageText.toLowerCase().includes("add admin") ||
           messageText.toLowerCase().includes("set admin")
@@ -366,6 +370,7 @@ async function handleMessage(messageObj) {
           } catch (error) {
             await sendMessage(chatId, error.message);
           }
+          return;
         }
       }
       // text handling:
@@ -507,16 +512,27 @@ async function handleMessage(messageObj) {
       return;
     }
   } else if (messageObj.chat.type === "supergroup") {
-    try {
-      if (messageObj.from.username === "AMereSoul") {
-        if (messageText.startsWith("say hi")) {
-          await sendReply(chatId, messageId, "خفه شو");
-        }
-      }
-    } catch (error) {
-      errorHandler(error, "handleMessage");
+    if (messageText.includes(" ")) {
       return;
     }
+    try {
+      if (wuwaMedia.hasOwnProperty(messageText)) {
+        const theMedia = await getMedia("wuwa", messageText);
+        if (theMedia) {
+          const { caption, file_id, unique_id, media_type } = theMedia;
+          if (media_type === "video") {
+            await sendVideo(chatId, file_id, caption, messageId);
+          }
+          if (media_type === "photo") {
+            await sendPhoto(chatId, file_id, caption, messageId);
+          }
+        }
+      }
+      return;
+    } catch (error) {
+      errorHandler(error, "handleMessage");
+    }
+    return;
   }
 }
 // handling bot inline keyboards

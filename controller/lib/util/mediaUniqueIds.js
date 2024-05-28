@@ -20,7 +20,7 @@ const wuwaMedia = {
   rover: "rover",
   //other
   map: "map",
-  troll: "troll",
+  hentai: "hentai",
 };
 
 module.exports = { wuwaMedia };
