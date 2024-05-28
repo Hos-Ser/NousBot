@@ -553,7 +553,7 @@ async function handleCallbackQuery(cbqObj) {
           await updateMessage(
             chatId,
             messageId,
-            "حالا برام UID، رنک و اطلاعات دیگه ای رو اگه لازم میدونی بفرست برام"
+            "حالا برام UID، رنک اکانتت رو بفرست"
           );
           addSession(chatId, `user ${cbqData}`);
           return;
