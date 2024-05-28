@@ -519,10 +519,6 @@ async function handleMessage(messageObj) {
       return;
     }
     try {
-      if (messageText.startsWith("سالمی؟")) {
-        await sendReply(chatId, messageId, "گوه خوری؟");
-        return;
-      }
       if (wuwaMedia.hasOwnProperty(messageText.toLowerCase())) {
         const theMedia = await getMedia("wuwa", messageText.toLowerCase());
         if (theMedia) {
