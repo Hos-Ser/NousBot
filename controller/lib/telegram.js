@@ -159,290 +159,300 @@ const handleSendingPhoto = async (chatId, photoUrl, caption = "") => {
     });
 };
 
-// handling bot PM
+// handling messages
 async function handleMessage(messageObj) {
   const messageText = messageObj.text || "";
   const chatId = messageObj.chat.id;
-  try {
-    if (messageObj.from.username === "killgis") {
-      const myChatId = await getMyChatId();
-      sendMessage(myChatId, messageText);
-      return;
-    }
-    // waiting for session handling
-    if (mustWaitForUser(chatId)) {
-      if (sessions[chatId].includes("user")) {
-        const [user, gameType, server] = sessions[chatId].split(" ");
-        deleteSession(chatId);
-        try {
-          const myChatId = await getMyChatId();
-          await sendKeyboard(
-            myChatId,
-            adminApprovalKbFunction(
-              `@${messageObj.chat.username} wants to help:\n${gameType} ${server}\n${messageText}`
-            )
-          );
-          await sendMessage(chatId, "یوزرت بعد از تایید ادمین اضافه میشه");
-        } catch (error) {
-          await sendMessage(chatId, "یه مشکلی پیش اومده یبار دیگه امتحان کن");
+  if (messageObj.chat.type === "private") {
+    try {
+      if (messageObj.from.username === "killgis") {
+        const myChatId = await getMyChatId();
+        sendMessage(myChatId, messageText);
+        return;
+      }
+      // waiting for session handling
+      if (mustWaitForUser(chatId)) {
+        if (sessions[chatId].includes("user")) {
+          const [user, gameType, server] = sessions[chatId].split(" ");
+          deleteSession(chatId);
+          try {
+            const myChatId = await getMyChatId();
+            await sendKeyboard(
+              myChatId,
+              adminApprovalKbFunction(
+                `@${messageObj.chat.username} wants to help:\n${gameType} ${server}\n${messageText}`
+              )
+            );
+            await sendMessage(chatId, "یوزرت بعد از تایید ادمین اضافه میشه");
+          } catch (error) {
+            await sendMessage(chatId, "یه مشکلی پیش اومده یبار دیگه امتحان کن");
+          }
+          return;
+        } else {
+          const [gameType, contentType] = sessions[chatId].split(" ");
+          deleteSession(chatId);
+          try {
+            if (contentType === "primo") {
+              await processPrimoCode(messageText, gameType);
+              await sendMessage(chatId, "done");
+              const subedChatIdList = await getSavedChatId("news", gameType);
+              if (subedChatIdList.length !== 0) {
+                await Promise.all(
+                  subedChatIdList.map(async (subedCI) => {
+                    await sendMessage(
+                      subedCI,
+                      `ریدیم کد جدید داریم ${gameType.toUpperCase()}`
+                    );
+                  })
+                );
+              }
+              return;
+            }
+            await processSavingContent(messageText, gameType, contentType);
+            await sendMessage(chatId, "done");
+            return;
+          } catch (error) {
+            sendMessage(chatId, error.message);
+          }
         }
         return;
-      } else {
-        const [gameType, contentType] = sessions[chatId].split(" ");
-        deleteSession(chatId);
-        try {
-          if (contentType === "primo") {
-            await processPrimoCode(messageText, gameType);
-            await sendMessage(chatId, "done");
-            const subedChatIdList = await getSavedChatId("news", gameType);
-            if (subedChatIdList.length !== 0) {
-              await Promise.all(
-                subedChatIdList.map(async (subedCI) => {
-                  await sendMessage(
-                    subedCI,
-                    `ریدیم کد جدید داریم ${gameType.toUpperCase()}`
-                  );
-                })
-              );
+      }
+      // command handling:
+      if (messageText.charAt(0) === "/") {
+        const command = messageText.substr(1);
+        switch (command) {
+          case "start":
+            await sendKeyboard(chatId, startKb);
+            return;
+          case "subtonews":
+            await sendKeyboard(chatId, subToNewsKb);
+            return;
+          case "unsubtonews":
+            try {
+              const err = await deleteSavedChatId(chatId);
+              if (err) throw new Error(err);
+              await sendMessage(chatId, "باشه دیگه بهت خبر نمیدیم :(");
+            } catch (error) {
+              await sendMessage(chatId, error.message);
             }
             return;
-          }
-          await processSavingContent(messageText, gameType, contentType);
-          await sendMessage(chatId, "done");
-          return;
-        } catch (error) {
-          sendMessage(chatId, error.message);
+          case "wannahelp":
+            await sendKeyboard(chatId, wannaHelpKb);
+            return;
+          case "about":
+            await sendMessage(
+              chatId,
+              "❜❜ این ربات هر اطلاعاتی درباره گیم‌های\n⌗ Genshin Impact - ⌗ Honkai Starrail - ⌗ Wuthering Waves\nرو لازم داشته باشید در اختیارتون میزاره~ ❛❛\n❨ @IRImpactTeam ❩\n\nنظرات و پیشنهاداتت رو میتونی به این آیدی بفرستی @AMereSoul"
+            );
+            return;
+          default:
+            await sendMessage(chatId, "in che kososherie");
+            return;
         }
       }
-      return;
-    }
-    // command handling:
-    if (messageText.charAt(0) === "/") {
-      const command = messageText.substr(1);
-      switch (command) {
-        case "start":
-          await sendKeyboard(chatId, startKb);
-          return;
-        case "subtonews":
-          await sendKeyboard(chatId, subToNewsKb);
-          return;
-        case "unsubtonews":
+      // photo handling:
+      // if (
+      //   !messageObj.media_group_id &&
+      //   messageObj.caption &&
+      //   messageObj.photo &&
+      //   messageObj.photo.length
+      // ) {
+      //   try {
+      //     await processSavingPhoto(messageObj);
+      //     await sendMessage(chatId, "شد");
+      //   } catch (error) {
+      //     await sendMessage(chatId, "نشد دابش");
+      //   }
+      // }
+      // admin tasks handling
+      // if (messageText === "admin" || messageText === "ادمین") {
+      //   try {
+      //     const adminArray = await getAdminList();
+      //     console.log(adminArray);
+      //     if (adminArray.includes(messageObj.from.username)) {
+      //       await sendKeyboard(chatId, mainPanelKb);
+      //     }
+      //     return;
+      //   } catch (error) {
+      //     errorHandler(error, "error occured in admin task");
+      //   }
+      // }
+      // hadnling my commands
+      if (messageObj.from.username === "AMereSoul") {
+        if (messageText === "admin" || messageText === "ادمین") {
+          await sendKeyboard(chatId, mainPanelKb);
+        }
+        if (messageText === "save me") {
           try {
-            const err = await deleteSavedChatId(chatId);
-            if (err) throw new Error(err);
-            await sendMessage(chatId, "باشه دیگه بهت خبر نمیدیم :(");
+            await processSavingChatId(
+              chatId,
+              "self",
+              messageObj.from.first_name,
+              "me king"
+            );
+            await sendMessage(chatId, "done");
+            return;
+          } catch (error) {
+            await sendMessage(chatId, error.message);
+          }
+        } else if (
+          messageText.toLowerCase().includes("add admin") ||
+          messageText.toLowerCase().includes("set admin")
+        ) {
+          try {
+            await processSavingAdmin(messageText);
+            await sendMessage(chatId, "done");
+            return;
+          } catch (error) {
+            await sendMessage(chatId, error.message);
+          }
+        }
+      }
+      // text handling:
+      switch (messageText) {
+        case "⋆˚₊⋆Genshin Impact๑⋆˚₊⊹":
+          await sendKeyboard(chatId, gameMenuKbFunction("⚝"));
+          return;
+        case "༶⋆˙⊹｡Honkai Starrail✯ ˛˚":
+          await sendKeyboard(chatId, gameMenuKbFunction("✯"));
+          return;
+        case "˚⋆˙✧⋆Wuthering Waves˚ ⋆·˚":
+          await sendKeyboard(chatId, gameMenuKbFunction("✧"));
+          return;
+        case "دنبال یکی میگردی که تو بازیت بهت کمک کنه؟":
+          await sendKeyboard(chatId, lookingForHelpKb);
+          return;
+        case "⚝ ریدیم کد":
+          await handlePrimoCode(chatId, "genshin");
+          return;
+        case "✯ ریدیم کد":
+          await handlePrimoCode(chatId, "honkai");
+          return;
+        case "✧ ریدیم کد":
+          await handlePrimoCode(chatId, "wuwa");
+          return;
+        case "⚝ آموزش":
+          try {
+            await handleContents(chatId, "genshin", "guide", messageText);
           } catch (error) {
             await sendMessage(chatId, error.message);
           }
           return;
-        case "wannahelp":
-          await sendKeyboard(chatId, wannaHelpKb);
+        case "✯ آموزش":
+          try {
+            await handleContents(chatId, "honkai", "guide", messageText);
+          } catch (error) {
+            await sendMessage(chatId, error.message);
+          }
           return;
-        case "about":
-          await sendMessage(
-            chatId,
-            "❜❜ این ربات هر اطلاعاتی درباره گیم‌های\n⌗ Genshin Impact - ⌗ Honkai Starrail - ⌗ Wuthering Waves\nرو لازم داشته باشید در اختیارتون میزاره~ ❛❛\n❨ @IRImpactTeam ❩\n\nنظرات و پیشنهاداتت رو میتونی به این آیدی بفرستی @AMereSoul"
-          );
+        case "✧ آموزش":
+          try {
+            await handleContents(chatId, "wuwa", "guide", messageText);
+          } catch (error) {
+            await sendMessage(chatId, error.message);
+          }
+          return;
+        case "⚝ داستان":
+          try {
+            await handleContents(chatId, "genshin", "story", messageText);
+          } catch (error) {
+            await sendMessage(chatId, error.message);
+          }
+          return;
+        case "✯ داستان":
+          try {
+            await handleContents(chatId, "honkai", "story", messageText);
+          } catch (error) {
+            await sendMessage(chatId, error.message);
+          }
+          return;
+        case "✧ داستان":
+          try {
+            await handleContents(chatId, "wuwa", "story", messageText);
+          } catch (error) {
+            await sendMessage(chatId, error.message);
+          }
+          return;
+        case "⚝ بنر":
+          try {
+            await handleContents(chatId, "genshin", "banner", messageText);
+          } catch (error) {
+            await sendMessage(chatId, error.message);
+          }
+          return;
+        case "✯ بنر":
+          try {
+            await handleContents(chatId, "honkai", "banner", messageText);
+          } catch (error) {
+            await sendMessage(chatId, error.message);
+          }
+          return;
+        case "✧ بنر":
+          try {
+            await handleContents(chatId, "wuwa", "banner", messageText);
+          } catch (error) {
+            await sendMessage(chatId, error.message);
+          }
+          return;
+        case "⚝ اند گیم":
+          try {
+            await handleContents(chatId, "genshin", "abyss", messageText);
+          } catch (error) {
+            await sendMessage(chatId, error.message);
+          }
+          return;
+        case "✯ اند گیم":
+          try {
+            await handleContents(chatId, "honkai", "abyss", messageText);
+          } catch (error) {
+            await sendMessage(chatId, error.message);
+          }
+          return;
+        case "✧ اند گیم":
+          try {
+            await handleContents(chatId, "wuwa", "abyss", messageText);
+          } catch (error) {
+            await sendMessage(chatId, error.message);
+          }
+          return;
+        case "⚝ بیلد کرکتر":
+          try {
+            await handleContents(chatId, "genshin", "build", messageText);
+          } catch (error) {
+            await sendMessage(chatId, error.message);
+          }
+          return;
+        case "✯ بیلد کرکتر":
+          try {
+            await handleContents(chatId, "honkai", "build", messageText);
+          } catch (error) {
+            await sendMessage(chatId, error.message);
+          }
+          return;
+        case "✧ بیلد کرکتر":
+          try {
+            await handleContents(chatId, "wuwa", "build", messageText);
+          } catch (error) {
+            await sendMessage(chatId, error.message);
+          }
+          return;
+        case "𓇻 منوی اصلی":
+          await sendKeyboard(chatId, startKb);
           return;
         default:
-          await sendMessage(chatId, "in che kososherie");
           return;
       }
+    } catch (error) {
+      errorHandler(error, "handleMessage");
+      return;
     }
-    // photo handling:
-    // if (
-    //   !messageObj.media_group_id &&
-    //   messageObj.caption &&
-    //   messageObj.photo &&
-    //   messageObj.photo.length
-    // ) {
-    //   try {
-    //     await processSavingPhoto(messageObj);
-    //     await sendMessage(chatId, "شد");
-    //   } catch (error) {
-    //     await sendMessage(chatId, "نشد دابش");
-    //   }
-    // }
-    // admin tasks handling
-    // if (messageText === "admin" || messageText === "ادمین") {
-    //   try {
-    //     const adminArray = await getAdminList();
-    //     console.log(adminArray);
-    //     if (adminArray.includes(messageObj.from.username)) {
-    //       await sendKeyboard(chatId, mainPanelKb);
-    //     }
-    //     return;
-    //   } catch (error) {
-    //     errorHandler(error, "error occured in admin task");
-    //   }
-    // }
-    // hadnling my commands
-    if (messageObj.from.username === "AMereSoul") {
-      if (messageText === "admin" || messageText === "ادمین") {
-        await sendKeyboard(chatId, mainPanelKb);
-      }
-      if (messageText === "save me") {
-        try {
-          await processSavingChatId(
-            chatId,
-            "self",
-            messageObj.from.first_name,
-            "me king"
-          );
-          await sendMessage(chatId, "done");
-          return;
-        } catch (error) {
-          await sendMessage(chatId, error.message);
-        }
-      } else if (
-        messageText.toLowerCase().includes("add admin") ||
-        messageText.toLowerCase().includes("set admin")
-      ) {
-        try {
-          await processSavingAdmin(messageText);
-          await sendMessage(chatId, "done");
-          return;
-        } catch (error) {
-          await sendMessage(chatId, error.message);
-        }
-      }
+  } else if (messageObj.chat.type === "supergroup") {
+    try {
+      return;
+    } catch (error) {
+      errorHandler(error, "handleMessage");
+      return;
     }
-    // text handling:
-    switch (messageText) {
-      case "⋆˚₊⋆Genshin Impact๑⋆˚₊⊹":
-        await sendKeyboard(chatId, gameMenuKbFunction("⚝"));
-        return;
-      case "༶⋆˙⊹｡Honkai Starrail✯ ˛˚":
-        await sendKeyboard(chatId, gameMenuKbFunction("✯"));
-        return;
-      case "˚⋆˙✧⋆Wuthering Waves˚ ⋆·˚":
-        await sendKeyboard(chatId, gameMenuKbFunction("✧"));
-        return;
-      case "دنبال یکی میگردی که تو بازیت بهت کمک کنه؟":
-        await sendKeyboard(chatId, lookingForHelpKb);
-        return;
-      case "⚝ ریدیم کد":
-        await handlePrimoCode(chatId, "genshin");
-        return;
-      case "✯ ریدیم کد":
-        await handlePrimoCode(chatId, "honkai");
-        return;
-      case "✧ ریدیم کد":
-        await handlePrimoCode(chatId, "wuwa");
-        return;
-      case "⚝ آموزش":
-        try {
-          await handleContents(chatId, "genshin", "guide", messageText);
-        } catch (error) {
-          await sendMessage(chatId, error.message);
-        }
-        return;
-      case "✯ آموزش":
-        try {
-          await handleContents(chatId, "honkai", "guide", messageText);
-        } catch (error) {
-          await sendMessage(chatId, error.message);
-        }
-        return;
-      case "✧ آموزش":
-        try {
-          await handleContents(chatId, "wuwa", "guide", messageText);
-        } catch (error) {
-          await sendMessage(chatId, error.message);
-        }
-        return;
-      case "⚝ داستان":
-        try {
-          await handleContents(chatId, "genshin", "story", messageText);
-        } catch (error) {
-          await sendMessage(chatId, error.message);
-        }
-        return;
-      case "✯ داستان":
-        try {
-          await handleContents(chatId, "honkai", "story", messageText);
-        } catch (error) {
-          await sendMessage(chatId, error.message);
-        }
-        return;
-      case "✧ داستان":
-        try {
-          await handleContents(chatId, "wuwa", "story", messageText);
-        } catch (error) {
-          await sendMessage(chatId, error.message);
-        }
-        return;
-      case "⚝ بنر":
-        try {
-          await handleContents(chatId, "genshin", "banner", messageText);
-        } catch (error) {
-          await sendMessage(chatId, error.message);
-        }
-        return;
-      case "✯ بنر":
-        try {
-          await handleContents(chatId, "honkai", "banner", messageText);
-        } catch (error) {
-          await sendMessage(chatId, error.message);
-        }
-        return;
-      case "✧ بنر":
-        try {
-          await handleContents(chatId, "wuwa", "banner", messageText);
-        } catch (error) {
-          await sendMessage(chatId, error.message);
-        }
-        return;
-      case "⚝ اند گیم":
-        try {
-          await handleContents(chatId, "genshin", "abyss", messageText);
-        } catch (error) {
-          await sendMessage(chatId, error.message);
-        }
-        return;
-      case "✯ اند گیم":
-        try {
-          await handleContents(chatId, "honkai", "abyss", messageText);
-        } catch (error) {
-          await sendMessage(chatId, error.message);
-        }
-        return;
-      case "✧ اند گیم":
-        try {
-          await handleContents(chatId, "wuwa", "abyss", messageText);
-        } catch (error) {
-          await sendMessage(chatId, error.message);
-        }
-        return;
-      case "⚝ بیلد کرکتر":
-        try {
-          await handleContents(chatId, "genshin", "build", messageText);
-        } catch (error) {
-          await sendMessage(chatId, error.message);
-        }
-        return;
-      case "✯ بیلد کرکتر":
-        try {
-          await handleContents(chatId, "honkai", "build", messageText);
-        } catch (error) {
-          await sendMessage(chatId, error.message);
-        }
-        return;
-      case "✧ بیلد کرکتر":
-        try {
-          await handleContents(chatId, "wuwa", "build", messageText);
-        } catch (error) {
-          await sendMessage(chatId, error.message);
-        }
-        return;
-      case "𓇻 منوی اصلی":
-        await sendKeyboard(chatId, startKb);
-        return;
-      default:
-        return;
-    }
-  } catch (error) {
-    errorHandler(error, "handleMessage");
   }
 }
 // handling bot inline keyboards
