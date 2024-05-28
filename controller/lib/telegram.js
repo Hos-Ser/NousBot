@@ -60,6 +60,23 @@ async function sendMessage(chatId, messageText, isParseMode = false) {
       errorHandler(ex, "sendMessage", "axios");
     });
 }
+async function sendReply(
+  chatId,
+  replyToMessageId,
+  messageText,
+  isParseMode = false
+) {
+  return axiosInstance
+    .post("sendMessage", {
+      chat_id: chatId,
+      text: messageText,
+      reply_to_message_id: replyToMessageId,
+      ...(isParseMode && { parse_mode: "Markdown" }),
+    })
+    .catch((ex) => {
+      errorHandler(ex, "sendMessage", "axios");
+    });
+}
 async function sendPhoto(chatId, photoUrl, caption = "", replyToMessageId) {
   return axiosInstance
     .post("sendPhoto", {
@@ -491,14 +508,10 @@ async function handleMessage(messageObj) {
     }
   } else if (messageObj.chat.type === "supergroup") {
     try {
-      if (messageText.startsWith("/m")) {
-      }
-
-      switch (messageText) {
-        case "map":
-          return;
-        default:
-          return;
+      if (messageObj.from.username === "AMereSoul") {
+        if (messageText.startsWith("say hi")) {
+          await sendReply(chatId, messageId, "خفه شو");
+        }
       }
     } catch (error) {
       errorHandler(error, "handleMessage");
