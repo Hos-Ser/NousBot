@@ -511,7 +511,10 @@ async function handleMessage(messageObj) {
       errorHandler(error, "handleMessage");
       return;
     }
-  } else if (messageObj.chat.type === "supergroup") {
+  } else if (
+    messageObj.chat.type === "supergroup" ||
+    messageObj.chat.type === "group"
+  ) {
     if (messageText.includes(" ")) {
       return;
     }
