@@ -277,7 +277,7 @@ async function handleMessage(messageObj) {
     //   }
     // }
     // hadnling my commands
-    if (messageObj.from.username === "mentalissuesexe") {
+    if (messageObj.from.username === "AMereSoul") {
       if (messageText === "admin" || messageText === "ادمین") {
         await sendKeyboard(chatId, mainPanelKb);
       }
@@ -663,7 +663,7 @@ async function handleChannelPost(postObj) {
   if (postObj.caption) {
     messageText = postObj.caption;
   }
-  const archiveChannelChatId = -1002119532371;
+  const archiveChannelChatId = -1002171059188;
   try {
     if (
       ["IRWutheringWaves", "IRStarRail", "IRImpact"].includes(
@@ -686,7 +686,7 @@ async function handleChannelPost(postObj) {
       }
       return;
     }
-    if (postObj.chat.username === "noonegonnafindthischannel") {
+    if (postObj.chat.username === "NousBot_archive") {
       if (postObj.forward_from_chat) {
         const meh = messageText.substring(messageText.indexOf("\n") + 1).trim();
         const title = meh.substring(0, meh.indexOf("\n"));
@@ -698,13 +698,13 @@ async function handleChannelPost(postObj) {
       }
       return;
     }
-    if (postObj.chat.username === "NousTheBot_Archive") {
-      await sendMessage(
-        archiveChannelChatId,
-        `${messageText}\nhttps://t.me/${postObj.chat.username}/${postObj.message_id}`
-      );
-      return;
-    }
+    // if (postObj.chat.username === "NousTheBot_Archive") {
+    //   await sendMessage(
+    //     archiveChannelChatId,
+    //     `${messageText}\nhttps://t.me/${postObj.chat.username}/${postObj.message_id}`
+    //   );
+    //   return;
+    // }
     return;
   } catch (error) {
     errorHandler(error, "handleChannelPost");
