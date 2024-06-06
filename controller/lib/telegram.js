@@ -1,3 +1,4 @@
+const NodeCache = require("node-cache");
 const { getAxiosInstance } = require("./axios");
 const {
   getPrimoCode,
@@ -8,7 +9,7 @@ const {
   getHelperList,
   getSavedChatId,
   deleteContent,
-  getMedia,
+  getAllMedia,
 } = require("./firebase");
 const { errorHandler } = require("./helper");
 const {
@@ -37,6 +38,7 @@ const MY_TOKEN = process.env.TG_BOT_TOKEN;
 const BASE_URL = `https://api.telegram.org/bot${MY_TOKEN}`;
 const axiosInstance = getAxiosInstance(BASE_URL);
 const sessions = {};
+const wuwaCache = new NodeCache();
 
 //sesson management
 const addSession = (chatId, valueString) => {
@@ -47,6 +49,23 @@ const deleteSession = (chatId) => {
 };
 const mustWaitForUser = (chatId) => {
   return sessions.hasOwnProperty(chatId);
+};
+const renewCache = async (cache, gpName) => {
+  cache.flushAll();
+  const allMediaArray = await getAllMedia(gpName);
+  allMediaArray.forEach((obj) => {
+    cache.set(obj.unique_alt, {
+      file_id: obj.file_id,
+      caption: obj.caption,
+      media_type: obj.media_type,
+    });
+    cache.set(obj.unique_id, {
+      file_id: obj.file_id,
+      caption: obj.caption,
+      media_type: obj.media_type,
+    });
+  });
+  return;
 };
 
 // axios things
@@ -145,6 +164,16 @@ async function updateInlineKeyboard(chatId, messageId, newKeyboard) {
       errorHandler(ex, "updateInlineKeyboard", "axios");
     });
 }
+async function answerInlineQuery(inlineQueryId, results) {
+  return axiosInstance
+    .post("answerInlineQuery", {
+      inline_query_id: inlineQueryId,
+      results,
+    })
+    .catch((ex) => {
+      errorHandler(ex, "answerInlineQuery", "axios");
+    });
+}
 /**
  *
  * @param {"genshin"|"honkai"|"wuthering"} game
@@ -197,13 +226,9 @@ async function handleMessage(messageObj) {
   const messageText = messageObj.text || "";
   const chatId = messageObj.chat.id;
   const messageId = messageObj.message_id;
+  const chatUsername = messageObj.chat.username;
   if (messageObj.chat.type === "private") {
     try {
-      if (messageObj.from.username === "killgis") {
-        const myChatId = await getMyChatId();
-        sendMessage(myChatId, messageText);
-        return;
-      }
       // waiting for session handling
       if (mustWaitForUser(chatId)) {
         if (sessions[chatId].includes("user")) {
@@ -214,7 +239,7 @@ async function handleMessage(messageObj) {
             await sendKeyboard(
               myChatId,
               adminApprovalKbFunction(
-                `@${messageObj.chat.username} wants to help:\n${gameType} ${server}\n${messageText}`
+                `@${chatUsername} wants to help:\n${gameType} ${server}\n${messageText}`
               )
             );
             await sendMessage(chatId, "یوزرت بعد از تایید ادمین اضافه میشه");
@@ -345,7 +370,8 @@ async function handleMessage(messageObj) {
                   fileId,
                   caption,
                   uniqueId,
-                  "wuwa"
+                  "",
+                  "wuwa_gp"
                 );
                 await sendMessage(chatId, "DONE");
                 return;
@@ -511,24 +537,97 @@ async function handleMessage(messageObj) {
       errorHandler(error, "handleMessage");
       return;
     }
-  } else if (
-    messageObj.chat.type === "supergroup" ||
-    messageObj.chat.type === "group"
-  ) {
-    if (messageText.includes(" ")) {
-      return;
+  } else if (messageObj.chat.type === "supergroup") {
+    let gpName = "";
+    switch (chatUsername) {
+      case "WutheringWavesGP":
+        gpName = "wuwa_gp";
+        break;
+      case "asdasdasdasddsadsdada":
+        gpName = "wuwa_gp";
+        break;
+      default:
+        return;
     }
     try {
-      if (wuwaMedia.hasOwnProperty(messageText.toLowerCase())) {
-        const theMedia = await getMedia("wuwa", messageText.toLowerCase());
-        if (theMedia) {
-          const { caption, file_id, unique_id, media_type } = theMedia;
-          if (media_type === "video") {
-            await sendVideo(chatId, file_id, caption, messageId);
+      if (wuwaCache.keys().length === 0) {
+        await renewCache(wuwaCache, gpName);
+      }
+      if (messageObj.from.username === "AMereSoul") {
+        if (messageText.toLowerCase().startsWith("add")) {
+          if (!messageObj.reply_to_message) {
+            await sendReply(chatId, messageId, "No Reply");
+            return;
           }
-          if (media_type === "photo") {
-            await sendPhoto(chatId, file_id, caption, messageId);
+
+          const uniqText = messageText.toLowerCase().substring(3).trim();
+          if (uniqText === "") return;
+          let uniqEng = "";
+          let uniqPer = "";
+          if (uniqText.includes("\n")) {
+            uniqEng = uniqText.substring(0, uniqText.indexOf("\n")).trim();
+            uniqPer = uniqText.substring(uniqText.indexOf("\n") + 1).trim();
+          } else {
+            uniqEng = uniqText;
           }
+
+          if (wuwaCache.has(uniqEng) || (uniqPer && wuwaCache.has(uniqPer))) {
+            await sendReply(chatId, messageId, "تکراریه");
+          } else {
+            let mediaType = "";
+            let fileId = "";
+            let caption = "";
+            if (messageObj.reply_to_message.text) {
+              mediaType = "text";
+              fileId = messageObj.reply_to_message.text;
+            } else if (messageObj.reply_to_message.photo) {
+              mediaType = "photo";
+              fileId =
+                messageObj.reply_to_message.photo[
+                  messageObj.reply_to_message.photo.length - 1
+                ].file_id;
+              caption = messageObj.reply_to_message.caption
+                ? messageObj.reply_to_message.caption
+                : "";
+            } else if (messageObj.reply_to_message.video) {
+              mediaType = "video";
+              fileId = messageObj.reply_to_message.video.file_id;
+              caption = messageObj.reply_to_message.caption
+                ? messageObj.reply_to_message.caption
+                : "";
+            } else return;
+            await processSavingMedia(
+              mediaType,
+              fileId,
+              caption,
+              uniqEng,
+              uniqPer,
+              gpName
+            );
+            wuwaCache.set(uniqEng, {
+              file_id: fileId,
+              caption: caption,
+              media_type: mediaType,
+            });
+            wuwaCache.set(uniqPer, {
+              file_id: fileId,
+              caption: caption,
+              media_type: mediaType,
+            });
+          }
+          return;
+        }
+      }
+      if (wuwaCache.has(messageText.toLowerCase())) {
+        const { caption, file_id, media_type } = wuwaCache.get(
+          messageText.toLowerCase()
+        );
+        if (media_type === "video") {
+          await sendVideo(chatId, file_id, caption, messageId);
+        } else if (media_type === "photo") {
+          await sendPhoto(chatId, file_id, caption, messageId);
+        } else if (media_type === "text") {
+          await sendReply(chatId, messageId, file_id);
         }
       }
       return;
@@ -803,4 +902,33 @@ async function handleChannelPost(postObj) {
     errorHandler(error, "handleChannelPost");
   }
 }
-module.exports = { handleMessage, handleCallbackQuery, handleChannelPost };
+// handling inline queries
+async function handleInlineQuery(inlineObj) {
+  const queryId = inlineObj.id;
+  const queryText = inlineObj.query;
+  let results = [];
+  if (queryText) {
+    let numericId = 0;
+    results = database.items
+      .filter((item) =>
+        item.title.toLowerCase().includes(queryText.toLowerCase())
+      )
+      .map((item) => ({
+        type: "photo",
+        id: numericId++,
+        photo_file_id: item.file_id,
+        title: item.title,
+        description: item.description,
+        caption: item.description,
+      }));
+  }
+
+  await answerInlineQuery(queryId, results);
+  return;
+}
+module.exports = {
+  handleMessage,
+  handleCallbackQuery,
+  handleChannelPost,
+  handleInlineQuery,
+};

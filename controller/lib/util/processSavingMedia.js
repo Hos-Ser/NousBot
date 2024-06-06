@@ -1,10 +1,10 @@
 const { uploadProcessedData } = require("../firebase");
 /**
  *
- * @param {"video"|"photo"} mediaType
+ * @param {"video"|"photo"|"text"} mediaType
  * @param {string} fileId
  * @param {string} caption
- * @param {"wuwa"|"genshin"|"honkai"} gameType
+ * @param {"wuwa_gp"|"genshin_gp"|"honkai_gp"} gpName
  * @returns
  */
 const processSavingMedia = async (
@@ -12,17 +12,20 @@ const processSavingMedia = async (
   fileId,
   caption = "",
   uniqueId,
-  gameType
+  uniqueAlt,
+  gpName
 ) => {
   await uploadProcessedData(
     {
       media_type: mediaType,
       file_id: fileId,
       caption,
+      unique_alt: uniqueAlt,
       unique_id: uniqueId,
     },
-    `${gameType}_gp`
+    gpName
   );
+
   return;
 };
 

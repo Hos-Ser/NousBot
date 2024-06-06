@@ -2,6 +2,7 @@ const {
   handleMessage,
   handleCallbackQuery,
   handleChannelPost,
+  handleInlineQuery,
 } = require("./lib/telegram");
 const { errorHandler } = require("./lib/helper");
 
@@ -23,6 +24,11 @@ async function handler(req, method) {
       await handleChannelPost(postObj);
       return "Success";
     }
+    // if (body && body.inline_query) {
+    //   const postObj = body.inline_query;
+    //   await handleInlineQuery(postObj);
+    //   return "Success";
+    // }
 
     return "Unknown request";
   } catch (error) {
