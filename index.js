@@ -9,7 +9,7 @@ app.use(express.json());
 initializeFirebaseApp();
 
 app.post("*", async (req, res) => {
-  console.log(req.body);
+  // console.log(req.body);
   res.send(await handler(req, "POST"));
 });
 

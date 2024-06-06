@@ -313,7 +313,6 @@ async function handleMessage(messageObj) {
       // if (messageText === "admin" || messageText === "ادمین") {
       //   try {
       //     const adminArray = await getAdminList();
-      //     console.log(adminArray);
       //     if (adminArray.includes(messageObj.from.username)) {
       //       await sendKeyboard(chatId, mainPanelKb);
       //     }
@@ -543,9 +542,9 @@ async function handleMessage(messageObj) {
       case "WutheringWavesGP":
         gpName = "wuwa_gp";
         break;
-      case "asdasdasdasddsadsdada":
-        gpName = "wuwa_gp";
-        break;
+      // case "asdasdasdasddsadsdada":
+      //   gpName = "wuwa_gp";
+      //   break;
       default:
         return;
     }

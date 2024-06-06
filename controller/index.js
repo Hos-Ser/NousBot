@@ -6,7 +6,7 @@ const {
 } = require("./lib/telegram");
 const { errorHandler } = require("./lib/helper");
 
-async function handler(req, method) {
+async function handler(req) {
   try {
     const { body } = req;
     if (body && body.message) {
