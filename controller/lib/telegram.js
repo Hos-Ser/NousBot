@@ -613,11 +613,12 @@ async function handleMessage(messageObj) {
               caption: caption,
               media_type: mediaType,
             });
+            await sendReply(chatId, messageId, "Done!");
           }
           return;
         }
       }
-      if (wuwaCache.has(messageText.toLowerCase())) {
+      if (wuwaCache.has(messageText.toLowerCase()) && messageText) {
         const { caption, file_id, media_type } = wuwaCache.get(
           messageText.toLowerCase()
         );
