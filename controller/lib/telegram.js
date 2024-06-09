@@ -322,7 +322,13 @@ async function handleMessage(messageObj) {
       //   }
       // }
       // hadnling my commands
-      if (messageObj.from.username === "AMereSoul") {
+      if (chatUsername === "AMereSoul") {
+        if (messageObj.photo) {
+          await sendMessage(
+            chatId,
+            messageObj.photo[messageObj.photo.length - 1].file_id
+          );
+        }
         if (messageText.toLowerCase() === "admin" || messageText === "ادمین") {
           await sendKeyboard(chatId, mainPanelKb);
         }
