@@ -323,12 +323,6 @@ async function handleMessage(messageObj) {
       // }
       // hadnling my commands
       if (chatUsername === "AMereSoul") {
-        if (messageObj.photo) {
-          await sendMessage(
-            chatId,
-            messageObj.photo[messageObj.photo.length - 1].file_id
-          );
-        }
         if (messageText.toLowerCase() === "admin" || messageText === "ادمین") {
           await sendKeyboard(chatId, mainPanelKb);
         }
@@ -619,7 +613,7 @@ async function handleMessage(messageObj) {
               caption: caption,
               media_type: mediaType,
             });
-            await sendReply(chatId, messageId, "Done!");
+            await sendReply(chatId, messageId, "Okie Dokie");
           }
           return;
         }
