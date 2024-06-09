@@ -323,6 +323,15 @@ async function handleMessage(messageObj) {
       // }
       // hadnling my commands
       if (chatUsername === "AMereSoul") {
+        if (messageObj.photo) {
+          await sendMessage(
+            chatId,
+            messageObj.photo[messageObj.photo.length - 1].file_id
+          );
+        }
+        if (messageObj.video) {
+          await sendMessage(chatId, messageObj.video.file_id);
+        }
         if (messageText.toLowerCase() === "admin" || messageText === "ادمین") {
           await sendKeyboard(chatId, mainPanelKb);
         }
@@ -553,6 +562,11 @@ async function handleMessage(messageObj) {
         await renewCache(wuwaCache, gpName);
       }
       if (messageObj.from.username === "AMereSoul") {
+        if (messageText.toLowerCase() === "recache") {
+          await renewCache(wuwaCache, gpName);
+          await deleteMessage(chatId, messageId);
+          return;
+        }
         if (messageText.toLowerCase() === "content list") {
           let finalMessage = "";
           let i = 1;
@@ -560,6 +574,7 @@ async function handleMessage(messageObj) {
             .keys()
             .forEach((val) => (finalMessage += `${i++}. \`${val}\`\n`));
           await sendReply(chatId, messageId, finalMessage, true);
+          return;
         }
         if (messageText.toLowerCase().startsWith("add")) {
           if (!messageObj.reply_to_message) {
