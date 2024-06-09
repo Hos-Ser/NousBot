@@ -553,6 +553,14 @@ async function handleMessage(messageObj) {
         await renewCache(wuwaCache, gpName);
       }
       if (messageObj.from.username === "AMereSoul") {
+        if (messageText.toLowerCase() === "content list") {
+          let finalMessage = "";
+          let i = 1;
+          wuwaCache
+            .keys()
+            .forEach((val) => (finalMessage += `${i++}. \`${val}\`\n`));
+          await sendReply(chatId, messageId, finalMessage, true);
+        }
         if (messageText.toLowerCase().startsWith("add")) {
           if (!messageObj.reply_to_message) {
             await sendReply(chatId, messageId, "No Reply");
