@@ -613,7 +613,7 @@ async function handleMessage(messageObj) {
               caption: caption,
               media_type: mediaType,
             });
-            await sendReply(chatId, messageId, "Okie Dokie");
+            await sendReply(chatId, messageId, "Okie Dokie!");
           }
           return;
         }
