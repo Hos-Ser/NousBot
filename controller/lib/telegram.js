@@ -10,6 +10,8 @@ const {
   getSavedChatId,
   deleteContent,
   getAllMedia,
+  getEventList,
+  getEvent,
 } = require("./firebase");
 const { errorHandler } = require("./helper");
 const {
@@ -32,7 +34,7 @@ const processSavingChatId = require("./util/processSavingChatId");
 const processSavingContent = require("./util/processSavingContent");
 const processSavingHelperUser = require("./util/processSavingHelperUser");
 const processSavingMedia = require("./util/processSavingMedia");
-const { wuwaMedia } = require("./util/mediaUniqueIds");
+const processSavingEvent = require("./util/processSavingEvent");
 
 const MY_TOKEN = process.env.TG_BOT_TOKEN;
 const BASE_URL = `https://api.telegram.org/bot${MY_TOKEN}`;
@@ -220,7 +222,26 @@ const handleContents = async (chatId, gameType, contentType, enteredText) => {
     throw new Error("محتوایی برای این بخش وجود نداره :'(");
   }
 };
-
+const handleEvents = async (gpName) => {
+  const eventList = await getEventList(gpName);
+  if (eventList.length === 0) {
+    throw new Error("Timeline Is Empty!");
+  }
+  let finalMessage = "تایم لاین ایونت ها ⏳\n";
+  eventList.forEach((val) => {
+    const currentDate = new Date();
+    const days = parseInt(
+      (val.expire_at.toDate().getTime() - currentDate.getTime()) /
+        (1000 * 60 * 60 * 24)
+    );
+    if (val.explanation) {
+      finalMessage += `\n 📌 [${val.event_name}](https://t.me/NousTheBot?start=${val.link_param}) --- ${days}`;
+    } else {
+      finalMessage += `\n 📌 ${val.event_name} --- ${days}`;
+    }
+  });
+  throw new Error(finalMessage);
+};
 // handling messages
 async function handleMessage(messageObj) {
   const messageText = messageObj.text || "";
@@ -305,22 +326,17 @@ async function handleMessage(messageObj) {
             );
             return;
           default:
-            await sendMessage(chatId, "in che kososherie");
+            if (command.startsWith("start")) {
+              const linkParam = command.substring(5).trim();
+              const theEvent = await getEvent(linkParam);
+              await sendMessage(
+                chatId,
+                `${theEvent.event_name}:\n - ${theEvent.explanation}`
+              );
+            }
             return;
         }
       }
-      // admin tasks handling
-      // if (messageText === "admin" || messageText === "ادمین") {
-      //   try {
-      //     const adminArray = await getAdminList();
-      //     if (adminArray.includes(messageObj.from.username)) {
-      //       await sendKeyboard(chatId, mainPanelKb);
-      //     }
-      //     return;
-      //   } catch (error) {
-      //     errorHandler(error, "error occured in admin task");
-      //   }
-      // }
       // hadnling my commands
       if (chatUsername === "AMereSoul") {
         if (messageObj.photo) {
@@ -349,53 +365,9 @@ async function handleMessage(messageObj) {
             await sendMessage(chatId, error.message);
           }
           return;
-        }
-        if (messageText.toLowerCase().startsWith("add")) {
-          try {
-            if (messageObj.reply_to_message) {
-              // const nextThingIndex = messageText.indexOf(" ");
-              const [add, uniqueId] = messageText.split(" ");
-              if (wuwaMedia.hasOwnProperty(uniqueId)) {
-                let mediaType = "";
-                let fileId = "";
-                if (messageObj.reply_to_message.photo) {
-                  mediaType = "photo";
-                  fileId =
-                    messageObj.reply_to_message.photo[
-                      messageObj.reply_to_message.photo.length - 1
-                    ].file_id;
-                } else if (messageObj.reply_to_message.video) {
-                  mediaType = "video";
-                  fileId = messageObj.reply_to_message.video.file_id;
-                } else {
-                  throw new Error("chie in akhe koni??????????");
-                }
-                const caption = messageObj.reply_to_message.caption
-                  ? messageObj.reply_to_message.caption
-                  : "";
-                await processSavingMedia(
-                  mediaType,
-                  fileId,
-                  caption,
-                  uniqueId,
-                  "",
-                  "wuwa_gp"
-                );
-                await sendMessage(chatId, "DONE");
-                return;
-              } else {
-                throw new Error("uidish tarif nashode");
-              }
-            } else {
-              throw new Error("reply nakardi");
-            }
-          } catch (error) {
-            await sendMessage(chatId, error.message);
-          }
-          return;
         } else if (
-          messageText.toLowerCase().includes("add admin") ||
-          messageText.toLowerCase().includes("set admin")
+          messageText.toLowerCase().startsWith("add admin") ||
+          messageText.toLowerCase().startsWith("set admin")
         ) {
           try {
             await processSavingAdmin(messageText);
@@ -551,9 +523,9 @@ async function handleMessage(messageObj) {
       case "WutheringWavesGP":
         gpName = "wuwa_gp";
         break;
-      // case "asdasdasdasddsadsdada":
-      //   gpName = "wuwa_gp";
-      //   break;
+      case "asdasdasdasddsadsdada":
+        gpName = "wuwa_gp";
+        break;
       default:
         return;
     }
@@ -562,9 +534,12 @@ async function handleMessage(messageObj) {
         await renewCache(wuwaCache, gpName);
       }
       if (messageObj.from.username === "AMereSoul") {
+        if (messageText.toLowerCase().startsWith("event")) {
+          await processSavingEvent(messageText, gpName);
+          return;
+        }
         if (messageText.toLowerCase() === "recache") {
           await renewCache(wuwaCache, gpName);
-          await deleteMessage(chatId, messageId);
           return;
         }
         if (messageText.toLowerCase() === "content list") {
@@ -640,6 +615,17 @@ async function handleMessage(messageObj) {
           }
           return;
         }
+      }
+      if (
+        messageText.toLowerCase() === "events" ||
+        messageText.toLowerCase() === "timeline"
+      ) {
+        try {
+          await handleEvents(gpName);
+        } catch (error) {
+          await sendReply(chatId, messageId, error.message, true);
+        }
+        return;
       }
       if (wuwaCache.has(messageText.toLowerCase()) && messageText) {
         const { caption, file_id, media_type } = wuwaCache.get(

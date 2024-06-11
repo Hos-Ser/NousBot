@@ -9,7 +9,9 @@ app.use(express.json());
 initializeFirebaseApp();
 
 app.post("*", async (req, res) => {
-  // console.log(req.body);
+  if (process.env.ENV === "DEV") {
+    console.log(req.body);
+  }
   res.send(await handler(req, "POST"));
 });
 

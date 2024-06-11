@@ -159,6 +159,44 @@ const getPrimoCode = async (gameType) => {
     errorHandler(error, "firebase-getPrimoCode");
   }
 };
+const getEventList = async (gpName) => {
+  try {
+    const resultArray = [];
+    const collectionRef = collection(firestoreDb, "timeline");
+    const currentTime = Timestamp.now();
+    const q = query(
+      collectionRef,
+      where("expire_at", ">=", currentTime),
+      where("gp_name", "==", gpName)
+    );
+    const docSnap = await getDocs(q);
+    docSnap.forEach((doc) => {
+      resultArray.push(doc.data());
+    });
+    return resultArray;
+  } catch (error) {
+    errorHandler(error, "firebase-getEventList");
+  }
+};
+const getEvent = async (linkParam) => {
+  try {
+    const resultArray = [];
+    const collectionRef = collection(firestoreDb, "timeline");
+    const currentTime = Timestamp.now();
+    const q = query(
+      collectionRef,
+      where("expire_at", ">=", currentTime),
+      where("link_param", "==", linkParam)
+    );
+    const docSnap = await getDocs(q);
+    docSnap.forEach((doc) => {
+      resultArray.push(doc.data());
+    });
+    return resultArray[0];
+  } catch (error) {
+    errorHandler(error, "firebase-getEvent");
+  }
+};
 const getAdminList = async () => {
   const resultArray = [];
   const collectionRef = collection(firestoreDb, "admin_username");
@@ -246,4 +284,6 @@ module.exports = {
   getHelperList,
   deleteContent,
   getAllMedia,
+  getEventList,
+  getEvent,
 };
