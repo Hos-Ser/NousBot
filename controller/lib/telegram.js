@@ -618,7 +618,8 @@ async function handleMessage(messageObj) {
       }
       if (
         messageText.toLowerCase() === "events" ||
-        messageText.toLowerCase() === "timeline"
+        messageText.toLowerCase() === "timeline" ||
+        messageText.toLowerCase() === "روزشمار"
       ) {
         try {
           await handleEvents(gpName);
