@@ -64,15 +64,28 @@ const deleteContent = async (gameType, contentType, postUrl) => {
     );
     const docSnap = await getDocs(q);
     if (!docSnap.empty) {
-      docSnap.forEach(async (data) => {
+      for (const data of docSnap.docs) {
         const docRef = doc(firestoreDb, gameType, data.id);
         await deleteDoc(docRef);
-        return;
-      });
+      }
     }
     return;
   } catch (error) {
     errorHandler(error, "firebase-deleteContent");
+  }
+};
+
+const deleteMedia = async (gpName, uniqueId) => {
+  try {
+    const collectionRef = collection(firestoreDb, gpName);
+    const q = query(collectionRef, where("unique_id", "==", uniqueId));
+    const docSnap = await getDocs(q);
+    if (!docSnap.empty) {
+      const docRef = doc(firestoreDb, gpName, docSnap.docs[0].id);
+      await deleteDoc(docRef);
+    }
+  } catch (error) {
+    errorHandler(error, "firebase-deleteMedia");
   }
 };
 
@@ -286,4 +299,5 @@ module.exports = {
   getAllMedia,
   getEventList,
   getEvent,
+  deleteMedia,
 };

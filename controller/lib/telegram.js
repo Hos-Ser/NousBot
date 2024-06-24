@@ -12,6 +12,7 @@ const {
   getAllMedia,
   getEventList,
   getEvent,
+  deleteMedia,
 } = require("./firebase");
 const { errorHandler } = require("./helper");
 const {
@@ -41,6 +42,13 @@ const BASE_URL = `https://api.telegram.org/bot${MY_TOKEN}`;
 const axiosInstance = getAxiosInstance(BASE_URL);
 const sessions = {};
 const wuwaCache = new NodeCache();
+const genshinCache = new NodeCache();
+const honkaiCache = new NodeCache();
+
+function isEnglish(input) {
+  const englishRegex = /^[A-Za-z\s]+$/;
+  return englishRegex.test(input);
+}
 
 //sesson management
 const addSession = (chatId, valueString) => {
@@ -176,6 +184,9 @@ async function answerInlineQuery(inlineQueryId, results) {
       errorHandler(ex, "answerInlineQuery", "axios");
     });
 }
+// const handleGpMessages = async (gpName, cache) => {
+
+// };
 /**
  *
  * @param {"genshin"|"honkai"|"wuthering"} game
@@ -526,6 +537,12 @@ async function handleMessage(messageObj) {
       case "asdasdasdasddsadsdada":
         gpName = "wuwa_gp";
         break;
+      // case "IRImpactGp":
+      //   gpName = "genshin_gp";
+      //   break;
+      // case "StarRailGP":
+      //   gpName = "honkai_gp";
+      //   break;
       default:
         return;
     }
@@ -615,6 +632,20 @@ async function handleMessage(messageObj) {
           }
           return;
         }
+        if (messageText.toLowerCase().startsWith("delete")) {
+          const uniqueId = messageText.substring(6).trim();
+          if (!isEnglish(uniqueId)) {
+            await sendReply(chatId, messageId, "Input is not in English");
+            return;
+          }
+          if (wuwaCache.has(uniqueId)) {
+            await deleteMedia(gpName, uniqueId);
+            await sendReply(chatId, messageId, "Done");
+            return;
+          }
+          await sendReply(chatId, messageId, "Content not found");
+          return;
+        }
       }
       if (
         messageText.toLowerCase() === "events" ||
@@ -647,7 +678,7 @@ async function handleMessage(messageObj) {
     return;
   }
 }
-// handling bot inline keyboards
+// handling inline keyboards
 async function handleCallbackQuery(cbqObj) {
   const messageText = cbqObj.message.text;
   const chatId = cbqObj.message.chat.id;
