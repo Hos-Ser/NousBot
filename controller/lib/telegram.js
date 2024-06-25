@@ -640,6 +640,7 @@ async function handleMessage(messageObj) {
           }
           if (wuwaCache.has(uniqueId)) {
             await deleteMedia(gpName, uniqueId);
+            await renewCache(wuwaCache, gpName);
             await sendReply(chatId, messageId, "Done");
             return;
           }
