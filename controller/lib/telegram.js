@@ -256,7 +256,9 @@ const handleEvents = async (gpName) => {
         hours - days * 24
       }`;
     } else {
-      finalMessage += `\n 📌 ${val.event_name} --- ${days}`;
+      finalMessage += `\n 📌 ${val.event_name} --- D:${days} H:${
+        hours - days * 24
+      }`;
     }
   });
   throw new Error(finalMessage);
