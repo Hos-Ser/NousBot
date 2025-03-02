@@ -333,7 +333,7 @@ async function handleMessage(messageObj) {
           case "about":
             await sendMessage(
               chatId,
-              "❜❜ این ربات هر اطلاعاتی درباره گیم‌های\n⌗ Genshin Impact - ⌗ Honkai Starrail - ⌗ Wuthering Waves\nرو لازم داشته باشید در اختیارتون میزاره~ ❛❛\n❨ @IRImpactTeam ❩\n\nنظرات و پیشنهاداتت رو میتونی به این آیدی بفرستی @AMereSoul"
+              "❜❜ این ربات هر اطلاعاتی درباره گیم‌های\n⌗ Genshin Impact - ⌗ Honkai Starrail - ⌗ Wuthering Waves\nرو لازم داشته باشید در اختیارتون میزاره~ ❛❛\n❨ @IRImpactTeam ❩\n\nنظرات و پیشنهاداتت رو میتونی به این آیدی بفرستی @sineve"
             );
             return;
           default:
@@ -349,7 +349,7 @@ async function handleMessage(messageObj) {
         }
       }
       // hadnling my commands
-      if (chatUsername === "AMereSoul") {
+      if (chatUsername === "sineve") {
         if (messageObj.photo) {
           await sendMessage(
             chatId,
@@ -550,7 +550,7 @@ async function handleMessage(messageObj) {
       if (wuwaCache.keys().length === 0) {
         await renewCache(wuwaCache, gpName);
       }
-      if (messageObj.from.username === "AMereSoul") {
+      if (messageObj.from.username === "sineve") {
         if (messageText.toLowerCase().startsWith("event")) {
           await processSavingEvent(messageText, gpName);
           return;
