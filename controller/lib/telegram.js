@@ -245,8 +245,16 @@ const handleEvents = async (gpName) => {
       (val.expire_at.toDate().getTime() - currentDate.getTime()) /
         (1000 * 60 * 60 * 24)
     );
+    const hours = parseInt(
+      (val.expire_at.toDate().getTime() - currentDate.getTime()) /
+        (1000 * 60 * 60)
+    );
     if (val.explanation) {
-      finalMessage += `\n 📌 [${val.event_name}](https://t.me/NousTheBot?start=${val.link_param}) --- ${days}`;
+      finalMessage += `\n 📌 [${
+        val.event_name
+      }](https://t.me/NousTheBot?start=${val.link_param}) --- D:${days} H:${
+        hours - days * 24
+      }`;
     } else {
       finalMessage += `\n 📌 ${val.event_name} --- ${days}`;
     }

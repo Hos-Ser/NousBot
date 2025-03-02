@@ -15,7 +15,7 @@ const processSavingEvent = async (messageText, gpName) => {
   }
   const linkParam = eventName.toLowerCase().split(" ").join("");
   const currentDate = new Date();
-  currentDate.setDate(currentDate.getDate() + parseInt(expireAt));
+  currentDate.setDate(currentDate.getHours + parseInt(expireAt));
   await uploadProcessedData(
     {
       event_name: eventName,
