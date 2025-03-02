@@ -563,10 +563,12 @@ async function handleMessage(messageObj) {
       if (messageObj.from.username === "sineve") {
         if (messageText.toLowerCase().startsWith("event")) {
           await processSavingEvent(messageText, gpName);
+          await sendReply(chatId, messageId, "ok");
           return;
         }
         if (messageText.toLowerCase() === "recache") {
           await renewCache(wuwaCache, gpName);
+          await sendReply(chatId, messageId, "ok");
           return;
         }
         if (messageText.toLowerCase() === "content list") {
@@ -583,7 +585,6 @@ async function handleMessage(messageObj) {
             await sendReply(chatId, messageId, "No Reply");
             return;
           }
-
           const uniqText = messageText.toLowerCase().substring(3).trim();
           if (uniqText === "") return;
           let uniqEng = "";
