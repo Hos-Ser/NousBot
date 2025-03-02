@@ -534,7 +534,7 @@ async function handleMessage(messageObj) {
       case "WutheringWavesGP":
         gpName = "wuwa_gp";
         break;
-      case "asdasdasdasddsadsdada":
+      case "wuwagp":
         gpName = "wuwa_gp";
         break;
       // case "IRImpactGp":
