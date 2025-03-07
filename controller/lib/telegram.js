@@ -343,7 +343,7 @@ async function handleMessage(messageObj) {
           case "about":
             await sendMessage(
               chatId,
-              "❜❜ این ربات هر اطلاعاتی درباره گیم‌های\n⌗ Genshin Impact - ⌗ Honkai Starrail - ⌗ Wuthering Waves\nرو لازم داشته باشید در اختیارتون میزاره~ ❛❛\n❨ @IRImpactTeam ❩\n\nنظرات و پیشنهاداتت رو میتونی به این آیدی بفرستی @sineve"
+              "❜❜ این ربات هر اطلاعاتی درباره گیم‌های\n⌗ Genshin Impact - ⌗ Honkai Starrail - ⌗ Wuthering Waves\nرو لازم داشته باشید در اختیارتون میزاره~ ❛❛\n❨ @IRCelesteTeam ❩\n\nنظرات و پیشنهاداتت رو میتونی به این آیدی بفرستی @sineve"
             );
             return;
           default:
