@@ -658,6 +658,11 @@ async function handleMessage(messageObj) {
           await sendReply(chatId, messageId, "Content not found");
           return;
         }
+        if (messageText.toLowerCase().startsWith("reply")) {
+          let replyText = messageText.substring(5).trim();
+          let replyId = messageObj.reply_to_message.message_id;
+          await sendReply(chatId, replyId, replyText);
+        }
       }
       if (
         messageText.toLowerCase() === "events" ||
