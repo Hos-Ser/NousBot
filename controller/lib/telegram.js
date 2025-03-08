@@ -547,9 +547,12 @@ async function handleMessage(messageObj) {
       case "wuwagp":
         gpName = "wuwa_gp";
         break;
-      // case "IRImpactGp":
-      //   gpName = "genshin_gp";
-      //   break;
+      case "IRImpactGp":
+        gpName = "genshin_gp";
+        break;
+      case "genimpgp":
+        gpName = "genshin_gp";
+        break;
       // case "StarRailGP":
       //   gpName = "honkai_gp";
       //   break;
