@@ -263,6 +263,145 @@ const handleEvents = async (gpName) => {
   });
   throw new Error(finalMessage);
 };
+const handleGpMessages = async (
+  gpCache,
+  gpName,
+  messageText,
+  messageObj,
+  messageId,
+  chatId
+) => {
+  if (gpCache.keys().length === 0) {
+    await renewCache(gpCache, gpName);
+  }
+  if (messageObj.from.username === "sineve") {
+    if (messageText.toLowerCase().startsWith("event")) {
+      await processSavingEvent(messageText, gpName);
+      await sendReply(chatId, messageId, "ok");
+      return;
+    }
+    if (messageText.toLowerCase() === "recache") {
+      await renewCache(gpCache, gpName);
+      await sendReply(chatId, messageId, "ok");
+      return;
+    }
+    if (messageText.toLowerCase() === "content list") {
+      let finalMessage = "";
+      let i = 1;
+      gpCache.keys().forEach((val) => (finalMessage += `${i++}. \`${val}\`\n`));
+      await sendReply(chatId, messageId, finalMessage, true);
+      return;
+    }
+    if (messageText.toLowerCase().startsWith("add")) {
+      if (!messageObj.reply_to_message) {
+        await sendReply(chatId, messageId, "No Reply");
+        return;
+      }
+      const uniqText = messageText.toLowerCase().substring(3).trim();
+      if (uniqText === "") return;
+      let uniqEng = "";
+      let uniqPer = "";
+      if (uniqText.includes("\n")) {
+        uniqEng = uniqText.substring(0, uniqText.indexOf("\n")).trim();
+        uniqPer = uniqText.substring(uniqText.indexOf("\n") + 1).trim();
+      } else {
+        uniqEng = uniqText;
+      }
+
+      if (gpCache.has(uniqEng) || (uniqPer && gpCache.has(uniqPer))) {
+        await sendReply(chatId, messageId, "تکراریه");
+      } else {
+        let mediaType = "";
+        let fileId = "";
+        let caption = "";
+        if (messageObj.reply_to_message.text) {
+          mediaType = "text";
+          fileId = messageObj.reply_to_message.text;
+        } else if (messageObj.reply_to_message.photo) {
+          mediaType = "photo";
+          fileId =
+            messageObj.reply_to_message.photo[
+              messageObj.reply_to_message.photo.length - 1
+            ].file_id;
+          caption = messageObj.reply_to_message.caption
+            ? messageObj.reply_to_message.caption
+            : "";
+        } else if (messageObj.reply_to_message.video) {
+          mediaType = "video";
+          fileId = messageObj.reply_to_message.video.file_id;
+          caption = messageObj.reply_to_message.caption
+            ? messageObj.reply_to_message.caption
+            : "";
+        } else return;
+        await processSavingMedia(
+          mediaType,
+          fileId,
+          caption,
+          uniqEng,
+          uniqPer,
+          gpName
+        );
+        gpCache.set(uniqEng, {
+          file_id: fileId,
+          caption: caption,
+          media_type: mediaType,
+        });
+        gpCache.set(uniqPer, {
+          file_id: fileId,
+          caption: caption,
+          media_type: mediaType,
+        });
+        await sendReply(chatId, messageId, "Okie Dokie!");
+      }
+      return;
+    }
+    if (messageText.toLowerCase().startsWith("delete")) {
+      const uniqueId = messageText.substring(6).trim();
+      if (!isEnglish(uniqueId)) {
+        await sendReply(chatId, messageId, "Input is not in English");
+        return;
+      }
+      if (gpCache.has(uniqueId)) {
+        await deleteMedia(gpName, uniqueId);
+        await renewCache(gpCache, gpName);
+        await sendReply(chatId, messageId, "Done");
+        return;
+      }
+      await sendReply(chatId, messageId, "Content not found");
+      return;
+    }
+    if (messageText.toLowerCase().startsWith("reply")) {
+      let replyText = messageText.substring(5).trim();
+      let replyId = messageObj.reply_to_message.message_id;
+      await sendReply(chatId, replyId, replyText);
+    }
+  }
+  if (
+    messageText.toLowerCase() === "events" ||
+    messageText.toLowerCase() === "timeline" ||
+    messageText.toLowerCase() === "روزشمار"
+  ) {
+    try {
+      await handleEvents(gpName);
+    } catch (error) {
+      await sendReply(chatId, messageId, error.message, true);
+    }
+    return;
+  }
+  if (gpCache.has(messageText.toLowerCase()) && messageText) {
+    const { caption, file_id, media_type } = gpCache.get(
+      messageText.toLowerCase()
+    );
+    if (media_type === "video") {
+      await sendVideo(chatId, file_id, caption, messageId);
+    } else if (media_type === "photo") {
+      await sendPhoto(chatId, file_id, caption, messageId);
+    } else if (media_type === "text") {
+      await sendReply(chatId, messageId, file_id);
+    }
+  }
+  return;
+};
 // handling messages
 async function handleMessage(messageObj) {
   const messageText = messageObj.text || "";
@@ -560,138 +699,40 @@ async function handleMessage(messageObj) {
         return;
     }
     try {
-      if (wuwaCache.keys().length === 0) {
-        await renewCache(wuwaCache, gpName);
+      switch (gpName) {
+        case "wuwa_gp":
+          await handleGpMessages(
+            wuwaCache,
+            gpName,
+            messageText,
+            messageObj,
+            messageId,
+            chatId
+          );
+          break;
+        case "genshin_gp":
+          await handleGpMessages(
+            genshinCache,
+            gpName,
+            messageText,
+            messageObj,
+            messageId,
+            chatId
+          );
+          break;
+        case "honkai_gp":
+          await handleGpMessages(
+            honkaiCache,
+            gpName,
+            messageText,
+            messageObj,
+            messageId,
+            chatId
+          );
+          break;
+        default:
+          break;
       }
-      if (messageObj.from.username === "sineve") {
-        if (messageText.toLowerCase().startsWith("event")) {
-          await processSavingEvent(messageText, gpName);
-          await sendReply(chatId, messageId, "ok");
-          return;
-        }
-        if (messageText.toLowerCase() === "recache") {
-          await renewCache(wuwaCache, gpName);
-          await sendReply(chatId, messageId, "ok");
-          return;
-        }
-        if (messageText.toLowerCase() === "content list") {
-          let finalMessage = "";
-          let i = 1;
-          wuwaCache
-            .keys()
-            .forEach((val) => (finalMessage += `${i++}. \`${val}\`\n`));
-          await sendReply(chatId, messageId, finalMessage, true);
-          return;
-        }
-        if (messageText.toLowerCase().startsWith("add")) {
-          if (!messageObj.reply_to_message) {
-            await sendReply(chatId, messageId, "No Reply");
-            return;
-          }
-          const uniqText = messageText.toLowerCase().substring(3).trim();
-          if (uniqText === "") return;
-          let uniqEng = "";
-          let uniqPer = "";
-          if (uniqText.includes("\n")) {
-            uniqEng = uniqText.substring(0, uniqText.indexOf("\n")).trim();
-            uniqPer = uniqText.substring(uniqText.indexOf("\n") + 1).trim();
-          } else {
-            uniqEng = uniqText;
-          }
-
-          if (wuwaCache.has(uniqEng) || (uniqPer && wuwaCache.has(uniqPer))) {
-            await sendReply(chatId, messageId, "تکراریه");
-          } else {
-            let mediaType = "";
-            let fileId = "";
-            let caption = "";
-            if (messageObj.reply_to_message.text) {
-              mediaType = "text";
-              fileId = messageObj.reply_to_message.text;
-            } else if (messageObj.reply_to_message.photo) {
-              mediaType = "photo";
-              fileId =
-                messageObj.reply_to_message.photo[
-                  messageObj.reply_to_message.photo.length - 1
-                ].file_id;
-              caption = messageObj.reply_to_message.caption
-                ? messageObj.reply_to_message.caption
-                : "";
-            } else if (messageObj.reply_to_message.video) {
-              mediaType = "video";
-              fileId = messageObj.reply_to_message.video.file_id;
-              caption = messageObj.reply_to_message.caption
-                ? messageObj.reply_to_message.caption
-                : "";
-            } else return;
-            await processSavingMedia(
-              mediaType,
-              fileId,
-              caption,
-              uniqEng,
-              uniqPer,
-              gpName
-            );
-            wuwaCache.set(uniqEng, {
-              file_id: fileId,
-              caption: caption,
-              media_type: mediaType,
-            });
-            wuwaCache.set(uniqPer, {
-              file_id: fileId,
-              caption: caption,
-              media_type: mediaType,
-            });
-            await sendReply(chatId, messageId, "Okie Dokie!");
-          }
-          return;
-        }
-        if (messageText.toLowerCase().startsWith("delete")) {
-          const uniqueId = messageText.substring(6).trim();
-          if (!isEnglish(uniqueId)) {
-            await sendReply(chatId, messageId, "Input is not in English");
-            return;
-          }
-          if (wuwaCache.has(uniqueId)) {
-            await deleteMedia(gpName, uniqueId);
-            await renewCache(wuwaCache, gpName);
-            await sendReply(chatId, messageId, "Done");
-            return;
-          }
-          await sendReply(chatId, messageId, "Content not found");
-          return;
-        }
-        if (messageText.toLowerCase().startsWith("reply")) {
-          let replyText = messageText.substring(5).trim();
-          let replyId = messageObj.reply_to_message.message_id;
-          await sendReply(chatId, replyId, replyText);
-        }
-      }
-      if (
-        messageText.toLowerCase() === "events" ||
-        messageText.toLowerCase() === "timeline" ||
-        messageText.toLowerCase() === "روزشمار"
-      ) {
-        try {
-          await handleEvents(gpName);
-        } catch (error) {
-          await sendReply(chatId, messageId, error.message, true);
-        }
-        return;
-      }
-      if (wuwaCache.has(messageText.toLowerCase()) && messageText) {
-        const { caption, file_id, media_type } = wuwaCache.get(
-          messageText.toLowerCase()
-        );
-        if (media_type === "video") {
-          await sendVideo(chatId, file_id, caption, messageId);
-        } else if (media_type === "photo") {
-          await sendPhoto(chatId, file_id, caption, messageId);
-        } else if (media_type === "text") {
-          await sendReply(chatId, messageId, file_id);
-        }
-      }
-      return;
     } catch (error) {
       errorHandler(error, "handleMessage");
     }
