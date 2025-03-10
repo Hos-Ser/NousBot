@@ -6,7 +6,13 @@ const processSavingEvent = async (messageText, gpName) => {
     .substring(5)
     .trim()
     .split("\n");
-  if (!eventName || !expireDay || isNaN(expireDay)) {
+  if (
+    !eventName ||
+    !expireDay ||
+    !expireHour ||
+    isNaN(expireDay) ||
+    isNaN(expireHour)
+  ) {
     return;
   }
   let explanation = "";

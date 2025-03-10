@@ -6,6 +6,7 @@ const {
   // setDoc,
   getDocs,
   addDoc,
+  updateDoc,
   collection,
   query,
   where,
@@ -210,6 +211,33 @@ const getEvent = async (linkParam) => {
     errorHandler(error, "firebase-getEvent");
   }
 };
+const checkAndResetExpiredEvents = async () => {
+  try {
+    const collectionRef = collection(firestoreDb, "timeline");
+    const currentTime = Timestamp.now();
+    const q = query(
+      collectionRef,
+      where("expire_at", "<", currentTime),
+      where("gp_name", "==", gpName)
+    );
+    const docSnap = await getDocs(q);
+    if (docSnap.empty) {
+      return;
+    }
+    docSnap.forEach(async (doc) => {
+      const event = doc.data();
+      if (event.reset_duration) {
+        const newExpirationTime = new Timestamp(
+          currentTime.seconds + event.reset_duration * 24 * 60 * 60 * 1000,
+          currentTime.nanoseconds
+        );
+        await updateDoc(doc.ref, { expire_at: newExpirationTime });
+      }
+    });
+  } catch (error) {
+    errorHandler(error, "firebase-checkAndResetExpiredEvents");
+  }
+};
 const getAdminList = async () => {
   const resultArray = [];
   const collectionRef = collection(firestoreDb, "admin_username");
@@ -300,4 +328,5 @@ module.exports = {
   getEventList,
   getEvent,
   deleteMedia,
+  checkAndResetExpiredEvents,
 };
