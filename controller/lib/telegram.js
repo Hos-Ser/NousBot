@@ -499,6 +499,7 @@ async function handleMessage(messageObj) {
       }
       // hadnling my commands
       if (chatUsername === "sineve") {
+        await sendMessage(chatId, parseInt(messageText));
         if (messageObj.photo) {
           await sendMessage(
             chatId,
@@ -692,9 +693,9 @@ async function handleMessage(messageObj) {
       case "genimpgp":
         gpName = "genshin_gp";
         break;
-      // case "StarRailGP":
-      //   gpName = "honkai_gp";
-      //   break;
+      case "StarRailGP":
+        gpName = "honkai_gp";
+        break;
       default:
         return;
     }
