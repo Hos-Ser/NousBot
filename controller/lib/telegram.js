@@ -393,7 +393,7 @@ const handleGpMessages = async (
   if (
     messageText.toLowerCase() === "events" ||
     messageText.toLowerCase() === "timeline" ||
-    messageText.toLowerCase() === "روزشمار"
+    messageText.toLowerCase() === "ایونت"
   ) {
     try {
       await handleEvents(gpName);
