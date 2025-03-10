@@ -499,7 +499,6 @@ async function handleMessage(messageObj) {
       }
       // hadnling my commands
       if (chatUsername === "sineve") {
-        await sendMessage(chatId, parseInt(messageText));
         if (messageObj.photo) {
           await sendMessage(
             chatId,
