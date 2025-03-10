@@ -1,7 +1,7 @@
 const { uploadProcessedData } = require("../firebase");
 const { Timestamp } = require("firebase/firestore");
 
-const processSavingIntervalEvent = async (messageText, gpName) => {
+const processSavingPeriodicEvent = async (messageText, gpName) => {
   const [eventName, expireDay, expireHour, resetDuration, ...rest] = messageText
     .substring(5)
     .trim()
@@ -15,7 +15,7 @@ const processSavingIntervalEvent = async (messageText, gpName) => {
     isNaN(expireDay) ||
     isNaN(expireHour)
   ) {
-    return;
+    throw new Error("something missing");
   }
   let explanation = "";
   if (rest.length !== 0) {
@@ -36,8 +36,7 @@ const processSavingIntervalEvent = async (messageText, gpName) => {
     },
     "timeline"
   );
-
   return;
 };
 
-module.exports = processSavingIntervalEvent;
+module.exports = processSavingPeriodicEvent;

@@ -36,6 +36,7 @@ const processSavingContent = require("./util/processSavingContent");
 const processSavingHelperUser = require("./util/processSavingHelperUser");
 const processSavingMedia = require("./util/processSavingMedia");
 const processSavingEvent = require("./util/processSavingEvent");
+const processSavingPeriodicEvent = require("./util/processSavingPeriodicEvent");
 
 const MY_TOKEN = process.env.TG_BOT_TOKEN;
 const BASE_URL = `https://api.telegram.org/bot${MY_TOKEN}`;
@@ -276,9 +277,22 @@ const handleGpMessages = async (
   }
   if (messageObj.from.username === "sineve") {
     if (messageText.toLowerCase().startsWith("event")) {
-      await processSavingEvent(messageText, gpName);
-      await sendReply(chatId, messageId, "ok");
-      return;
+      try {
+        await processSavingEvent(messageText, gpName);
+        await sendReply(chatId, messageId, "ok");
+        return;
+      } catch (error) {
+        await sendReply(chatId, messageId, error.message);
+      }
+    }
+    if (messageText.toLowerCase().startsWith("prd")) {
+      try {
+        await processSavingPeriodicEvent(messageText, gpName);
+        await sendReply(chatId, messageId, "ok");
+        return;
+      } catch (error) {
+        await sendReply(chatId, messageId, error.message);
+      }
     }
     if (messageText.toLowerCase() === "recache") {
       await renewCache(gpCache, gpName);

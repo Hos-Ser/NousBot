@@ -13,7 +13,7 @@ const processSavingEvent = async (messageText, gpName) => {
     isNaN(expireDay) ||
     isNaN(expireHour)
   ) {
-    return;
+    throw new Error("something missing");
   }
   let explanation = "";
   if (rest.length !== 0) {
