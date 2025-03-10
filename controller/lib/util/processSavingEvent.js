@@ -2,11 +2,11 @@ const { uploadProcessedData } = require("../firebase");
 const { Timestamp } = require("firebase/firestore");
 
 const processSavingEvent = async (messageText, gpName) => {
-  const [eventName, expireAt, ...rest] = messageText
+  const [eventName, expireDay, expireHour, ...rest] = messageText
     .substring(5)
     .trim()
     .split("\n");
-  if (!eventName || !expireAt || isNaN(expireAt)) {
+  if (!eventName || !expireDay || isNaN(expireDay)) {
     return;
   }
   let explanation = "";
@@ -15,7 +15,8 @@ const processSavingEvent = async (messageText, gpName) => {
   }
   const linkParam = eventName.toLowerCase().split(" ").join("");
   const currentDate = new Date();
-  currentDate.setHours(currentDate.getHours() + parseInt(expireAt));
+  currentDate.setDate(currentDate.getDate() + parseInt(expireDay));
+  currentDate.setHours(currentDate.getHours() + parseInt(expireHour));
   await uploadProcessedData(
     {
       event_name: eventName,
