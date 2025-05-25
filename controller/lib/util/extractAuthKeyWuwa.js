@@ -1,56 +1,57 @@
-const URL = require("url").URL;
-const URLSearchParams = require("url").URLSearchParams;
-
 function extractAuthKeyWuwa(url) {
+  console.log("[DEBUG] Starting URL processing:", url); // Log input
+
   try {
-    // Validate URL structure
-    if (!url.includes("aki-gm-resources-oversea.aki-game.net")) {
-      throw new Error("Invalid Wuthering Waves URL format");
+    // Basic validation
+    if (!url || typeof url !== "string") {
+      throw new Error("No URL provided");
     }
 
-    // Extract the token parameters from the URL
+    console.log("[DEBUG] Creating URL object"); // Track progress
     const urlObj = new URL(url);
-    const hashParams = new URLSearchParams(urlObj.hash.split("?")[1]);
 
-    // Required parameters for API calls
+    // Verify it's a WuWa URL
+    if (!urlObj.hostname.includes("aki-game.net")) {
+      throw new Error("Invalid Wuthering Waves URL");
+    }
+
+    console.log("[DEBUG] Processing hash parameters"); // Track progress
+    const hashPart = urlObj.hash.split("?")[1];
+    if (!hashPart) {
+      throw new Error("URL missing hash parameters");
+    }
+
+    const params = new URLSearchParams(hashPart);
     const requiredParams = [
       "svr_id",
       "player_id",
       "gacha_id",
-      "gacha_type",
-      "svr_area",
       "record_id",
       "resources_id",
     ];
 
-    // Verify all required parameters exist
-    const missingParams = requiredParams.filter(
-      (param) => !hashParams.has(param)
-    );
+    // Validate required parameters
+    const missingParams = requiredParams.filter((p) => !params.has(p));
     if (missingParams.length > 0) {
-      throw new Error(
-        `Missing required parameters: ${missingParams.join(", ")}`
-      );
+      throw new Error(`Missing parameters: ${missingParams.join(", ")}`);
     }
 
-    // Return the complete authentication object
-    return {
-      svr_id: hashParams.get("svr_id"),
-      player_id: hashParams.get("player_id"),
-      gacha_id: hashParams.get("gacha_id"),
-      gacha_type: hashParams.get("gacha_type"),
-      svr_area: hashParams.get("svr_area"),
-      record_id: hashParams.get("record_id"),
-      resources_id: hashParams.get("resources_id"),
-      lang: hashParams.get("lang") || "en",
-      platform: hashParams.get("platform") || "PC",
+    const authData = {
+      svr_id: params.get("svr_id"),
+      player_id: params.get("player_id"),
+      gacha_id: params.get("gacha_id"),
+      gacha_type: params.get("gacha_type") || "1",
+      record_id: params.get("record_id"),
+      resources_id: params.get("resources_id"),
+      lang: params.get("lang") || "en",
+      platform: params.get("platform") || "PC",
     };
+
+    console.log("[DEBUG] Extracted auth data:", authData); // Log output
+    return authData;
   } catch (error) {
-    console.error("AuthKey Extraction Error:", error);
-    throw new Error(
-      `Failed to extract authentication parameters: ${error.message}`
-    );
+    console.error("[ERROR] extractAuthKeyWuwa failed:", error);
+    throw new Error(`URL processing failed: ${error.message}`);
   }
 }
-
 module.exports = extractAuthKeyWuwa;

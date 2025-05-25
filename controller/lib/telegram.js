@@ -457,10 +457,21 @@ async function handleMessage(messageObj) {
           deleteSession(chatId);
           try {
             await sendMessage(chatId, "درحال پردازش...");
+
+            console.log("[DEBUG] Starting wish import process");
+            console.log("[DEBUG] User input:", messageText);
+
             const keyParams = extractAuthKeyWuwa(messageText);
-            await sendMessage(chatId, "درحال پردازش...");
+            console.log("[DEBUG] Extracted params:", keyParams);
+
             const result = await fetchWishHistoryWuwa(keyParams);
-            console.log(`THESE ARE THE RESULTS:\n${result}`);
+            console.log(
+              "[DEBUG] Wish history results:",
+              result.length,
+              "items"
+            );
+
+            return result;
           } catch (error) {
             await sendMessage(chatId, `یه مشکلی هست ${error}`);
           }

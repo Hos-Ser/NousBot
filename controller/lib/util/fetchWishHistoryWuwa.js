@@ -1,70 +1,44 @@
-const axios = require("axios");
-
 async function fetchWishHistoryWuwa(authParams) {
+  console.log("[DEBUG] Starting wish history fetch", authParams); // Log input
+
   try {
-    // Validate auth parameters
-    if (!authParams || typeof authParams !== "object") {
+    if (!authParams || !authParams.svr_id) {
       throw new Error("Invalid authentication parameters");
     }
 
-    // API endpoint (this might need adjustment based on actual API)
-    const baseUrl =
+    const apiUrl =
       "https://aki-gm-resources-oversea.aki-game.net/aki/gacha/api/record";
 
-    // Prepare request parameters
-    const params = {
-      svr_id: authParams.svr_id,
-      player_id: authParams.player_id,
-      gacha_id: authParams.gacha_id,
-      gacha_type: authParams.gacha_type,
-      svr_area: authParams.svr_area,
-      record_id: authParams.record_id,
-      resources_id: authParams.resources_id,
-      lang: authParams.lang,
-      platform: authParams.platform,
-      page: 1,
-      size: 20, // Max items per request
-    };
-
-    // Make the API request
-    const response = await axios.get(baseUrl, {
-      params,
+    console.log("[DEBUG] Making API request to:", apiUrl); // Track progress
+    const response = await axios.get(apiUrl, {
+      params: {
+        ...authParams,
+        page: 1,
+        size: 20,
+      },
       headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "User-Agent": "Mozilla/5.0",
         Referer: "https://aki-gm-resources-oversea.aki-game.net/",
-        Accept: "application/json",
       },
       timeout: 10000,
     });
 
-    // Check response status
-    if (response.data.code !== 0) {
-      throw new Error(`API Error: ${response.data.message || "Unknown error"}`);
+    console.log("[DEBUG] API response status:", response.status); // Log response
+
+    if (response.data?.code !== 0) {
+      throw new Error(response.data?.message || "API returned error");
     }
 
-    // Process the wish history
-    const wishHistory = response.data.data?.list || [];
-    return wishHistory.map((wish) => ({
-      id: wish.id,
-      name: wish.name,
-      type: wish.item_type,
-      rarity: wish.rank_type,
-      time: wish.time,
-      pity: wish.pity, // If available in response
-    }));
+    const wishes = response.data?.data?.list || [];
+    console.log("[DEBUG] Retrieved wishes count:", wishes.length); // Log results
+    return wishes;
   } catch (error) {
-    console.error("Fetch Error:", {
-      error: error.response?.data || error.message,
-      params: authParams ? { ...authParams, player_id: "REDACTED" } : null,
+    console.error("[ERROR] fetchWishHistoryWuwa failed:", {
+      error: error.message,
+      stack: error.stack,
+      response: error.response?.data,
     });
-
-    throw new Error(
-      error.response?.data?.message ||
-        error.message ||
-        "Failed to fetch wish history"
-    );
+    throw new Error(`Failed to fetch wishes: ${error.message}`);
   }
 }
-
 module.exports = fetchWishHistoryWuwa;
