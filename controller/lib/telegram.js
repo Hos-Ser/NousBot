@@ -46,57 +46,6 @@ const wuwaCache = new NodeCache();
 const genshinCache = new NodeCache();
 const honkaiCache = new NodeCache();
 
-// 1. Define all banner types and their parameters
-const QUERY_CONFIGURATIONS = [
-  { gacha_type: "1", gacha_id: "100023" }, // Current character banner
-  { gacha_type: "1", gacha_id: "100022" }, // Previous character banner
-  { gacha_type: "1", gacha_id: "100021" }, // Older character banner
-
-  // Weapon Banners
-  { gacha_type: "2", gacha_id: "200023" }, // Current weapon
-  { gacha_type: "2", gacha_id: "200022" }, // Previous weapon
-
-  // Standard & Beginner
-  { gacha_type: "3", gacha_id: "300023" }, // Standard
-  { gacha_type: "4", gacha_id: "400023" }, // Beginner
-
-  // Additional possible queries
-  { gacha_type: "1", gacha_id: "100020" }, // Older character
-  { gacha_type: "2", gacha_id: "200021" }, // Older weapon
-];
-async function queryAllBanners(authParams) {
-  const activeQueries = new Set();
-  let allWishes = [];
-
-  // Query all configured banners
-  await Promise.all(
-    QUERY_CONFIGURATIONS.map(async (config, index) => {
-      const queryId = `${config.gacha_type}-${config.gacha_id}`;
-      activeQueries.add(queryId);
-
-      try {
-        // Stagger requests (300ms apart)
-        await new Promise((resolve) => setTimeout(resolve, index * 300));
-
-        console.log(`Starting query ${queryId}`);
-        const wishes = await fetchWishHistory(authParams, config);
-
-        if (wishes.length > 0) {
-          console.log(`✅ ${queryId} returned ${wishes.length} wishes`);
-          allWishes.push(...wishes);
-        } else {
-          console.log(`⚠️ ${queryId} returned empty`);
-        }
-      } finally {
-        activeQueries.delete(queryId);
-      }
-    })
-  );
-
-  console.log(`Completed all queries. Total wishes: ${allWishes.length}`);
-  return allWishes.sort((a, b) => new Date(b.time) - new Date(a.time));
-}
-
 function isEnglish(input) {
   const englishRegex = /^[A-Za-z\s]+$/;
   return englishRegex.test(input);
@@ -493,6 +442,10 @@ async function handleMessage(messageObj) {
             await sendMessage(chatId, "یه مشکلی پیش اومده یبار دیگه امتحان کن");
           }
           return;
+        } else if (mustWaitForUser.includes("genshinpity")) {
+          await sendMessage(chatId, "Processing...");
+        } else if (mustWaitForUser.includes("wuwapity")) {
+          await sendMessage(chatId, "Processing...");
         } else {
           const [gameType, contentType] = sessions[chatId].split(" ");
           deleteSession(chatId);
@@ -528,6 +481,9 @@ async function handleMessage(messageObj) {
         switch (command) {
           case "start":
             await sendKeyboard(chatId, startKb);
+            return;
+          case "pity":
+            await sendKeyboard(chatId, pityCounterkb);
             return;
           case "subtonews":
             await sendKeyboard(chatId, subToNewsKb);
