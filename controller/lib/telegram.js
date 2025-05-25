@@ -49,6 +49,39 @@ const wuwaCache = new NodeCache();
 const genshinCache = new NodeCache();
 const honkaiCache = new NodeCache();
 
+async function fetchAllWishes(authParams) {
+  let allWishes = [];
+  let page = 1;
+  let attempts = 0;
+  const MAX_ATTEMPTS = 3;
+
+  while (attempts < MAX_ATTEMPTS) {
+    try {
+      const wishes = await fetchWishHistoryWuwa({
+        ...authParams,
+        page,
+        size: 20,
+      });
+
+      if (wishes.length === 0) break;
+
+      allWishes.push(...wishes);
+      page++;
+      attempts = 0; // Reset attempt counter on success
+
+      // Rate limiting
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    } catch (error) {
+      attempts++;
+      console.error(`Attempt ${attempts} failed:`, error.message);
+      if (attempts >= MAX_ATTEMPTS) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 2000)); // Wait 2s before retry
+    }
+  }
+
+  return allWishes;
+}
+
 function isEnglish(input) {
   const englishRegex = /^[A-Za-z\s]+$/;
   return englishRegex.test(input);
@@ -460,10 +493,8 @@ async function handleMessage(messageObj) {
             const keyParams = extractAuthKeyWuwa(messageText);
             await sendMessage(chatId, `${keyParams}`);
             await sendMessage(chatId, `fething started`);
-            const result = await fetchWishHistoryWuwa(keyParams);
-            await sendMessage(chatId, `fething finished`);
-
-            await sendMessage(chatId, `${result.length}`);
+            const result = await fetchAllWishes(keyParams);
+            await sendMessage(chatId, `fething finished ${result.length}`);
           } catch (error) {
             await sendMessage(chatId, `یه مشکلی هست \n${error}`);
           }

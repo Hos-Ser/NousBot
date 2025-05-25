@@ -1,13 +1,10 @@
 function extractAuthKeyWuwa(url) {
-  console.log("[DEBUG] Starting URL processing:", url); // Log input
-
   try {
     // Basic validation
     if (!url || typeof url !== "string") {
       throw new Error("No URL provided");
     }
 
-    console.log("[DEBUG] Creating URL object"); // Track progress
     const urlObj = new URL(url);
 
     // Verify it's a WuWa URL
@@ -15,7 +12,6 @@ function extractAuthKeyWuwa(url) {
       throw new Error("Invalid Wuthering Waves URL");
     }
 
-    console.log("[DEBUG] Processing hash parameters"); // Track progress
     const hashPart = urlObj.hash.split("?")[1];
     if (!hashPart) {
       throw new Error("URL missing hash parameters");
@@ -44,13 +40,11 @@ function extractAuthKeyWuwa(url) {
       record_id: params.get("record_id"),
       resources_id: params.get("resources_id"),
       lang: params.get("lang") || "en",
-      platform: params.get("platform") || "PC",
+      // platform: params.get("platform") || "PC",
     };
 
-    console.log("[DEBUG] Extracted auth data:", authData); // Log output
     return authData;
   } catch (error) {
-    console.error("[ERROR] extractAuthKeyWuwa failed:", error);
     throw new Error(`URL processing failed: ${error.message}`);
   }
 }
