@@ -38,6 +38,9 @@ const processSavingHelperUser = require("./util/processSavingHelperUser");
 const processSavingMedia = require("./util/processSavingMedia");
 const processSavingEvent = require("./util/processSavingEvent");
 const processSavingPeriodicEvent = require("./util/processSavingPeriodicEvent");
+const extractAuthParams = require("./pity_counter_utlls/extractAuthParams");
+const getAllGachaRecords = require("./pity_counter_utlls/getAllGachaRecords");
+const generateSummary = require("./pity_counter_utlls/generateSummary");
 
 const MY_TOKEN = process.env.TG_BOT_TOKEN;
 const BASE_URL = `https://api.telegram.org/bot${MY_TOKEN}`;
@@ -443,10 +446,27 @@ async function handleMessage(messageObj) {
             await sendMessage(chatId, "یه مشکلی پیش اومده یبار دیگه امتحان کن");
           }
           return;
-        } else if (mustWaitForUser.includes("genshinpity")) {
+        } else if (sessions[chatId].includes("genshinpity")) {
           await sendMessage(chatId, "Processing...");
-        } else if (mustWaitForUser.includes("wuwapity")) {
+          return;
+        } else if (sessions[chatId].includes("wuwapity")) {
           await sendMessage(chatId, "Processing...");
+          // Extract auth params
+          const authParams = extractAuthParams(messageText);
+          const records = await getAllGachaRecords(authParams);
+
+          if (!records || Object.keys(records).length === 0) {
+            await sendMessage(
+              chatId,
+              "❌ No gacha records found or the URL has expired."
+            );
+            return;
+          }
+          console.log(records);
+
+          const summary = generateSummary(records);
+          await sendMessage(chatId, summary, true);
+          return;
         } else {
           const [gameType, contentType] = sessions[chatId].split(" ");
           deleteSession(chatId);
