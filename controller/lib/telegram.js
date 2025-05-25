@@ -461,10 +461,10 @@ async function handleMessage(messageObj) {
             const keyParams = extractAuthKeyWuwa(messageText);
             // const result = await fetchWishHistoryWuwa(keyParams);
             const wuwaClient = new WuwaAPIClient({
-              recordId: authParams.record_id,
-              resourceId: authParams.resources_id,
-              playerId: authParams.player_id,
-              serverId: authParams.svr_id,
+              recordId: keyParams.record_id,
+              resourceId: keyParams.resources_id,
+              playerId: keyParams.player_id,
+              serverId: keyParams.svr_id,
             });
 
             const isValid = await wuwaClient.verifyAuth();
@@ -475,8 +475,8 @@ async function handleMessage(messageObj) {
 
             while (hasMore) {
               const wishes = await wuwaClient.getWishes({
-                gachaType: authParams.gacha_type,
-                lang: authParams.lang,
+                gachaType: keyParams.gacha_type,
+                lang: keyParams.lang,
                 page,
                 size: 20,
               });
