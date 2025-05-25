@@ -501,7 +501,7 @@ async function handleMessage(messageObj) {
           try {
             await sendMessage(chatId, "درحال پردازش...");
 
-            const authParams = extractAuthParams(messageText);
+            const authParams = extractAuthKeyWuwa(messageText);
             const allWishes = await fetchCompleteWishHistory(authParams);
 
             await sendMessage(chatId, `${allWishes.length}`);
