@@ -1,3 +1,5 @@
+const axios = require("axios");
+
 async function fetchWishHistoryWuwa(authParams) {
   console.log("[DEBUG] Starting wish history fetch", authParams); // Log input
 

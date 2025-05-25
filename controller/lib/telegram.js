@@ -457,23 +457,11 @@ async function handleMessage(messageObj) {
           deleteSession(chatId);
           try {
             await sendMessage(chatId, "درحال پردازش...");
-
-            console.log("[DEBUG] Starting wish import process");
-            console.log("[DEBUG] User input:", messageText);
-
             const keyParams = extractAuthKeyWuwa(messageText);
-            console.log("[DEBUG] Extracted params:", keyParams);
-
             const result = await fetchWishHistoryWuwa(keyParams);
-            console.log(
-              "[DEBUG] Wish history results:",
-              result.length,
-              "items"
-            );
-
-            return result;
+            await sendMessage(chatId, `${result}`);
           } catch (error) {
-            await sendMessage(chatId, `یه مشکلی هست ${error}`);
+            await sendMessage(chatId, `یه مشکلی هست \n${error}`);
           }
           return;
         } else {
@@ -842,7 +830,7 @@ async function handleCallbackQuery(cbqObj) {
         `,
         true
       );
-      addSession(chatId, "genshinpity");
+      addSession(chatId, "wuwapity");
     }
     if (messageText === "پنل ادمین") {
       switch (cbqData) {
