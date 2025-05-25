@@ -458,7 +458,11 @@ async function handleMessage(messageObj) {
           try {
             await sendMessage(chatId, "درحال پردازش...");
             const keyParams = extractAuthKeyWuwa(messageText);
+            await sendMessage(chatId, `${keyParams}`);
+            await sendMessage(chatId, `fething started`);
             const result = await fetchWishHistoryWuwa(keyParams);
+            await sendMessage(chatId, `fething finished`);
+
             await sendMessage(chatId, `${result}`);
           } catch (error) {
             await sendMessage(chatId, `یه مشکلی هست \n${error}`);
