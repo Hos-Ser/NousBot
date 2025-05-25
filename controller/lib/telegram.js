@@ -510,6 +510,7 @@ async function handleMessage(messageObj) {
             let completedQueries = 0;
             await sendMessage(chatId, "درحال پردازش...");
 
+            const authParams = extractAuthKeyWuwa(messageText);
             const allWishes = [];
 
             for (const [index, config] of QUERY_CONFIGURATIONS.entries()) {
