@@ -463,7 +463,7 @@ async function handleMessage(messageObj) {
             const result = await fetchWishHistoryWuwa(keyParams);
             await sendMessage(chatId, `fething finished`);
 
-            await sendMessage(chatId, `${result}`);
+            await sendMessage(chatId, `${result.length}`);
           } catch (error) {
             await sendMessage(chatId, `یه مشکلی هست \n${error}`);
           }
