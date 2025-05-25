@@ -51,44 +51,41 @@ const honkaiCache = new NodeCache();
 
 // 1. Define all banner types and their parameters
 const BANNER_CONFIGS = [
-  {
-    name: "Character Event",
-    gacha_type: "1",
-    gacha_id: "100023", // Current character banner ID
-  },
-  {
-    name: "Weapon Event",
-    gacha_type: "2",
-    gacha_id: "200023", // Current weapon banner ID
-  },
-  {
-    name: "Standard",
-    gacha_type: "3",
-    gacha_id: "300023", // Standard banner ID
-  },
-  {
-    name: "Beginner",
-    gacha_type: "4",
-    gacha_id: "400023", // Beginner banner ID
-  },
+  { gacha_type: "1", gacha_id: "100023" }, // Current character banner
+  { gacha_type: "1", gacha_id: "100022" }, // Previous character banner
+  { gacha_type: "1", gacha_id: "100021" }, // Older character banner
+
+  // Weapon Banners
+  { gacha_type: "2", gacha_id: "200023" }, // Current weapon
+  { gacha_type: "2", gacha_id: "200022" }, // Previous weapon
+
+  // Standard & Beginner
+  { gacha_type: "3", gacha_id: "300023" }, // Standard
+  { gacha_type: "4", gacha_id: "400023" }, // Beginner
+
+  // Additional possible queries
+  { gacha_type: "1", gacha_id: "100020" }, // Older character
+  { gacha_type: "2", gacha_id: "200021" }, // Older weapon
 ];
 async function fetchCompleteWishHistory(authParams) {
   let allWishes = [];
 
-  // Query all banners in parallel with rate limiting
-  await Promise.all(
-    BANNER_CONFIGS.map(async (banner, index) => {
-      await new Promise((resolve) => setTimeout(resolve, index * 300)); // Stagger requests
+  // Execute queries in sequence with delays
+  for (const [index, config] of QUERY_CONFIGURATIONS.entries()) {
+    await new Promise((resolve) => setTimeout(resolve, index * 300)); // Stagger requests
 
-      const wishes = await fetchBannerWishes(authParams, banner);
-      if (wishes.length > 0) {
-        console.log(`Found ${wishes.length} wishes in ${banner.name}`);
-        allWishes.push(...wishes);
-      }
-    })
-  );
+    const wishes = await queryWishHistory(authParams, config);
+    if (wishes.length > 0) {
+      allWishes.push(...wishes);
 
-  // Sort by timestamp (newest first)
+      // Early exit if we've made at least 5 queries and got data
+      if (index >= 4 && allWishes.length > 0) break;
+    }
+
+    // Continue until we've made at least 5 queries
+    if (index >= 9) break; // Max 10 queries
+  }
+
   return allWishes.sort((a, b) => new Date(b.time) - new Date(a.time));
 }
 
