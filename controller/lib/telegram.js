@@ -28,7 +28,6 @@ const {
   lookingForHelpKb,
   helperKbFunction,
   deleteSelectionKbFunction,
-  pityCounterkb,
 } = require("./util/keyboardOptions");
 const processPrimoCode = require("./util/processPrimoCode");
 const { processSavingAdmin } = require("./util/processSavingAdmin");
@@ -38,8 +37,6 @@ const processSavingHelperUser = require("./util/processSavingHelperUser");
 const processSavingMedia = require("./util/processSavingMedia");
 const processSavingEvent = require("./util/processSavingEvent");
 const processSavingPeriodicEvent = require("./util/processSavingPeriodicEvent");
-const extractAuthKeyWuwa = require("./util/extractAuthKeyWuwa");
-const fetchWishHistory = require("./util/fetchWishHistory");
 
 const MY_TOKEN = process.env.TG_BOT_TOKEN;
 const BASE_URL = `https://api.telegram.org/bot${MY_TOKEN}`;
@@ -496,44 +493,6 @@ async function handleMessage(messageObj) {
             await sendMessage(chatId, "یه مشکلی پیش اومده یبار دیگه امتحان کن");
           }
           return;
-        } else if (sessions[chatId].includes("genshinpity")) {
-          deleteSession(chatId);
-          try {
-            await sendMessage(chatId, "درحال پردازش...");
-          } catch (error) {
-            await sendMessage(chatId, "یه مشکلی هست");
-          }
-          return;
-        } else if (sessions[chatId].includes("wuwapity")) {
-          deleteSession(chatId);
-          try {
-            let completedQueries = 0;
-            await sendMessage(chatId, "درحال پردازش...");
-
-            const authParams = extractAuthKeyWuwa(messageText);
-            const allWishes = [];
-
-            for (const [index, config] of QUERY_CONFIGURATIONS.entries()) {
-              try {
-                const wishes = await fetchWishHistory(authParams, config);
-                allWishes.push(...wishes);
-                completedQueries++;
-
-                await new Promise((resolve) => setTimeout(resolve, 300));
-              } catch (error) {
-                await sendMessage(
-                  chatId,
-                  `Query ${index} failed: ${error.message}`
-                );
-              }
-
-              if (index >= 9) break; // Limit to 10 queries max
-            }
-            await sendMessage(chatId, `${allWishes.length}`);
-          } catch (error) {
-            await sendMessage(chatId, `یه مشکلی هست \n${error}`);
-          }
-          return;
         } else {
           const [gameType, contentType] = sessions[chatId].split(" ");
           deleteSession(chatId);
@@ -590,9 +549,6 @@ async function handleMessage(messageObj) {
               chatId,
               "❜❜ این ربات هر اطلاعاتی درباره گیم‌های\n⌗ Genshin Impact - ⌗ Honkai Starrail - ⌗ Wuthering Waves\nرو لازم داشته باشید در اختیارتون میزاره~ ❛❛\n❨ @IRCelesteTeam ❩\n\nنظرات و پیشنهاداتت رو میتونی به این آیدی بفرستی @sineve"
             );
-            return;
-          case "pity":
-            await sendKeyboard(chatId, pityCounterkb);
             return;
           default:
             if (command.startsWith("start")) {
