@@ -28,6 +28,7 @@ const {
   lookingForHelpKb,
   helperKbFunction,
   deleteSelectionKbFunction,
+  pityCounterkb,
 } = require("./util/keyboardOptions");
 const processPrimoCode = require("./util/processPrimoCode");
 const { processSavingAdmin } = require("./util/processSavingAdmin");
@@ -37,6 +38,8 @@ const processSavingHelperUser = require("./util/processSavingHelperUser");
 const processSavingMedia = require("./util/processSavingMedia");
 const processSavingEvent = require("./util/processSavingEvent");
 const processSavingPeriodicEvent = require("./util/processSavingPeriodicEvent");
+const extractAuthKeyWuwa = require("./util/extractAuthKeyWuwa");
+const fetchWishHistoryWuwa = require("./util/fetchWishHistoryWuwa");
 
 const MY_TOKEN = process.env.TG_BOT_TOKEN;
 const BASE_URL = `https://api.telegram.org/bot${MY_TOKEN}`;
@@ -442,6 +445,26 @@ async function handleMessage(messageObj) {
             await sendMessage(chatId, "یه مشکلی پیش اومده یبار دیگه امتحان کن");
           }
           return;
+        } else if (sessions[chatId].includes("genshinpity")) {
+          deleteSession(chatId);
+          try {
+            await sendMessage(chatId, "درحال پردازش...");
+          } catch (error) {
+            await sendMessage(chatId, "یه مشکلی هست");
+          }
+          return;
+        } else if (sessions[chatId].includes("wuwapity")) {
+          deleteSession(chatId);
+          try {
+            await sendMessage(chatId, "درحال پردازش...");
+            const keyParams = extractAuthKeyWuwa(messageText);
+            await sendMessage(chatId, "درحال پردازش...");
+            const result = await fetchWishHistoryWuwa(keyParams);
+            console.log(`THESE ARE THE RESULTS:\n${result}`);
+          } catch (error) {
+            await sendMessage(chatId, `یه مشکلی هست ${error}`);
+          }
+          return;
         } else {
           const [gameType, contentType] = sessions[chatId].split(" ");
           deleteSession(chatId);
@@ -498,6 +521,9 @@ async function handleMessage(messageObj) {
               chatId,
               "❜❜ این ربات هر اطلاعاتی درباره گیم‌های\n⌗ Genshin Impact - ⌗ Honkai Starrail - ⌗ Wuthering Waves\nرو لازم داشته باشید در اختیارتون میزاره~ ❛❛\n❨ @IRCelesteTeam ❩\n\nنظرات و پیشنهاداتت رو میتونی به این آیدی بفرستی @emoedgy"
             );
+            return;
+          case "pity":
+            await sendKeyboard(chatId, pityCounterkb);
             return;
           default:
             if (command.startsWith("start")) {
@@ -776,6 +802,36 @@ async function handleCallbackQuery(cbqObj) {
     if (cbqData === "no") {
       await updateMessage(chatId, messageId, `${messageText}\nREJECTED`);
       return;
+    }
+    if (cbqData == "genshinpity") {
+      await sendMessage(
+        chatId,
+        `
+        واسه اینکه بتونم پیتی بازیتو بگیرم کار های زیر رو انجام بده
+        1. گنشین رو باز کن
+        2. داخل بازی قسمت ویش History رو باز کن و بزار کامل لود شه
+        3. داخل ویندوز powershell رو باز کن و متن زیر رو داخلش کپی کن
+        \`Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex "&{$((New-Object System.Net.WebClient).DownloadString('https://gist.github.com/MadeBaruna/1d75c1d37d19eca71591ec8a31178235/raw/getlink.ps1'))} global"\`
+        4. متن دریافتی رو برام بفرست
+        `,
+        true
+      );
+      addSession(chatId, "genshinpity");
+    }
+    if (cbqData == "wuwapity") {
+      await sendMessage(
+        chatId,
+        `
+        واسه اینکه بتونم پیتی بازیتو بگیرم کار های زیر رو انجام بده
+        1. گنشین رو باز کن
+        2. داخل بازی قسمت ویش History رو باز کن و بزار کامل لود شه
+        3. داخل ویندوز powershell رو باز کن و متن زیر رو داخلش کپی کن
+        \`iwr -useb "https://wuwatracker.com/import.ps1" | iex\`
+        4. متن دریافتی رو برام بفرست
+        `,
+        true
+      );
+      addSession(chatId, "genshinpity");
     }
     if (messageText === "پنل ادمین") {
       switch (cbqData) {
