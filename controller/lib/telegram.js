@@ -39,7 +39,7 @@ const processSavingMedia = require("./util/processSavingMedia");
 const processSavingEvent = require("./util/processSavingEvent");
 const processSavingPeriodicEvent = require("./util/processSavingPeriodicEvent");
 const extractAuthKeyWuwa = require("./util/extractAuthKeyWuwa");
-const fetchWishHistoryWuwa = require("./util/fetchWishHistoryWuwa");
+const fetchBannerWishes = require("./util/fetchBannerWishes");
 
 const MY_TOKEN = process.env.TG_BOT_TOKEN;
 const BASE_URL = `https://api.telegram.org/bot${MY_TOKEN}`;
@@ -49,37 +49,47 @@ const wuwaCache = new NodeCache();
 const genshinCache = new NodeCache();
 const honkaiCache = new NodeCache();
 
-async function fetchAllWishes(authParams) {
+// 1. Define all banner types and their parameters
+const BANNER_CONFIGS = [
+  {
+    name: "Character Event",
+    gacha_type: "1",
+    gacha_id: "100023", // Current character banner ID
+  },
+  {
+    name: "Weapon Event",
+    gacha_type: "2",
+    gacha_id: "200023", // Current weapon banner ID
+  },
+  {
+    name: "Standard",
+    gacha_type: "3",
+    gacha_id: "300023", // Standard banner ID
+  },
+  {
+    name: "Beginner",
+    gacha_type: "4",
+    gacha_id: "400023", // Beginner banner ID
+  },
+];
+async function fetchCompleteWishHistory(authParams) {
   let allWishes = [];
-  let page = 1;
-  let attempts = 0;
-  const MAX_ATTEMPTS = 3;
 
-  while (attempts < MAX_ATTEMPTS) {
-    try {
-      const wishes = await fetchWishHistoryWuwa({
-        ...authParams,
-        page,
-        size: 20,
-      });
+  // Query all banners in parallel with rate limiting
+  await Promise.all(
+    BANNER_CONFIGS.map(async (banner, index) => {
+      await new Promise((resolve) => setTimeout(resolve, index * 300)); // Stagger requests
 
-      if (wishes.length === 0) break;
+      const wishes = await fetchBannerWishes(authParams, banner);
+      if (wishes.length > 0) {
+        console.log(`Found ${wishes.length} wishes in ${banner.name}`);
+        allWishes.push(...wishes);
+      }
+    })
+  );
 
-      allWishes.push(...wishes);
-      page++;
-      attempts = 0; // Reset attempt counter on success
-
-      // Rate limiting
-      await new Promise((resolve) => setTimeout(resolve, 500));
-    } catch (error) {
-      attempts++;
-      console.error(`Attempt ${attempts} failed:`, error.message);
-      if (attempts >= MAX_ATTEMPTS) throw error;
-      await new Promise((resolve) => setTimeout(resolve, 2000)); // Wait 2s before retry
-    }
-  }
-
-  return allWishes;
+  // Sort by timestamp (newest first)
+  return allWishes.sort((a, b) => new Date(b.time) - new Date(a.time));
 }
 
 function isEnglish(input) {
@@ -490,11 +500,11 @@ async function handleMessage(messageObj) {
           deleteSession(chatId);
           try {
             await sendMessage(chatId, "درحال پردازش...");
-            const keyParams = extractAuthKeyWuwa(messageText);
-            await sendMessage(chatId, `${keyParams}`);
-            await sendMessage(chatId, `fething started`);
-            const result = await fetchAllWishes(keyParams);
-            await sendMessage(chatId, `fething finished ${result.length}`);
+
+            const authParams = extractAuthParams(messageText);
+            const allWishes = await fetchCompleteWishHistory(authParams);
+
+            await sendMessage(chatId, `${allWishes.length}`);
           } catch (error) {
             await sendMessage(chatId, `یه مشکلی هست \n${error}`);
           }
