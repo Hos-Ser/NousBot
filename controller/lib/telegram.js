@@ -329,7 +329,7 @@ const handleGpMessages = async (
   if (gpCache.keys().length === 0) {
     await renewCache(gpCache, gpName);
   }
-  if (messageObj.from.username === "emoedgy") {
+  if (messageObj.from.username === "sineve") {
     if (messageText.toLowerCase().startsWith("event")) {
       try {
         await processSavingEvent(messageText, gpName);
@@ -588,7 +588,7 @@ async function handleMessage(messageObj) {
           case "about":
             await sendMessage(
               chatId,
-              "❜❜ این ربات هر اطلاعاتی درباره گیم‌های\n⌗ Genshin Impact - ⌗ Honkai Starrail - ⌗ Wuthering Waves\nرو لازم داشته باشید در اختیارتون میزاره~ ❛❛\n❨ @IRCelesteTeam ❩\n\nنظرات و پیشنهاداتت رو میتونی به این آیدی بفرستی @emoedgy"
+              "❜❜ این ربات هر اطلاعاتی درباره گیم‌های\n⌗ Genshin Impact - ⌗ Honkai Starrail - ⌗ Wuthering Waves\nرو لازم داشته باشید در اختیارتون میزاره~ ❛❛\n❨ @IRCelesteTeam ❩\n\nنظرات و پیشنهاداتت رو میتونی به این آیدی بفرستی @sineve"
             );
             return;
           case "pity":
@@ -607,7 +607,7 @@ async function handleMessage(messageObj) {
         }
       }
       // hadnling my commands
-      if (chatUsername === "emoedgy") {
+      if (chatUsername === "sineve") {
         if (messageObj.photo) {
           await sendMessage(
             chatId,
