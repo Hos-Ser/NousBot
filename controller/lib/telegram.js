@@ -28,6 +28,7 @@ const {
   lookingForHelpKb,
   helperKbFunction,
   deleteSelectionKbFunction,
+  pityCounterkb,
 } = require("./util/keyboardOptions");
 const processPrimoCode = require("./util/processPrimoCode");
 const { processSavingAdmin } = require("./util/processSavingAdmin");
