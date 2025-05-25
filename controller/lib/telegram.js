@@ -39,7 +39,7 @@ const processSavingMedia = require("./util/processSavingMedia");
 const processSavingEvent = require("./util/processSavingEvent");
 const processSavingPeriodicEvent = require("./util/processSavingPeriodicEvent");
 const extractAuthKeyWuwa = require("./util/extractAuthKeyWuwa");
-const fetchBannerWishes = require("./util/fetchBannerWishes");
+const fetchWishHistory = require("./util/fetchWishHistory");
 
 const MY_TOKEN = process.env.TG_BOT_TOKEN;
 const BASE_URL = `https://api.telegram.org/bot${MY_TOKEN}`;
@@ -67,25 +67,36 @@ const QUERY_CONFIGURATIONS = [
   { gacha_type: "1", gacha_id: "100020" }, // Older character
   { gacha_type: "2", gacha_id: "200021" }, // Older weapon
 ];
-async function fetchCompleteWishHistory(authParams) {
+async function queryAllBanners(authParams) {
+  const activeQueries = new Set();
   let allWishes = [];
 
-  // Execute queries in sequence with delays
-  for (const [index, config] of QUERY_CONFIGURATIONS.entries()) {
-    await new Promise((resolve) => setTimeout(resolve, index * 300)); // Stagger requests
+  // Query all configured banners
+  await Promise.all(
+    QUERY_CONFIGURATIONS.map(async (config, index) => {
+      const queryId = `${config.gacha_type}-${config.gacha_id}`;
+      activeQueries.add(queryId);
 
-    const wishes = await fetchBannerWishes(authParams, config);
-    if (wishes.length > 0) {
-      allWishes.push(...wishes);
+      try {
+        // Stagger requests (300ms apart)
+        await new Promise((resolve) => setTimeout(resolve, index * 300));
 
-      // Early exit if we've made at least 5 queries and got data
-      if (index >= 4 && allWishes.length > 0) break;
-    }
+        console.log(`Starting query ${queryId}`);
+        const wishes = await fetchWishHistory(authParams, config);
 
-    // Continue until we've made at least 5 queries
-    if (index >= 9) break; // Max 10 queries
-  }
+        if (wishes.length > 0) {
+          console.log(`✅ ${queryId} returned ${wishes.length} wishes`);
+          allWishes.push(...wishes);
+        } else {
+          console.log(`⚠️ ${queryId} returned empty`);
+        }
+      } finally {
+        activeQueries.delete(queryId);
+      }
+    })
+  );
 
+  console.log(`Completed all queries. Total wishes: ${allWishes.length}`);
   return allWishes.sort((a, b) => new Date(b.time) - new Date(a.time));
 }
 
@@ -496,11 +507,27 @@ async function handleMessage(messageObj) {
         } else if (sessions[chatId].includes("wuwapity")) {
           deleteSession(chatId);
           try {
+            let completedQueries = 0;
             await sendMessage(chatId, "درحال پردازش...");
 
-            const authParams = extractAuthKeyWuwa(messageText);
-            const allWishes = await fetchCompleteWishHistory(authParams);
+            const allWishes = [];
 
+            for (const [index, config] of QUERY_CONFIGURATIONS.entries()) {
+              try {
+                const wishes = await fetchWishHistory(authParams, config);
+                allWishes.push(...wishes);
+                completedQueries++;
+
+                await new Promise((resolve) => setTimeout(resolve, 300));
+              } catch (error) {
+                await sendMessage(
+                  chatId,
+                  `Query ${index} failed: ${error.message}`
+                );
+              }
+
+              if (index >= 9) break; // Limit to 10 queries max
+            }
             await sendMessage(chatId, `${allWishes.length}`);
           } catch (error) {
             await sendMessage(chatId, `یه مشکلی هست \n${error}`);
