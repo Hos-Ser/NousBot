@@ -15,7 +15,6 @@
     "express": "^4.19.2",
     "firebase": "^10.11.0",
     "node-cache": "^5.1.2",
-    "winston": "^3.13.0",
-    "wuwa-api-client": "^1.0.0"
+    "winston": "^3.13.0"
   }
 }

@@ -40,7 +40,6 @@ const processSavingEvent = require("./util/processSavingEvent");
 const processSavingPeriodicEvent = require("./util/processSavingPeriodicEvent");
 const extractAuthKeyWuwa = require("./util/extractAuthKeyWuwa");
 const fetchWishHistoryWuwa = require("./util/fetchWishHistoryWuwa");
-const { WuwaAPIClient } = require("wuwa-api-client");
 
 const MY_TOKEN = process.env.TG_BOT_TOKEN;
 const BASE_URL = `https://api.telegram.org/bot${MY_TOKEN}`;
@@ -459,45 +458,8 @@ async function handleMessage(messageObj) {
           try {
             await sendMessage(chatId, "درحال پردازش...");
             const keyParams = extractAuthKeyWuwa(messageText);
-            // const result = await fetchWishHistoryWuwa(keyParams);
-            const wuwaClient = new WuwaAPIClient({
-              recordId: keyParams.record_id,
-              resourceId: keyParams.resources_id,
-              playerId: keyParams.player_id,
-              serverId: keyParams.svr_id,
-            });
-
-            const isValid = await wuwaClient.verifyAuth();
-            if (!isValid.valid) throw new Error("Invalid authentication");
-            const allWishes = [];
-            let page = 1;
-            let hasMore = true;
-
-            while (hasMore) {
-              const wishes = await wuwaClient.getWishes({
-                gachaType: keyParams.gacha_type,
-                lang: keyParams.lang,
-                page,
-                size: 20,
-              });
-
-              allWishes.push(...wishes);
-              hasMore = wishes.length === 20;
-              page++;
-              await new Promise((resolve) => setTimeout(resolve, 500)); // Rate limit
-            }
-
-            await sendMessage(
-              chatId,
-              `
-✅ *Successfully imported ${allWishes.length} wishes!*
-
-✨ 5★ Items: ${allWishes.filter((w) => w.rarity === 5).length}  
-⭐ 4★ Items: ${allWishes.filter((w) => w.rarity === 4).length}  
-
-Use /stats to view your full history
-`
-            );
+            const result = await fetchWishHistoryWuwa(keyParams);
+            await sendMessage(chatId, `${result}`);
           } catch (error) {
             await sendMessage(chatId, `یه مشکلی هست \n${error}`);
           }
@@ -859,13 +821,13 @@ async function handleCallbackQuery(cbqObj) {
       await sendMessage(
         chatId,
         `
-واسه اینکه بتونم پیتی بازیتو بگیرم کار های زیر رو انجام بده
-1. گنشین رو باز کن
-2. داخل بازی قسمت ویش History رو باز کن و بزار کامل لود شه
-3. داخل ویندوز powershell رو باز کن و متن زیر رو داخلش کپی کن
-\`iwr -useb "https://wuwatracker.com/import.ps1" | iex\`
-4. متن دریافتی رو برام بفرست
-`,
+        واسه اینکه بتونم پیتی بازیتو بگیرم کار های زیر رو انجام بده
+        1. گنشین رو باز کن
+        2. داخل بازی قسمت ویش History رو باز کن و بزار کامل لود شه
+        3. داخل ویندوز powershell رو باز کن و متن زیر رو داخلش کپی کن
+        \`iwr -useb "https://wuwatracker.com/import.ps1" | iex\`
+        4. متن دریافتی رو برام بفرست
+        `,
         true
       );
       addSession(chatId, "wuwapity");
