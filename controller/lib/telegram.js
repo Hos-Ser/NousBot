@@ -50,7 +50,7 @@ const genshinCache = new NodeCache();
 const honkaiCache = new NodeCache();
 
 // 1. Define all banner types and their parameters
-const BANNER_CONFIGS = [
+const QUERY_CONFIGURATIONS = [
   { gacha_type: "1", gacha_id: "100023" }, // Current character banner
   { gacha_type: "1", gacha_id: "100022" }, // Previous character banner
   { gacha_type: "1", gacha_id: "100021" }, // Older character banner
