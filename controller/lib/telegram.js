@@ -74,7 +74,7 @@ async function fetchCompleteWishHistory(authParams) {
   for (const [index, config] of QUERY_CONFIGURATIONS.entries()) {
     await new Promise((resolve) => setTimeout(resolve, index * 300)); // Stagger requests
 
-    const wishes = await queryWishHistory(authParams, config);
+    const wishes = await fetchBannerWishes(authParams, config);
     if (wishes.length > 0) {
       allWishes.push(...wishes);
 
