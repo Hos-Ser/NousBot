@@ -25,7 +25,7 @@ async function queryGachaRecords(authParams, cardPoolType) {
     languageCode: "en",
     playerId: authParams.player_id,
     recordId: authParams.record_id,
-    serverId: authParams.server_id,
+    serverId: authParams.svr_id,
   };
 
   try {
