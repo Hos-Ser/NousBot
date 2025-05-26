@@ -457,16 +457,11 @@ async function handleMessage(messageObj) {
           const authParams = extractAuthParams(messageText);
           await sendMessage(
             chatId,
-            `${
-              (authParams.player_id,
-              authParams.record_id,
-              authParams.resources_id,
-              authParams.svr_id)
-            }`
+            `${authParams.player_id}\n${authParams.record_id}\n${authParams.resources_id}\n${authParams.svr_id}`
           );
           const records = await getAllGachaRecords(authParams);
 
-          await sendMessage(chatId, `${records.length}`);
+          await sendMessage(chatId, `${Object.keys(records).length}`);
           if (!records || Object.keys(records).length === 0) {
             await sendMessage(
               chatId,
