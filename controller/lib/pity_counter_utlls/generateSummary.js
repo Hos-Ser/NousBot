@@ -70,3 +70,5 @@ function calculatePity(records, lastTime) {
     .flat()
     .filter((item) => new Date(item.time) > new Date(lastTime)).length;
 }
+
+module.exports = generateSummary;
