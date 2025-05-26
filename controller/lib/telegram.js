@@ -455,11 +455,12 @@ async function handleMessage(messageObj) {
           await sendMessage(chatId, "Processing...");
           // Extract auth params
           const authParams = extractAuthParams(messageText);
-          await sendMessage(
-            chatId,
-            `${authParams.player_id}\n${authParams.record_id}\n${authParams.resources_id}\n${authParams.svr_id}`
-          );
           const records = await getAllGachaRecords(authParams);
+
+          Object.entries(records).forEach(async ([bannerKey, bannerData]) => {
+            await sendMessage(chatId, `\nBanner Key: ${bannerKey}`);
+            await sendMessage(chatId, `Has data: ${!!bannerData}`);
+          });
 
           await sendMessage(chatId, `${Object.keys(records).length}`);
           if (!records || Object.keys(records).length === 0) {
