@@ -280,6 +280,14 @@ const handleGpMessages = async (
     await renewCache(gpCache, gpName);
   }
   if (messageObj.from.username === "sineve") {
+    if (messageText.toLowerCase() === "ربات") {
+      try {
+        await sendReply(chatId, messageId, "جون🤤");
+        return;
+      } catch (error) {
+        await sendReply(chatId, messageId, error.message);
+      }
+    }
     if (messageText.toLowerCase().startsWith("event")) {
       try {
         await processSavingEvent(messageText, gpName);
