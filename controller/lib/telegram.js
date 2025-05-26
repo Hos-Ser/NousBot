@@ -474,8 +474,7 @@ async function handleMessage(messageObj) {
           return;
         } else if (sessions[chatId].includes("wuwapity")) {
           deleteSession(chatId);
-          await sendMessage(chatId, "هنوز کامل نشده");
-          return;
+          await sendMessage(chatId, "Processing...");
           // Extract auth params
           const authParams = extractAuthParams(messageText);
           const records = await getAllGachaRecords(authParams);
