@@ -55,6 +55,18 @@ function isEnglish(input) {
   return englishRegex.test(input);
 }
 
+function logFirstRecord(records) {
+  for (const [bannerKey, bannerData] of Object.entries(records)) {
+    if (bannerData?.data?.length > 0) {
+      return `First record found in banner ${bannerKey}:\n${JSON.stringify(
+        bannerData.data[0],
+        null,
+        2
+      )}`;
+    }
+  }
+}
+
 //sesson management
 const addSession = (chatId, valueString) => {
   sessions[chatId] = valueString;
@@ -458,6 +470,7 @@ async function handleMessage(messageObj) {
           const records = await getAllGachaRecords(authParams);
 
           await sendMessage(chatId, `${Object.keys(records).length}`);
+          await sendMessage(chatId, `${logFirstRecord(records)}`);
           if (!records || Object.keys(records).length === 0) {
             await sendMessage(
               chatId,
@@ -514,6 +527,7 @@ async function handleMessage(messageObj) {
             return;
           case "unsubtonews":
             try {
+              //FIXME
               const err = await deleteSavedChatId(chatId);
               if (err) throw new Error(err);
               await sendMessage(chatId, "باشه دیگه بهت خبر نمیدیم :(");
