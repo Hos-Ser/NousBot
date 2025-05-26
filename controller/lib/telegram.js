@@ -457,11 +457,6 @@ async function handleMessage(messageObj) {
           const authParams = extractAuthParams(messageText);
           const records = await getAllGachaRecords(authParams);
 
-          Object.entries(records).forEach(async ([bannerKey, bannerData]) => {
-            await sendMessage(chatId, `\nBanner Key: ${bannerKey}`);
-            await sendMessage(chatId, `Has data: ${!!bannerData}`);
-          });
-
           await sendMessage(chatId, `${Object.keys(records).length}`);
           if (!records || Object.keys(records).length === 0) {
             await sendMessage(

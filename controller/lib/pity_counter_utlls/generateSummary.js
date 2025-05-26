@@ -98,3 +98,5 @@ function calculatePitySinceLast(records, lastFiveStarTime) {
 
   return pityCounter;
 }
+
+module.exports = generateSummary;
