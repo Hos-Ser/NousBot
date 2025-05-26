@@ -455,6 +455,7 @@ async function handleMessage(messageObj) {
           await sendMessage(chatId, "Processing...");
           // Extract auth params
           const authParams = extractAuthParams(messageText);
+          console.log(authParams);
           await sendMessage(chatId, `${authParams}`);
           const records = await getAllGachaRecords(authParams);
 
