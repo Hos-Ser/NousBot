@@ -473,6 +473,13 @@ async function handleMessage(messageObj) {
           await sendMessage(chatId, "هنوز کامل نشده");
           return;
         } else if (sessions[chatId].includes("wuwapity")) {
+          if (
+            !messageText.startsWith(
+              "https://aki-gm-resources-oversea.aki-game.net"
+            )
+          ) {
+            throw new Error("ورودی اشتباهه!");
+          }
           deleteSession(chatId);
           await sendMessage(chatId, "درحال پردازش لطفا صبر کنید...");
           // Extract auth params
@@ -832,13 +839,12 @@ async function handleCallbackQuery(cbqObj) {
       await sendMessage(
         chatId,
         `
-        واسه اینکه بتونم پیتی بازیتو بگیرم کار های زیر رو انجام بده
-        1. گنشین رو باز کن
-        2. داخل بازی قسمت ویش History رو باز کن و بزار کامل لود شه
-        3. داخل ویندوز powershell رو باز کن و متن زیر رو داخلش کپی کن
-        \`Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex "&{$((New-Object System.Net.WebClient).DownloadString('https://gist.github.com/MadeBaruna/1d75c1d37d19eca71591ec8a31178235/raw/getlink.ps1'))} global"\`
-        4. متن دریافتی رو برام بفرست
-        `,
+واسه اینکه بتونم پیتی بازیتو بگیرم کار های زیر رو انجام بده
+1. بازی رو باز کن
+2. داخل بازی قسمت ویش History رو باز کن و بزار کامل لود شه
+3. داخل ویندوز powershell رو باز کن و متن زیر رو داخلش کپی کن
+\`Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex "&{$((New-Object System.Net.WebClient).DownloadString('https://gist.github.com/MadeBaruna/1d75c1d37d19eca71591ec8a31178235/raw/getlink.ps1'))} global"\`
+4. متن دریافتی رو برام بفرست`,
         true
       );
       addSession(chatId, "genshinpity");
@@ -847,13 +853,12 @@ async function handleCallbackQuery(cbqObj) {
       await sendMessage(
         chatId,
         `
-        واسه اینکه بتونم پیتی بازیتو بگیرم کار های زیر رو انجام بده
-        1. گنشین رو باز کن
-        2. داخل بازی قسمت ویش History رو باز کن و بزار کامل لود شه
-        3. داخل ویندوز powershell رو باز کن و متن زیر رو داخلش کپی کن
-        \`iwr -useb "https://wuwatracker.com/import.ps1" | iex\`
-        4. متن دریافتی رو برام بفرست
-        `,
+واسه اینکه بتونم پیتی بازیتو بگیرم کار های زیر رو انجام بده
+1. بازی رو باز کن
+2. داخل بازی قسمت کانوین History رو باز کن و بزار کامل لود شه
+3. داخل ویندوز powershell رو باز کن و متن زیر رو داخلش کپی کن
+\`iwr -useb "https://wuwatracker.com/import.ps1" | iex\`
+4. متن دریافتی رو برام بفرست`,
         true
       );
       addSession(chatId, "wuwapity");

@@ -4,8 +4,34 @@ function generateSummary(records) {
   Object.entries(records).forEach(([bannerKey, pulls]) => {
     if (!pulls || pulls.length === 0) return;
 
-    const bannerName =
-      pulls[0]?.cardPoolType || `بنر ${bannerKey.split("_")[1]}`;
+    const bannerType = bannerKey.split("_")[1];
+    let bannerName;
+    switch (bannerType) {
+      case "1":
+        bannerName = "بنر کرکتر ایونت";
+        break;
+      case "2":
+        bannerName = "بنر اسلحه ایونت";
+        break;
+      case "3":
+        bannerName = "بنر کرکتر استاندارد";
+        break;
+      case "4":
+        bannerName = "بنر اسلحه استاندارد";
+        break;
+      case "5":
+        bannerName = "بنر مبتدی";
+        break;
+      case "6":
+        bannerName = "بنر انتخابی";
+        break;
+      case "7":
+        bannerName = "بنر هدیه بازگشت";
+        break;
+      default:
+        bannerName = "Unknown";
+        break;
+    }
     const fiveStarHistory = [];
     const fourStarHistory = [];
     let currentPity5 = 0;
@@ -53,15 +79,15 @@ function generateSummary(records) {
         : "N/A";
 
     // Format output
-    summary += `🎪 *${bannerName}*\n`;
-    summary += `▸ مجموع پول ها: ${totalPulls}\n`;
-    summary += `▸ پیتی تا 5★ : ${currentPity5}\n`;
-    summary += `▸ پیتی تا 4★ : ${currentPity4}\n`;
+    summary += `🎲 *${bannerName}*\n`;
+    summary += `▸ مجموع کانوین ها: ${totalPulls}\n`;
+    summary += `▸ پیتی 5★ : ${currentPity5}\n`;
+    summary += `▸ پیتی 4★ : ${currentPity4}\n`;
     summary += `▸ میانگین 5★ : ${avgPity5} pulls\n`;
     summary += `▸ میانگین 4★ : ${avgPity4} pulls\n`;
 
     if (allFiveStars.length > 0) {
-      summary += `\n📊 *5★ پیتی کرکترها*\n`;
+      summary += `\n📊 *پیتی ها 5★*\n`;
 
       const pullsWithPosition = pulls.map((pull, index) => ({
         ...pull,
