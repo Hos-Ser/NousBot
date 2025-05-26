@@ -280,14 +280,6 @@ const handleGpMessages = async (
     await renewCache(gpCache, gpName);
   }
   if (messageObj.from.username === "emoedgy") {
-    if (messageText.toLowerCase() === "ربات") {
-      try {
-        await sendReply(chatId, messageId, "جون🤤");
-        return;
-      } catch (error) {
-        await sendReply(chatId, messageId, error.message);
-      }
-    }
     if (messageText.toLowerCase().startsWith("event")) {
       try {
         await processSavingEvent(messageText, gpName);
@@ -463,10 +455,18 @@ async function handleMessage(messageObj) {
           await sendMessage(chatId, "Processing...");
           // Extract auth params
           const authParams = extractAuthParams(messageText);
-          console.log(authParams);
-          await sendMessage(chatId, `${authParams}`);
+          await sendMessage(
+            chatId,
+            `${
+              (authParams.player_id,
+              authParams.record_id,
+              authParams.resources_id,
+              authParams.svr_id)
+            }`
+          );
           const records = await getAllGachaRecords(authParams);
 
+          await sendMessage(chatId, `${records.length}`);
           if (!records || Object.keys(records).length === 0) {
             await sendMessage(
               chatId,
