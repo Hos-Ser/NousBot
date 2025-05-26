@@ -480,7 +480,7 @@ async function handleMessage(messageObj) {
           const records = await getAllGachaRecords(authParams);
 
           await sendMessage(chatId, `${records}`);
-          await sendMessage(chatId, `${Object.keys(records).length}`);
+          await sendMessage(chatId, `${JSON.stringify(authParams)}`);
           await sendMessage(chatId, `${JSON.stringify(records)}`);
           await sendMessage(chatId, `${logFirstRecord(records)}`);
           if (!records || Object.keys(records).length === 0) {
