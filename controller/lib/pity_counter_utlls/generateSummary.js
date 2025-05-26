@@ -76,3 +76,5 @@ function generateSummary(records) {
 
   return summary;
 }
+
+module.exports = generateSummary;
