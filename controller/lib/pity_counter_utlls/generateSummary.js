@@ -1,74 +1,82 @@
 function generateSummary(records) {
   let summary = "✨ *Wuthering Waves Gacha Summary* ✨\n\n";
 
-  // Process each banner
   Object.entries(records).forEach(([bannerKey, pulls]) => {
     if (!pulls || pulls.length === 0) return;
 
     const bannerName =
       pulls[0]?.cardPoolType || `Banner ${bannerKey.split("_")[1]}`;
-    const fiveStarPulls = [];
-    const fourStarPulls = [];
+    const fiveStarHistory = [];
+    const fourStarHistory = [];
     let currentPity5 = 0;
     let currentPity4 = 0;
-    let totalPulls = 0;
+    let totalPulls = pulls.length;
 
-    // Calculate metrics
-    pulls.forEach((pull, index) => {
-      totalPulls++;
+    // Reverse chronological order (newest first)
+    const reversedPulls = [...pulls].reverse();
+
+    // Calculate current pity (counting forward from now)
+    for (const pull of reversedPulls) {
       currentPity5++;
       currentPity4++;
 
       if (pull.qualityLevel === 5) {
-        fiveStarPulls.push({
-          pullNumber: index + 1,
+        fiveStarHistory.push({
+          name: pull.name,
+          time: pull.time,
           pity: currentPity5,
-          item: pull.name,
         });
         currentPity5 = 0;
       }
 
       if (pull.qualityLevel === 4) {
-        fourStarPulls.push(currentPity4);
+        fourStarHistory.push(currentPity4);
         currentPity4 = 0;
       }
-    });
 
-    // Calculate averages
+      // Stop counting when we hit both rarities
+      if (currentPity5 === 0 && currentPity4 === 0) break;
+    }
+
+    // Calculate averages (using original chronological order)
+    const allFiveStars = pulls.filter((p) => p.qualityLevel === 5);
+    const allFourStars = pulls.filter((p) => p.qualityLevel === 4);
+
     const avgPity5 =
-      fiveStarPulls.length > 0
-        ? (
-            fiveStarPulls.reduce((sum, item) => sum + item.pity, 0) /
-            fiveStarPulls.length
-          ).toFixed(1)
+      allFiveStars.length > 0
+        ? (pulls.length / allFiveStars.length).toFixed(1)
         : "N/A";
 
     const avgPity4 =
-      fourStarPulls.length > 0
-        ? (
-            fourStarPulls.reduce((sum, pity) => sum + pity, 0) /
-            fourStarPulls.length
-          ).toFixed(1)
+      allFourStars.length > 0
+        ? (pulls.length / allFourStars.length).toFixed(1)
         : "N/A";
 
-    // Format banner section
+    // Format output
     summary += `🎪 *${bannerName}*\n`;
     summary += `▸ Total Pulls: ${totalPulls}\n`;
-    summary += `▸ 5★ Pity: ${currentPity5} (since last)\n`;
-    summary += `▸ 4★ Pity: ${currentPity4} (since last)\n`;
-    summary += `▸ Avg 5★ Pity: ${avgPity5}\n`;
-    summary += `▸ Avg 4★ Pity: ${avgPity4}\n`;
+    summary += `▸ Current 5★ Pity: ${currentPity5}\n`;
+    summary += `▸ Current 4★ Pity: ${currentPity4}\n`;
+    summary += `▸ Avg 5★ Every: ${avgPity5} pulls\n`;
+    summary += `▸ Avg 4★ Every: ${avgPity4} pulls\n`;
 
-    // Add 5★ pull history if available
-    if (fiveStarPulls.length > 0) {
-      summary += `\n⭐ *5★ Pull History*\n`;
-      fiveStarPulls.forEach((star, i) => {
-        const sinceLast =
-          i === 0
-            ? star.pullNumber
-            : star.pullNumber - fiveStarPulls[i - 1].pullNumber;
-        summary += `  • ${star.item} (Pity: ${star.pity}, After: ${sinceLast} pulls)\n`;
-      });
+    if (fiveStarHistory.length > 0) {
+      summary += `\n⭐ *Last 5★*\n`;
+      const last5Star = fiveStarHistory[0];
+      summary += `  • ${last5Star.name} (${last5Star.time})\n`;
+      summary += `    → Pity: ${last5Star.pity} (${
+        totalPulls - last5Star.pity + 1
+      }-${totalPulls})\n`;
+    }
+
+    if (allFiveStars.length > 1) {
+      summary += `\n📊 *5★ Pull Intervals*\n`;
+      for (let i = 1; i < allFiveStars.length; i++) {
+        const prev = allFiveStars[i - 1];
+        const curr = allFiveStars[i];
+        const interval = curr.pullNumber - prev.pullNumber;
+        summary += `  • ${interval} pulls between ${prev.name} → ${curr.name}\n`;
+      }
     }
 
     summary += "\n";
@@ -76,5 +84,3 @@ function generateSummary(records) {
 
   return summary;
 }
-
-module.exports = generateSummary;
