@@ -447,12 +447,15 @@ async function handleMessage(messageObj) {
           }
           return;
         } else if (sessions[chatId].includes("genshinpity")) {
+          deleteSession(chatId);
           await sendMessage(chatId, "Processing...");
           return;
         } else if (sessions[chatId].includes("wuwapity")) {
+          deleteSession(chatId);
           await sendMessage(chatId, "Processing...");
           // Extract auth params
           const authParams = extractAuthParams(messageText);
+          await sendMessage(chatId, `${authParams}`);
           const records = await getAllGachaRecords(authParams);
 
           if (!records || Object.keys(records).length === 0) {
