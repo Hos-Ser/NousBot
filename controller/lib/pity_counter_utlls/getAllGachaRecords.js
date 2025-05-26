@@ -26,60 +26,32 @@ const defaultHeaders = {
   "priority": "u=1, i",
 };
 
-async function queryGachaRecords(authParams, gachaType, gachaId, retries = 0) {
-  try {
-    const payload = {
-      ...authParams,
-      gacha_type: gachaType,
-      gacha_id: gachaId,
-    };
+async function queryGachaRecords(authParams, cardPoolType) {
+  const payload = {
+    cardPoolType: cardPoolType, // 1-6 instead of gacha_type/gacha_id
+    languageCode: "en", // Required field
+    playerId: authParams.player_id,
+    recordId: authParams.record_id,
+    serverId: authParams.svr_id,
+  };
 
-    const response = await axios.post(API_ENDPOINT, payload, {
-      headers: defaultHeaders,
-      timeout: REQUEST_TIMEOUT,
-    });
-
-    if (!response.data || !response.data.data) {
-      throw new Error("Empty response from API");
-    }
-
-    return response.data.data;
-  } catch (error) {
-    if (retries < MAX_RETRIES) {
-      console.log(
-        `Retrying (${
-          retries + 1
-        }/${MAX_RETRIES}) for gacha_type ${gachaType}, gacha_id ${gachaId}`
-      );
-      await new Promise((resolve) => setTimeout(resolve, 1000 * (retries + 1))); // Exponential backoff
-      return queryGachaRecords(authParams, gachaType, gachaId, retries + 1);
-    }
-    console.error(
-      `Failed after ${MAX_RETRIES} retries for gacha_type ${gachaType}, gacha_id ${gachaId}:`,
-      error.message
-    );
-    return null;
-  }
+  const response = await axios.post(API_ENDPOINT, payload, {
+    headers: defaultHeaders,
+    timeout: REQUEST_TIMEOUT,
+  });
+  return response.data?.data || [];
 }
 
 async function getAllGachaRecords(authParams) {
-  // Define the banners to query
-  const banners = [
-    { type: 1, id: 1 }, // Character banner 1
-    { type: 1, id: 2 }, // Character banner 2
-    { type: 2, id: 11 }, // Weapon banner
-    { type: 3, id: 1 }, // Standard banner
-    { type: 4, id: 1 }, // Beginner banner
-  ];
-
   const results = {};
 
-  for (const banner of banners) {
-    const records = await queryGachaRecords(authParams, banner.type, banner.id);
-    if (records) {
-      results[`${banner.type}_${banner.id}`] = records;
+  // Query all cardPoolTypes from 1 to 6
+  for (let cardPoolType = 1; cardPoolType <= 6; cardPoolType++) {
+    const records = await queryGachaRecords(authParams, cardPoolType);
+    if (records.length > 0) {
+      results[`pool_${cardPoolType}`] = records;
     }
-    await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY));
+    await new Promise((resolve) => setTimeout(resolve, 500)); // 300ms delay
   }
 
   return results;
