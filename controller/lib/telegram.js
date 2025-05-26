@@ -479,6 +479,8 @@ async function handleMessage(messageObj) {
           const authParams = extractAuthParams(messageText);
           const records = await getAllGachaRecords(authParams);
 
+          await sendMessage(chatId, `${records}`);
+          await sendMessage(chatId, `${Object.keys(records).length}`);
           await sendMessage(chatId, `${JSON.stringify(records)}`);
           await sendMessage(chatId, `${logFirstRecord(records)}`);
           if (!records || Object.keys(records).length === 0) {
@@ -488,7 +490,6 @@ async function handleMessage(messageObj) {
             );
             return;
           }
-          console.log(records);
 
           const summary = generateSummary(records);
           await sendMessage(chatId, summary, true);
