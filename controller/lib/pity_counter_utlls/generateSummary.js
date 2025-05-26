@@ -5,7 +5,7 @@ function generateSummary(records) {
     if (!pulls || pulls.length === 0) return;
 
     const bannerName =
-      pulls[0]?.cardPoolType || `Banner ${bannerKey.split("_")[1]}`;
+      pulls[0]?.cardPoolType || `بنر ${bannerKey.split("_")[1]}`;
     const fiveStarHistory = [];
     const fourStarHistory = [];
     let currentPity5 = 0;
@@ -54,33 +54,35 @@ function generateSummary(records) {
 
     // Format output
     summary += `🎪 *${bannerName}*\n`;
-    summary += `▸ Total Pulls: ${totalPulls}\n`;
-    summary += `▸ Current 5★ Pity: ${currentPity5}\n`;
-    summary += `▸ Current 4★ Pity: ${currentPity4}\n`;
-    summary += `▸ Avg 5★ Every: ${avgPity5} pulls\n`;
-    summary += `▸ Avg 4★ Every: ${avgPity4} pulls\n`;
+    summary += `▸ مجموع پول ها: ${totalPulls}\n`;
+    summary += `▸ پیتی تا 5★ : ${currentPity5}\n`;
+    summary += `▸ پیتی تا 4★ : ${currentPity4}\n`;
+    summary += `▸ میانگین 5★ : ${avgPity5} pulls\n`;
+    summary += `▸ میانگین 4★ : ${avgPity4} pulls\n`;
 
     if (allFiveStars.length > 0) {
-      summary += `\n📊 *5★ Pull Intervals*\n`;
+      summary += `\n📊 *5★ پیتی کرکترها*\n`;
 
-      // First, map all pulls to include their position/index
       const pullsWithPosition = pulls.map((pull, index) => ({
         ...pull,
-        position: index + 1, // Adding 1 to make it human-readable (1st pull, not 0th)
+        position: index + 1,
       }));
 
-      // Then filter just the 5★ pulls with their positions
       const fiveStarsWithPositions = pullsWithPosition.filter(
         (p) => p.qualityLevel === 5
       );
 
-      // Now calculate intervals between them
       for (let i = 1; i < fiveStarsWithPositions.length; i++) {
         const prev = fiveStarsWithPositions[i - 1];
         const curr = fiveStarsWithPositions[i];
         const interval = curr.position - prev.position;
-        summary += `  • ${interval} pulls between ${prev.name} → ${curr.name}\n`;
+        summary += `  • ${prev.name} → ${interval}\n`;
       }
+      summary += `• ${
+        fiveStarsWithPositions[fiveStarsWithPositions.length - 1].name
+      } → ${
+        fiveStarsWithPositions[fiveStarsWithPositions.length - 1].position
+      }`;
     }
 
     summary += "\n";
