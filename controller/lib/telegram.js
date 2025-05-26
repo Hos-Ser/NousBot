@@ -59,12 +59,11 @@ function logFirstRecord(records) {
   for (const [bannerKey, bannerData] of Object.entries(records)) {
     if (bannerData?.data?.length > 0) {
       return `First record found in banner ${bannerKey}:\n${JSON.stringify(
-        bannerData.data[0],
-        null,
-        2
+        bannerData.data[0]
       )}`;
     }
   }
+  return "nothing found";
 }
 
 //sesson management
