@@ -2,7 +2,14 @@
 const extractAuthParams = (url) => {
   try {
     const urlObj = new URL(url);
-    const params = new URLSearchParams(urlObj.search);
+
+    // Get the part after # and then split parameters
+    const hashParts = urlObj.hash.split("?");
+    if (hashParts.length < 2) {
+      throw new Error("No parameters in hash fragment");
+    }
+
+    const params = new URLSearchParams(hashParts[1]);
 
     const requiredParams = ["record_id", "resources_id", "player_id", "svr_id"];
     const result = {};
