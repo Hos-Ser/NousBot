@@ -60,21 +60,25 @@ function generateSummary(records) {
     summary += `▸ Avg 5★ Every: ${avgPity5} pulls\n`;
     summary += `▸ Avg 4★ Every: ${avgPity4} pulls\n`;
 
-    if (fiveStarHistory.length > 0) {
-      summary += `\n⭐ *Last 5★*\n`;
-      const last5Star = fiveStarHistory[0];
-      summary += `  • ${last5Star.name} (${last5Star.time})\n`;
-      summary += `    → Pity: ${last5Star.pity} (${
-        totalPulls - last5Star.pity + 1
-      }-${totalPulls})\n`;
-    }
-
-    if (allFiveStars.length > 1) {
+    if (allFiveStars.length > 0) {
       summary += `\n📊 *5★ Pull Intervals*\n`;
-      for (let i = 1; i < allFiveStars.length; i++) {
-        const prev = allFiveStars[i - 1];
-        const curr = allFiveStars[i];
-        const interval = curr.pullNumber - prev.pullNumber;
+
+      // First, map all pulls to include their position/index
+      const pullsWithPosition = pulls.map((pull, index) => ({
+        ...pull,
+        position: index + 1, // Adding 1 to make it human-readable (1st pull, not 0th)
+      }));
+
+      // Then filter just the 5★ pulls with their positions
+      const fiveStarsWithPositions = pullsWithPosition.filter(
+        (p) => p.qualityLevel === 5
+      );
+
+      // Now calculate intervals between them
+      for (let i = 1; i < fiveStarsWithPositions.length; i++) {
+        const prev = fiveStarsWithPositions[i - 1];
+        const curr = fiveStarsWithPositions[i];
+        const interval = curr.position - prev.position;
         summary += `  • ${interval} pulls between ${prev.name} → ${curr.name}\n`;
       }
     }
