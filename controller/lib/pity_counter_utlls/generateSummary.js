@@ -78,11 +78,13 @@ function generateSummary(records) {
         const interval = curr.position - prev.position;
         summary += `  • ${prev.name} → ${interval}\n`;
       }
-      summary += `• ${
+      summary += `  • ${
         fiveStarsWithPositions[fiveStarsWithPositions.length - 1].name
       } → ${
-        fiveStarsWithPositions[fiveStarsWithPositions.length - 1].position
-      }`;
+        totalPulls -
+        fiveStarsWithPositions[fiveStarsWithPositions.length - 1].position +
+        1
+      }\n`;
     }
 
     summary += "\n";
