@@ -83,8 +83,8 @@ function generateSummary(records) {
     summary += `▸ مجموع کانوین ها: ${totalPulls}\n`;
     summary += `▸ پیتی 5★ : ${currentPity5}\n`;
     summary += `▸ پیتی 4★ : ${currentPity4}\n`;
-    summary += `▸ میانگین 5★ : ${avgPity5} pulls\n`;
-    summary += `▸ میانگین 4★ : ${avgPity4} pulls\n`;
+    summary += `▸ میانگین 5★ : ${avgPity5}\n`;
+    summary += `▸ میانگین 4★ : ${avgPity4}\n`;
 
     if (allFiveStars.length > 0) {
       summary += `\n📊 *پیتی ها 5★*\n`;
