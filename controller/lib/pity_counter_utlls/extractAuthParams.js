@@ -11,7 +11,7 @@ const extractAuthParams = (url) => {
 
     const params = new URLSearchParams(hashParts[1]);
 
-    const requiredParams = ["record_id", "resources_id", "player_id", "svr_id"];
+    const requiredParams = ["record_id", "player_id", "svr_id"];
     const result = {};
 
     for (const param of requiredParams) {
@@ -23,8 +23,7 @@ const extractAuthParams = (url) => {
 
     return result;
   } catch (error) {
-    console.error("Error extracting auth params:", error);
-    return null;
+    throw new Error(error.message);
   }
 };
 
