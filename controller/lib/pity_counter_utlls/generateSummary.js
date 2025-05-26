@@ -1,74 +1,78 @@
 function generateSummary(records) {
-  let summary = "🎰 Gacha Summary\n\n";
-  let totalPulls = 0;
-  const rarityCounts = { 3: 0, 4: 0, 5: 0 };
-  const bannerStats = {};
+  let summary = "✨ *Wuthering Waves Gacha Summary* ✨\n\n";
 
-  // Process all pools
-  Object.entries(records).forEach(([poolKey, poolData]) => {
-    if (!poolData || poolData.length === 0) return;
+  // Process each banner
+  Object.entries(records).forEach(([bannerKey, pulls]) => {
+    if (!pulls || pulls.length === 0) return;
 
-    const poolName = poolData[0]?.cardPoolType || poolKey;
-    bannerStats[poolName] = {
-      pulls: poolData.length,
-      lastPull: poolData[0]?.time,
-      rarities: { 3: 0, 4: 0, 5: 0 },
-    };
+    const bannerName =
+      pulls[0]?.cardPoolType || `Banner ${bannerKey.split("_")[1]}`;
+    const fiveStarPulls = [];
+    const fourStarPulls = [];
+    let currentPity5 = 0;
+    let currentPity4 = 0;
+    let totalPulls = 0;
 
-    poolData.forEach((item) => {
+    // Calculate metrics
+    pulls.forEach((pull, index) => {
       totalPulls++;
-      const rarity = item.qualityLevel;
-      rarityCounts[rarity]++;
-      bannerStats[poolName].rarities[rarity]++;
+      currentPity5++;
+      currentPity4++;
+
+      if (pull.qualityLevel === 5) {
+        fiveStarPulls.push({
+          pullNumber: index + 1,
+          pity: currentPity5,
+          item: pull.name,
+        });
+        currentPity5 = 0;
+      }
+
+      if (pull.qualityLevel === 4) {
+        fourStarPulls.push(currentPity4);
+        currentPity4 = 0;
+      }
     });
+
+    // Calculate averages
+    const avgPity5 =
+      fiveStarPulls.length > 0
+        ? (
+            fiveStarPulls.reduce((sum, item) => sum + item.pity, 0) /
+            fiveStarPulls.length
+          ).toFixed(1)
+        : "N/A";
+
+    const avgPity4 =
+      fourStarPulls.length > 0
+        ? (
+            fourStarPulls.reduce((sum, pity) => sum + pity, 0) /
+            fourStarPulls.length
+          ).toFixed(1)
+        : "N/A";
+
+    // Format banner section
+    summary += `🎪 *${bannerName}*\n`;
+    summary += `▸ Total Pulls: ${totalPulls}\n`;
+    summary += `▸ 5★ Pity: ${currentPity5} (since last)\n`;
+    summary += `▸ 4★ Pity: ${currentPity4} (since last)\n`;
+    summary += `▸ Avg 5★ Pity: ${avgPity5}\n`;
+    summary += `▸ Avg 4★ Pity: ${avgPity4}\n`;
+
+    // Add 5★ pull history if available
+    if (fiveStarPulls.length > 0) {
+      summary += `\n⭐ *5★ Pull History*\n`;
+      fiveStarPulls.forEach((star, i) => {
+        const sinceLast =
+          i === 0
+            ? star.pullNumber
+            : star.pullNumber - fiveStarPulls[i - 1].pullNumber;
+        summary += `  • ${star.item} (Pity: ${star.pity}, After: ${sinceLast} pulls)\n`;
+      });
+    }
+
+    summary += "\n";
   });
-
-  // Add banner details
-  Object.entries(bannerStats).forEach(([name, stats]) => {
-    summary += `▸ ${name}\n`;
-    summary += `  Pulls: ${stats.pulls} | `;
-    summary += `3★: ${stats.rarities[3]} | `;
-    summary += `4★: ${stats.rarities[4]} | `;
-    summary += `5★: ${stats.rarities[5]}\n`;
-    summary += `  Last: ${stats.lastPull}\n\n`;
-  });
-
-  // Add global stats
-  summary += `🌟 Global Stats\n`;
-  summary += `Total Pulls: ${totalPulls}\n`;
-  summary += `3★ Rate: ${((rarityCounts[3] / totalPulls) * 100).toFixed(1)}%\n`;
-  summary += `4★ Rate: ${((rarityCounts[4] / totalPulls) * 100).toFixed(1)}%\n`;
-  summary += `5★ Rate: ${((rarityCounts[5] / totalPulls) * 100).toFixed(1)}%\n`;
-
-  // Calculate pity
-  const lastFiveStar = findLastRarityPull(records, 5);
-  if (lastFiveStar) {
-    summary += `\nLast 5★: ${lastFiveStar.name} (${lastFiveStar.time})\n`;
-    summary += `Pity Since: ${calculatePity(records, lastFiveStar.time)} pulls`;
-  }
 
   return summary;
 }
-
-// Helper functions
-function findLastRarityPull(records, rarity) {
-  let lastItem = null;
-  Object.values(records)
-    .flat()
-    .forEach((item) => {
-      if (item.qualityLevel === rarity) {
-        if (!lastItem || new Date(item.time) > new Date(lastItem.time)) {
-          lastItem = item;
-        }
-      }
-    });
-  return lastItem;
-}
-
-function calculatePity(records, lastTime) {
-  return Object.values(records)
-    .flat()
-    .filter((item) => new Date(item.time) > new Date(lastTime)).length;
-}
-
-module.exports = generateSummary;

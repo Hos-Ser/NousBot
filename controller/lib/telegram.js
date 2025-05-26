@@ -474,15 +474,10 @@ async function handleMessage(messageObj) {
           return;
         } else if (sessions[chatId].includes("wuwapity")) {
           deleteSession(chatId);
-          await sendMessage(chatId, "Processing...");
+          await sendMessage(chatId, "درحال پردازش لطفا صبر کنید...");
           // Extract auth params
           const authParams = extractAuthParams(messageText);
           const records = await getAllGachaRecords(authParams);
-
-          await sendMessage(chatId, `${records}`);
-          await sendMessage(chatId, `${JSON.stringify(authParams)}`);
-          await sendMessage(chatId, `${JSON.stringify(records)}`);
-          await sendMessage(chatId, `${logFirstRecord(records)}`);
           if (!records || Object.keys(records).length === 0) {
             await sendMessage(
               chatId,
