@@ -56,14 +56,25 @@ function isEnglish(input) {
 }
 
 function logFirstRecord(records) {
+  if (!records) {
+    return "❌ No records object received (null/undefined)";
+  }
+
+  const bannerKeys = Object.keys(records);
+
   for (const [bannerKey, bannerData] of Object.entries(records)) {
-    if (bannerData?.data?.length > 0) {
-      return `First record found in banner ${bannerKey}:\n${JSON.stringify(
-        bannerData.data[0]
-      )}`;
+    if (!bannerData) {
+      return "⚠️ Banner data is null/undefined";
+    }
+
+    if (bannerData.data) {
+      if (bannerData.data.length > 0) {
+        return `✅ First record:, ${JSON.stringify(bannerData.data[0])}`;
+      }
     }
   }
-  return "nothing found";
+
+  return "❌ No records with data found in any banner";
 }
 
 //sesson management
