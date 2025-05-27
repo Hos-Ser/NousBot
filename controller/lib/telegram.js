@@ -525,7 +525,7 @@ async function handleMessage(messageObj) {
           }
 
           const summary = generateSummary(records);
-          await sendKeyboardMarkdown(chatId, gachaHistorySaveKb(summary));
+          await sendMessage(chatId, summary, true);
           return;
         } else {
           const [gameType, contentType] = sessions[chatId].split(" ");
