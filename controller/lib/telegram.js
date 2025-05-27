@@ -1108,23 +1108,9 @@ async function handleChannelPost(postObj) {
 async function handleInlineQuery(inlineObj) {
   const queryId = inlineObj.id;
   const queryText = inlineObj.query;
-  let results = [];
+  let results = ["kif"];
   if (queryText) {
-    let numericId = 0;
-    results = database.items
-      .filter((item) =>
-        item.title.toLowerCase().includes(queryText.toLowerCase())
-      )
-      .map((item) => ({
-        type: "photo",
-        id: numericId++,
-        photo_file_id: item.file_id,
-        title: item.title,
-        description: item.description,
-        caption: item.description,
-      }));
   }
-
   await answerInlineQuery(queryId, results);
   return;
 }

@@ -24,11 +24,11 @@ async function handler(req) {
       await handleChannelPost(postObj);
       return "Success";
     }
-    // if (body && body.inline_query) {
-    //   const postObj = body.inline_query;
-    //   await handleInlineQuery(postObj);
-    //   return "Success";
-    // }
+    if (body && body.inline_query) {
+      const postObj = body.inline_query;
+      await handleInlineQuery(postObj);
+      return "Success";
+    }
 
     return "Unknown request";
   } catch (error) {

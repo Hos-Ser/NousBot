@@ -44,7 +44,7 @@ async function getAllGachaRecords(authParams) {
   const results = {};
 
   // Query pools 1 through 6 (adjust based on your needs)
-  for (let poolType = 1; poolType <= 7; poolType++) {
+  for (let poolType = 1; poolType <= 4; poolType++) {
     results[`pool_${poolType}`] = await queryGachaRecords(authParams, poolType);
     await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY));
   }
