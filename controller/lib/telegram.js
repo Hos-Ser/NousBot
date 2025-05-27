@@ -131,7 +131,7 @@ async function sendMessage(chatId, messageText, isParseMode = false) {
     .post("sendMessage", {
       chat_id: chatId,
       text: messageText,
-      ...(isParseMode && { parse_mode: "MarkdownV2" }),
+      ...(isParseMode && { parse_mode: "Markdown" }),
     })
     .catch((ex) => {
       errorHandler(ex, "sendMessage", "axios");
@@ -214,7 +214,7 @@ async function sendKeyboardMarkdown(chatId, keyboardOptions) {
   return axiosInstance
     .post("sendMessage", {
       chat_id: chatId,
-      parse_mode: "MarkdownV2",
+      parse_mode: "Markdown",
       ...keyboardOptions,
     })
     .catch((ex) => {
