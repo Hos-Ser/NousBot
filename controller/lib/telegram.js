@@ -200,11 +200,21 @@ async function deleteMessage(chatId, messageId) {
       errorHandler(ex, "deleteMessage", "axios");
     });
 }
-async function sendKeyboard(chatId, keyboardOptions, isParseMode = false) {
+async function sendKeyboard(chatId, keyboardOptions) {
   return axiosInstance
     .post("sendMessage", {
       chat_id: chatId,
-      ...(isParseMode && { parse_mode: "Markdown" }),
+      ...keyboardOptions,
+    })
+    .catch((ex) => {
+      errorHandler(ex, "sendKeyboard", "axios");
+    });
+}
+async function sendKeyboardMarkdown(chatId, keyboardOptions) {
+  return axiosInstance
+    .post("sendMessage", {
+      chat_id: chatId,
+      parse_mode: "Markdown",
       ...keyboardOptions,
     })
     .catch((ex) => {
@@ -515,7 +525,7 @@ async function handleMessage(messageObj) {
           }
 
           const summary = generateSummary(records);
-          await sendKeyboard(chatId, gachaHistorySaveKb(summary), true);
+          await sendKeyboardMarkdown(chatId, gachaHistorySaveKb(summary));
           return;
         } else {
           const [gameType, contentType] = sessions[chatId].split(" ");
