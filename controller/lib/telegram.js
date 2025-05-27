@@ -924,8 +924,8 @@ async function handleCallbackQuery(cbqObj) {
           chatId,
           "ذخیره شد.\nالان میتونی هرجای دیگه ای که دلت خواست به اشتراکشون بزاری"
         );
-        return;
       }
+      return;
     }
     if (messageText === "پنل ادمین") {
       switch (cbqData) {
@@ -1185,27 +1185,27 @@ function createQueryResult(userUid) {
     ];
   }
   const cacheData = gachaHistoryCache.get(userUid);
-  const finalResult = [];
-  for (const [key, value] of Object.entries(cacheData)) {
-    finalResult.push({
-      type: "article",
-      id: "1",
-      title: `${key}`,
-      input_message_content: {
-        message_text: `${value}`,
-      },
-    });
-  }
-  return finalResult;
+  return Object.entries(cacheData).map(([key, value], index) => ({
+    type: "article",
+    id: `${userUid}_${index}`,
+    title: key,
+    input_message_content: {
+      message_text: String(value), // Ensure string output
+    },
+  }));
 }
 async function handleInlineQuery(inlineObj) {
-  const queryId = inlineObj.id;
-  const userUID = inlineObj.from.id;
+  try {
+    const queryId = inlineObj.id;
+    const userUID = inlineObj.from.id;
 
-  const results = createQueryResult(userUID);
+    const results = createQueryResult(userUID);
 
-  await answerInlineQuery(queryId, results);
-  return;
+    await answerInlineQuery(queryId, results);
+    return;
+  } catch (error) {
+    errorHandler(error, "handleInlineQuery", "");
+  }
 }
 module.exports = {
   handleMessage,

@@ -158,7 +158,7 @@ const deleteSelectionKbFunction = (cbqData, arrayOfkeyboards) => {
   };
 };
 const pityCounterkb = {
-  text: " (فعلا ربات فقط از نسخه pc پیشتیبانی میکنه) کدوم بازی رو میخوای؟",
+  text: "کدوم بازی رو میخوای؟",
   reply_markup: JSON.stringify({
     inline_keyboard: [
       [{ text: "Genshin Impact", callback_data: "genshinpity" }],
