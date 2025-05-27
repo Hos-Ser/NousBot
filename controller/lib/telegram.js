@@ -42,6 +42,7 @@ const processSavingPeriodicEvent = require("./util/processSavingPeriodicEvent");
 const extractAuthParams = require("./pity_counter_utlls/extractAuthParams");
 const getAllGachaRecords = require("./pity_counter_utlls/getAllGachaRecords");
 const generateSummary = require("./pity_counter_utlls/generateSummary");
+const processSavingGachaHistory = require("./util/processSavingGachaHistory");
 
 const MY_TOKEN = process.env.TG_BOT_TOKEN;
 const BASE_URL = `https://api.telegram.org/bot${MY_TOKEN}`;
@@ -95,6 +96,30 @@ function splitTextByDiceToObject(text) {
   });
 
   return result;
+}
+function createQueryResult(userUid) {
+  if (!gachaHistoryCache.has(userUid)) {
+    return [
+      {
+        type: "article",
+        id: "1", // Unique identifier for this result
+        title: "اطلاعاتی داخل بات دخیره نکردی",
+        input_message_content: {
+          message_text:
+            "واسه اینکه اطلاعات گاچات رو برای بقیه به اشتراک بزاری برو داخل بات و دستور /pity رو اجرا کن",
+        },
+      },
+    ];
+  }
+  const cacheData = gachaHistoryCache.get(userUid);
+  return Object.entries(cacheData).map(([key, value], index) => ({
+    type: "article",
+    id: `${userUid}_${index}`,
+    title: key,
+    input_message_content: {
+      message_text: String(value),
+    },
+  }));
 }
 
 //sesson management
@@ -913,14 +938,15 @@ async function handleCallbackQuery(cbqObj) {
       return;
     }
     if (cbqData == "save_gacha") {
-      const formatedTextObject = splitTextByDiceToObject(messageText);
+      const gachas = splitTextByDiceToObject(messageText);
       if (gachaHistoryCache.has(userUID)) {
         gachaHistoryCache.del(userUID);
-        gachaHistoryCache.set(userUID, formatedTextObject);
-        sendMessage(chatId, "بروزرسانی شد.");
+        gachaHistoryCache.set(userUID, gachas);
+        await sendMessage(chatId, "بروزرسانی شد.");
       } else {
-        gachaHistoryCache.set(userUID, formatedTextObject);
-        sendMessage(
+        // processSavingGachaHistory(userUID, gachas);
+        gachaHistoryCache.set(userUID, gachas);
+        await sendMessage(
           chatId,
           "ذخیره شد.\nالان میتونی هرجای دیگه ای که دلت خواست به اشتراکشون بزاری"
         );
@@ -1170,30 +1196,6 @@ async function handleChannelPost(postObj) {
   }
 }
 // handling inline queries
-function createQueryResult(userUid) {
-  if (!gachaHistoryCache.has(userUid)) {
-    return [
-      {
-        type: "article",
-        id: "1", // Unique identifier for this result
-        title: "اطلاعاتی داخل بات دخیره نکردی",
-        input_message_content: {
-          message_text:
-            "واسه اینکه اطلاعات گاچات رو برای بقیه به اشتراک بزاری برو داخل بات و دستور /pity رو اجرا کن",
-        },
-      },
-    ];
-  }
-  const cacheData = gachaHistoryCache.get(userUid);
-  return Object.entries(cacheData).map(([key, value], index) => ({
-    type: "article",
-    id: `${userUid}_${index}`,
-    title: key,
-    input_message_content: {
-      message_text: String(value), // Ensure string output
-    },
-  }));
-}
 async function handleInlineQuery(inlineObj) {
   try {
     const queryId = inlineObj.id;

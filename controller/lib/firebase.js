@@ -238,6 +238,21 @@ const checkAndResetExpiredEvents = async () => {
     errorHandler(error, "firebase-checkAndResetExpiredEvents");
   }
 };
+const getGachaHistory = async (userUid) => {
+  try {
+    const resultArray = [];
+    const collectionRef = collection(firestoreDb, "gacha_history");
+    const q = query(collectionRef, where("user_uid", "==", userUid));
+    const docSnap = await getDocs(q);
+    docSnap.forEach((doc) => {
+      resultArray.push(doc.data());
+    });
+    return resultArray;
+  } catch (error) {
+    errorHandler(error, "firebase-getGachaHistory");
+  }
+};
+const updateGachaHistory = async (userUid) => {};
 const getAdminList = async () => {
   const resultArray = [];
   const collectionRef = collection(firestoreDb, "admin_username");
