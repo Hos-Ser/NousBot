@@ -171,7 +171,9 @@ const gachaHistorySaveKb = (text) => {
   return {
     text,
     reply_markup: JSON.stringify({
-      inline_keyboard: [{ text: "دخیره اطلاعات", callback_data: "save_gacha" }],
+      inline_keyboard: [
+        [{ text: "دخیره اطلاعات", callback_data: "save_gacha" }],
+      ],
     }),
   };
 };

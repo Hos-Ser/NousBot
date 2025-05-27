@@ -131,7 +131,7 @@ async function sendMessage(chatId, messageText, isParseMode = false) {
     .post("sendMessage", {
       chat_id: chatId,
       text: messageText,
-      ...(isParseMode && { parse_mode: "Markdown" }),
+      ...(isParseMode && { parse_mode: "MarkdownV2" }),
     })
     .catch((ex) => {
       errorHandler(ex, "sendMessage", "axios");
@@ -214,7 +214,7 @@ async function sendKeyboardMarkdown(chatId, keyboardOptions) {
   return axiosInstance
     .post("sendMessage", {
       chat_id: chatId,
-      parse_mode: "Markdown",
+      parse_mode: "MarkdownV2",
       ...keyboardOptions,
     })
     .catch((ex) => {
@@ -525,7 +525,7 @@ async function handleMessage(messageObj) {
           }
 
           const summary = generateSummary(records);
-          await sendMessage(chatId, summary, true);
+          await sendKeyboardMarkdown(chatId, gachaHistorySaveKb(summary));
           return;
         } else {
           const [gameType, contentType] = sessions[chatId].split(" ");
