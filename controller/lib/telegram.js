@@ -29,6 +29,7 @@ const {
   helperKbFunction,
   deleteSelectionKbFunction,
   pityCounterkb,
+  gachaHistorySaveKb,
 } = require("./util/keyboardOptions");
 const processPrimoCode = require("./util/processPrimoCode");
 const { processSavingAdmin } = require("./util/processSavingAdmin");
@@ -45,36 +46,55 @@ const generateSummary = require("./pity_counter_utlls/generateSummary");
 const MY_TOKEN = process.env.TG_BOT_TOKEN;
 const BASE_URL = `https://api.telegram.org/bot${MY_TOKEN}`;
 const axiosInstance = getAxiosInstance(BASE_URL);
+
+// caches
 const sessions = {};
 const wuwaCache = new NodeCache();
 const genshinCache = new NodeCache();
 const honkaiCache = new NodeCache();
+const gachaHistoryCache = new NodeCache();
 
 function isEnglish(input) {
   const englishRegex = /^[A-Za-z\s]+$/;
   return englishRegex.test(input);
 }
 
-function logFirstRecord(records) {
-  if (!records) {
-    return "❌ No records object received (null/undefined)";
+function splitTextByDiceToObject(text) {
+  // Split the text into lines
+  const lines = text.split("\n");
+
+  // Remove the first line (summary line)
+  if (lines.length > 0) {
+    lines.shift();
   }
 
-  const bannerKeys = Object.keys(records);
+  // Join the remaining lines back into a single string
+  const filteredText = lines.join("\n");
 
-  for (const [bannerKey, bannerData] of Object.entries(records)) {
-    if (!bannerData) {
-      return "⚠️ Banner data is null/undefined";
-    }
+  // Split the text by the dice emoji "🎲"
+  const parts = filteredText.split(/(?=🎲)/g);
 
-    if (bannerData.data) {
-      if (bannerData.data.length > 0) {
-        return `✅ First record:, ${JSON.stringify(bannerData.data[0])}`;
-      }
-    }
-  }
+  // Create the result object
+  const result = {};
 
-  return "❌ No records with data found in any banner";
+  parts.forEach((part) => {
+    if (part.trim() === "") return;
+
+    // Extract the first line (title line)
+    const firstNewLine = part.indexOf("\n");
+    const firstLine =
+      firstNewLine === -1
+        ? part.trim()
+        : part.substring(0, firstNewLine).trim();
+
+    // Remove the dice emoji from the key
+    const key = firstLine.replace("🎲", "").trim();
+
+    // The value is the entire part
+    result[key] = part.trim();
+  });
+
+  return result;
 }
 
 //sesson management
@@ -180,10 +200,11 @@ async function deleteMessage(chatId, messageId) {
       errorHandler(ex, "deleteMessage", "axios");
     });
 }
-async function sendKeyboard(chatId, keyboardOptions) {
+async function sendKeyboard(chatId, keyboardOptions, isParseMode = false) {
   return axiosInstance
     .post("sendMessage", {
       chat_id: chatId,
+      ...(isParseMode && { parse_mode: "Markdown" }),
       ...keyboardOptions,
     })
     .catch((ex) => {
@@ -205,7 +226,7 @@ async function answerInlineQuery(inlineQueryId, results) {
   return axiosInstance
     .post("answerInlineQuery", {
       inline_query_id: inlineQueryId,
-      results,
+      results: JSON.stringify(results),
     })
     .catch((ex) => {
       errorHandler(ex, "answerInlineQuery", "axios");
@@ -494,7 +515,7 @@ async function handleMessage(messageObj) {
           }
 
           const summary = generateSummary(records);
-          await sendMessage(chatId, summary, true);
+          await sendKeyboard(chatId, gachaHistorySaveKb(summary), true);
           return;
         } else {
           const [gameType, contentType] = sessions[chatId].split(" ");
@@ -817,6 +838,7 @@ async function handleCallbackQuery(cbqObj) {
   const chatId = cbqObj.message.chat.id;
   const messageId = cbqObj.message.message_id;
   const cbqData = cbqObj.data;
+  const userUID = cbqObj.from.id;
   try {
     if (cbqData === "close") {
       await deleteMessage(chatId, messageId);
@@ -839,15 +861,24 @@ async function handleCallbackQuery(cbqObj) {
       await sendMessage(
         chatId,
         `
-واسه اینکه بتونم پیتی بازیتو بگیرم کار های زیر رو انجام بده
+آموزش مراحل روی پیسی
 1. بازی رو باز کن
 2. داخل بازی قسمت ویش History رو باز کن و بزار کامل لود شه
 3. داخل ویندوز powershell رو باز کن و متن زیر رو داخلش کپی کن
 \`Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex "&{$((New-Object System.Net.WebClient).DownloadString('https://gist.github.com/MadeBaruna/1d75c1d37d19eca71591ec8a31178235/raw/getlink.ps1'))} global"\`
-4. متن دریافتی رو برام بفرست`,
+4. متن دریافتی رو برام بفرست
+
+
+آموزش مراحل برای گوشی
+1. بازی رو باز کن
+2. داخل قسمت کانوین برو و بعدش گوشیتو بزار روی حالت هواپیما
+3. فسمت History رو باز کن و با پیام مشکل اینترنت برمیخوری
+4. یه متن نامرئی بالای اون پیام هست انگشتت رو روش نگه دار و select all رو بزن و همش رو کپی کن
+5. متن رو برام بفرست`,
         true
       );
       addSession(chatId, "genshinpity");
+      return;
     }
     if (cbqData == "wuwapity") {
       await sendMessage(
@@ -862,6 +893,22 @@ async function handleCallbackQuery(cbqObj) {
         true
       );
       addSession(chatId, "wuwapity");
+      return;
+    }
+    if (cbqData == "save_gacha") {
+      const formatedTextObject = splitTextByDiceToObject(messageText);
+      if (gachaHistoryCache.has(userUID)) {
+        gachaHistoryCache.del(userUID);
+        gachaHistoryCache.set(userUID, formatedTextObject);
+        sendMessage(chatId, "بروزرسانی شد.");
+      } else {
+        gachaHistoryCache.set(userUID, formatedTextObject);
+        sendMessage(
+          chatId,
+          "ذخیره شد.\nالان میتونی هرجای دیگه ای که دلت خواست به اشتراکشون بزاری"
+        );
+        return;
+      }
     }
     if (messageText === "پنل ادمین") {
       switch (cbqData) {
@@ -1043,6 +1090,7 @@ async function handleCallbackQuery(cbqObj) {
       await deleteContent(gameType, contentType, postUrl);
       await updateMessage(chatId, messageId, "Done!");
     }
+
     return;
   } catch (error) {
     errorHandler(error, "handleCallbackQuery");
@@ -1105,12 +1153,40 @@ async function handleChannelPost(postObj) {
   }
 }
 // handling inline queries
+function createQueryResult(userUid) {
+  if (!gachaHistoryCache.has(userUid)) {
+    return [
+      {
+        type: "article",
+        id: "1", // Unique identifier for this result
+        title: "اطلاعاتی داخل بات دخیره نکردی",
+        input_message_content: {
+          message_text:
+            "واسه اینکه اطلاعات گاچات رو برای بقیه به اشتراک بزاری برو داخل بات و دستور /pity رو اجرا کن",
+        },
+      },
+    ];
+  }
+  const cacheData = gachaHistoryCache.get(userUid);
+  const finalResult = [];
+  for (const [key, value] of Object.entries(cacheData)) {
+    finalResult.push({
+      type: "article",
+      id: "1",
+      title: `${key}`,
+      input_message_content: {
+        message_text: `${value}`,
+      },
+    });
+  }
+  return finalResult;
+}
 async function handleInlineQuery(inlineObj) {
   const queryId = inlineObj.id;
-  const queryText = inlineObj.query;
-  let results = ["kif"];
-  if (queryText) {
-  }
+  const userUID = inlineObj.from.id;
+
+  const results = createQueryResult(userUID);
+
   await answerInlineQuery(queryId, results);
   return;
 }

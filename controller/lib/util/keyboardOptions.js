@@ -167,6 +167,14 @@ const pityCounterkb = {
   }),
 };
 
+const gachaHistorySaveKb = (text) => {
+  return {
+    text,
+    reply_markup: JSON.stringify({
+      inline_keyboard: [{ text: "دخیره اطلاعات", callback_data: "save_gacha" }],
+    }),
+  };
+};
 const adminApprovalKbFunction = (text) => {
   return {
     text,
@@ -203,6 +211,7 @@ module.exports = {
   gamesOptionKbFunction,
   contentKbFunction,
   pityCounterkb,
+  gachaHistorySaveKb,
   adminApprovalKbFunction,
   deleteSelectionKbFunction,
   redoKb,
