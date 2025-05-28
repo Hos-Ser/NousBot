@@ -6,7 +6,7 @@ const {
 
 const processSavingGachaHistory = async (userUid, gachas) => {
   const savedGacha = await getGachaHistory(userUid);
-  if (savedGacha.length > 0) {
+  if (savedGacha.length === 0) {
     await uploadProcessedData(
       {
         user_uid: userUid,
