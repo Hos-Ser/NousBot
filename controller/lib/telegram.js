@@ -102,7 +102,7 @@ async function createQueryResult(userUid) {
   if (!gachaHistoryCache.has(userUid)) {
     try {
       const gachaHistory = await getGachaHistory(userUid);
-      if (gachaHistory.length > 0) {
+      if (gachaHistory.length === 0) {
         return [
           {
             type: "article",
@@ -123,7 +123,9 @@ async function createQueryResult(userUid) {
       errorHandler(error);
     }
   }
+
   const cacheData = gachaHistoryCache.get(userUid);
+  console.log(cacheData);
   return Object.entries(cacheData).map(([key, value], index) => ({
     type: "article",
     id: `${userUid}_${index}`,
@@ -1216,7 +1218,7 @@ async function handleInlineQuery(inlineObj) {
     const queryId = inlineObj.id;
     const userUID = inlineObj.from.id;
 
-    const results = createQueryResult(userUID);
+    const results = await createQueryResult(userUID);
 
     await answerInlineQuery(queryId, results);
     return;
