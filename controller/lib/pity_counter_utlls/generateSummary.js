@@ -6,23 +6,18 @@ function generateSummary(records) {
 
     const bannerType = bannerKey.split("_")[1];
     let bannerName;
-    let prompt;
     switch (bannerType) {
       case "1":
         bannerName = "بنر کرکتر ایونت";
-        prompt = "ec";
         break;
       case "2":
         bannerName = "بنر اسلحه ایونت";
-        prompt = "ew";
         break;
       case "3":
         bannerName = "بنر کرکتر استاندارد";
-        prompt = "sc";
         break;
       case "4":
         bannerName = "بنر اسلحه استاندارد";
-        prompt = "sw";
         break;
       default:
         bannerName = "Unknown";

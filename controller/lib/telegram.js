@@ -542,6 +542,7 @@ async function handleMessage(messageObj) {
           deleteSession(chatId);
           return;
         } else if (sessions[chatId].includes("wuwapity")) {
+          deleteSession(chatId);
           if (
             !messageText.startsWith(
               "https://aki-gm-resources-oversea.aki-game.net"
@@ -550,7 +551,6 @@ async function handleMessage(messageObj) {
             await sendMessage(chatId, "ورودی اشتباهه!");
             return;
           }
-          deleteSession(chatId);
           await sendMessage(chatId, "درحال پردازش لطفا صبر کنید...");
           // Extract auth params
           const authParams = extractAuthParams(messageText);
