@@ -252,7 +252,15 @@ const getGachaHistory = async (userUid) => {
     errorHandler(error, "firebase-getGachaHistory");
   }
 };
-const updateGachaHistory = async (userUid) => {};
+const updateGachaHistory = async (userUid, newGachaData) => {
+  const collectionRef = collection(firestoreDb, "gacha_history");
+  const q = query(collectionRef, where("user_uid", "==", userUid));
+  const docSnap = await getDocs(q);
+  const docRef = doc(firestoreDb, "gacha_history", docSnap.docs[0].id);
+  await updateDoc(docRef, {
+    gacha_data: newGachaData,
+  });
+};
 const getAdminList = async () => {
   const resultArray = [];
   const collectionRef = collection(firestoreDb, "admin_username");
@@ -336,6 +344,8 @@ module.exports = {
   getContentList,
   getMyChatId,
   deleteSavedChatId,
+  getGachaHistory,
+  updateGachaHistory,
   getAdminList,
   getHelperList,
   deleteContent,

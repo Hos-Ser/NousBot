@@ -13,6 +13,7 @@ const {
   getEventList,
   getEvent,
   deleteMedia,
+  getGachaHistory,
 } = require("./firebase");
 const { errorHandler } = require("./helper");
 const {
@@ -97,19 +98,30 @@ function splitTextByDiceToObject(text) {
 
   return result;
 }
-function createQueryResult(userUid) {
+async function createQueryResult(userUid) {
   if (!gachaHistoryCache.has(userUid)) {
-    return [
-      {
-        type: "article",
-        id: "1", // Unique identifier for this result
-        title: "اطلاعاتی داخل بات دخیره نکردی",
-        input_message_content: {
-          message_text:
-            "واسه اینکه اطلاعات گاچات رو برای بقیه به اشتراک بزاری برو داخل بات و دستور /pity رو اجرا کن",
-        },
-      },
-    ];
+    try {
+      const gachaHistory = await getGachaHistory(userUid);
+      if (gachaHistory.length > 0) {
+        return [
+          {
+            type: "article",
+            id: "1", // Unique identifier for this result
+            title: "اطلاعاتی داخل بات دخیره نکردی",
+            input_message_content: {
+              message_text:
+                "واسه اینکه اطلاعات گاچات رو برای بقیه به اشتراک بزاری برو داخل بات و دستور /pity رو اجرا کن",
+            },
+          },
+        ];
+      }
+      gachaHistoryCache.set(
+        gachaHistory[0].user_uid,
+        gachaHistory[0].gacha_data
+      );
+    } catch (error) {
+      errorHandler(error);
+    }
   }
   const cacheData = gachaHistoryCache.get(userUid);
   return Object.entries(cacheData).map(([key, value], index) => ({
@@ -942,10 +954,13 @@ async function handleCallbackQuery(cbqObj) {
       if (gachaHistoryCache.has(userUID)) {
         gachaHistoryCache.del(userUID);
         gachaHistoryCache.set(userUID, gachas);
+        await processSavingGachaHistory(userUID, gachas);
+        await updateMessage(chatId, messageId, messageText);
         await sendMessage(chatId, "بروزرسانی شد.");
       } else {
-        // processSavingGachaHistory(userUID, gachas);
         gachaHistoryCache.set(userUID, gachas);
+        await processSavingGachaHistory(userUID, gachas);
+        await updateMessage(chatId, messageId, messageText);
         await sendMessage(
           chatId,
           "ذخیره شد.\nالان میتونی هرجای دیگه ای که دلت خواست به اشتراکشون بزاری"
