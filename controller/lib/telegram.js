@@ -540,7 +540,6 @@ async function handleMessage(messageObj) {
           return;
         } else if (sessions[chatId].includes("genshinpity")) {
           deleteSession(chatId);
-          await sendMessage(chatId, "هنوز کامل نشده");
           return;
         } else if (sessions[chatId].includes("wuwapity")) {
           if (
@@ -548,7 +547,8 @@ async function handleMessage(messageObj) {
               "https://aki-gm-resources-oversea.aki-game.net"
             )
           ) {
-            throw new Error("ورودی اشتباهه!");
+            await sendMessage(chatId, "ورودی اشتباهه!");
+            return;
           }
           deleteSession(chatId);
           await sendMessage(chatId, "درحال پردازش لطفا صبر کنید...");
@@ -907,6 +907,9 @@ async function handleCallbackQuery(cbqObj) {
       return;
     }
     if (cbqData == "genshinpity") {
+      //FIXME fix this after implenting genshin datas
+      await sendMessage(chatId, "هنوز کامل نشده");
+      return;
       await sendMessage(
         chatId,
         `
