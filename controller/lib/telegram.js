@@ -968,7 +968,7 @@ async function handleCallbackQuery(cbqObj) {
         await updateMessage(chatId, messageId, messageText);
         await sendMessage(
           chatId,
-          "ذخیره شد.\nالان میتونی هرجای دیگه ای که دلت خواست به اشتراکشون بزاری"
+          "ذخیره شد.\nبا نوشتن @NousTheBot اطلاعااتت بهت نمایش داده میشه و میتونی هرجایی دوست داشتی به اشتراکشون بزاری."
         );
       }
       return;
