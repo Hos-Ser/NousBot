@@ -371,7 +371,10 @@ const handleGpMessages = async (
   if (gpCache.keys().length === 0) {
     await renewCache(gpCache, gpName);
   }
-  if (messageObj.from.username === "emoedgy") {
+  if (
+    messageObj.from.username === "emoedgy" ||
+    messageObj.from.username === "misaghoooo"
+  ) {
     if (messageText.toLowerCase().startsWith("event")) {
       try {
         await processSavingEvent(messageText, gpName);
