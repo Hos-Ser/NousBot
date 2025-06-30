@@ -276,6 +276,7 @@ async function answerInlineQuery(inlineQueryId, results) {
     .post("answerInlineQuery", {
       inline_query_id: inlineQueryId,
       results: JSON.stringify(results),
+      cache_time: 0,
     })
     .catch((ex) => {
       errorHandler(ex, "answerInlineQuery", "axios");
