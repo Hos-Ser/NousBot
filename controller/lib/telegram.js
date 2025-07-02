@@ -108,11 +108,14 @@ async function createQueryResult(userUid) {
           {
             type: "article",
             id: "1",
-            title: "اطلاعاتی داخل بات دخیره نکردی",
+            title: "اطلاعاتی داخل بات ذخیره نکردی",
+            description: "برای اشتراک‌گذاری اطلاعاتت وارد بات شو",
             input_message_content: {
               message_text:
                 "واسه اینکه اطلاعات گاچات رو برای بقیه به اشتراک بزاری برو داخل بات و دستور /pity رو اجرا کن",
             },
+            url: "https://t.me/nousthebot?start",
+            hide_url: true,
           },
         ];
       }
