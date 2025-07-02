@@ -3,7 +3,7 @@ const { Timestamp } = require("firebase/firestore");
 
 const processSavingPeriodicEvent = async (messageText, gpName) => {
   const [eventName, expireDay, expireHour, resetDuration, ...rest] = messageText
-    .substring(5)
+    .substring(3)
     .trim()
     .split("\n");
   if (

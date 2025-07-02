@@ -14,6 +14,7 @@ const {
   getEvent,
   deleteMedia,
   getGachaHistory,
+  checkAndResetExpiredEvents,
 } = require("./firebase");
 const { errorHandler } = require("./helper");
 const {
@@ -33,7 +34,7 @@ const {
   gachaHistorySaveKb,
 } = require("./util/keyboardOptions");
 const processPrimoCode = require("./util/processPrimoCode");
-const { processSavingAdmin } = require("./util/processSavingAdmin");
+const processSavingAdmin = require("./util/processSavingAdmin");
 const processSavingChatId = require("./util/processSavingChatId");
 const processSavingContent = require("./util/processSavingContent");
 const processSavingHelperUser = require("./util/processSavingHelperUser");
@@ -106,7 +107,7 @@ async function createQueryResult(userUid) {
         return [
           {
             type: "article",
-            id: "1", // Unique identifier for this result
+            id: "1",
             title: "اطلاعاتی داخل بات دخیره نکردی",
             input_message_content: {
               message_text:
@@ -332,6 +333,7 @@ const handleContents = async (chatId, gameType, contentType, enteredText) => {
   }
 };
 const handleEvents = async (gpName) => {
+  await checkAndResetExpiredEvents(gpName);
   const eventList = await getEventList(gpName);
   if (eventList.length === 0) {
     throw new Error("Timeline Is Empty!");

@@ -211,7 +211,7 @@ const getEvent = async (linkParam) => {
     errorHandler(error, "firebase-getEvent");
   }
 };
-const checkAndResetExpiredEvents = async () => {
+const checkAndResetExpiredEvents = async (gpName) => {
   try {
     const collectionRef = collection(firestoreDb, "timeline");
     const currentTime = Timestamp.now();
@@ -224,16 +224,17 @@ const checkAndResetExpiredEvents = async () => {
     if (docSnap.empty) {
       return;
     }
-    docSnap.forEach(async (doc) => {
+    for (const doc of docSnap.docs) {
       const event = doc.data();
       if (event.reset_duration) {
+        const secondsToAdd = event.reset_duration * 24 * 60 * 60;
         const newExpirationTime = new Timestamp(
-          currentTime.seconds + event.reset_duration * 24 * 60 * 60 * 1000,
-          currentTime.nanoseconds
+          currentTime.seconds + secondsToAdd,
+          0
         );
         await updateDoc(doc.ref, { expire_at: newExpirationTime });
       }
-    });
+    }
   } catch (error) {
     errorHandler(error, "firebase-checkAndResetExpiredEvents");
   }

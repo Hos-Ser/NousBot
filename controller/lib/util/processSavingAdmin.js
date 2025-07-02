@@ -15,4 +15,4 @@ const processSavingAdmin = async (messageText) => {
   }
 };
 
-module.exports = { processSavingAdmin };
+module.exports = processSavingAdmin;
