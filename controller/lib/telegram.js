@@ -104,20 +104,7 @@ async function createQueryResult(userUid) {
     try {
       const gachaHistory = await getGachaHistory(userUid);
       if (gachaHistory.length === 0) {
-        return [
-          {
-            type: "article",
-            id: "1",
-            title: "اطلاعاتی داخل بات ذخیره نکردی",
-            description: "برای اشتراک‌گذاری اطلاعاتت وارد بات شو",
-            input_message_content: {
-              message_text:
-                "واسه اینکه اطلاعات گاچات رو برای بقیه به اشتراک بزاری برو داخل بات و دستور /pity رو اجرا کن",
-            },
-            url: "https://t.me/nousthebot?start",
-            hide_url: true,
-          },
-        ];
+        return false;
       }
       gachaHistoryCache.set(
         gachaHistory[0].user_uid,
@@ -276,6 +263,19 @@ async function updateInlineKeyboard(chatId, messageId, newKeyboard) {
     });
 }
 async function answerInlineQuery(inlineQueryId, results) {
+  if (!results) {
+    return axiosInstance
+      .post("answerInlineQuery", {
+        inline_query_id: inlineQueryId,
+        results: [],
+        cache_time: 0,
+        switch_pm_text: "برای شروع وارد بات شو و دستور /pity رو بزن",
+        switch_pm_parameter: "x",
+      })
+      .catch((ex) => {
+        errorHandler(ex, "answerInlineQuery", "axios");
+      });
+  }
   return axiosInstance
     .post("answerInlineQuery", {
       inline_query_id: inlineQueryId,
