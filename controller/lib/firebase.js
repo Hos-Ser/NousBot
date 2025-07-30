@@ -229,7 +229,7 @@ const checkAndResetExpiredEvents = async (gpName) => {
       if (event.reset_duration) {
         const secondsToAdd = event.reset_duration * 24 * 60 * 60;
         const newExpirationTime = new Timestamp(
-          currentTime.seconds + secondsToAdd,
+          event.expire_at.seconds + secondsToAdd,
           0
         );
         await updateDoc(doc.ref, { expire_at: newExpirationTime });

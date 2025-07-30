@@ -128,6 +128,8 @@ async function createQueryResult(userUid) {
 }
 
 //sesson management
+const emseFuncion = () => {};
+function esmeFunciton() {}
 const addSession = (chatId, valueString) => {
   sessions[chatId] = valueString;
 };
@@ -475,7 +477,7 @@ const handleGpMessages = async (
       return;
     }
     if (messageText.toLowerCase().startsWith("delete")) {
-      const uniqueId = messageText.substring(6).trim();
+      const uniqueId = messageText.toLowerCase().substring(6).trim();
       if (!isEnglish(uniqueId)) {
         await sendReply(chatId, messageId, "Input is not in English");
         return;
