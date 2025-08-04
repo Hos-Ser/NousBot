@@ -500,7 +500,9 @@ const handleGpMessages = async (
   if (
     messageText.toLowerCase() === "events" ||
     messageText.toLowerCase() === "timeline" ||
-    messageText.toLowerCase() === "ایونت"
+    messageText.toLowerCase() === "ایونت" ||
+    messageText.toLowerCase() === "بنر" ||
+    messageText.toLowerCase() === "banner"
   ) {
     try {
       await handleEvents(gpName);
