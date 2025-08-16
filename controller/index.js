@@ -19,11 +19,11 @@ async function handler(req) {
       await handleCallbackQuery(cbqObj);
       return "Success";
     }
-    // if (body && body.channel_post) {
-    //   const postObj = body.channel_post;
-    //   await handleChannelPost(postObj);
-    //   return "Success";
-    // }
+    if (body && body.channel_post) {
+      const postObj = body.channel_post;
+      await handleChannelPost(postObj);
+      return "Success";
+    }
     if (body && body.inline_query) {
       const postObj = body.inline_query;
       await handleInlineQuery(postObj);

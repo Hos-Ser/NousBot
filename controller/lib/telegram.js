@@ -554,7 +554,7 @@ async function handleMessage(messageObj) {
   const chatId = messageObj.chat.id;
   const messageId = messageObj.message_id;
   const chatUsername = messageObj.chat.username;
-  const userId = messageId.from.id;
+  const userId = messageObj.from.id;
   if (messageObj.chat.type === "private") {
     try {
       // waiting for session handling
