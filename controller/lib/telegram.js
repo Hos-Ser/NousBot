@@ -289,7 +289,7 @@ async function answerInlineQuery(inlineQueryId, results) {
 }
 async function isUserInChannel(userId, channelUsername) {
   try {
-    const res = await axiosInstance.post("getChatMember", {
+    const res = await axiosInstance.get("getChatMember", {
       chat_id: channelUsername,
       user_id: userId,
     });
@@ -538,7 +538,8 @@ const handleGpMessages = async (
   return;
 };
 async function checkUserInChannels(userId, chatId) {
-  const REQUIRED_CHANNELS = ["@wuwagp"];
+  const REQUIRED_CHANNELS = ["@somerandomchnltotestbot"];
+  // TODO change this
   for (const channel of REQUIRED_CHANNELS) {
     const isMember = await isUserInChannel(userId, channel);
     if (!isMember) {

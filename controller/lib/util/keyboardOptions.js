@@ -15,16 +15,15 @@ const startKb = {
 const joinChannelsKb = {
   text: "برای شرکت در نظر سنجی باید تو چنلای ما جوین باشی",
   reply_markup: JSON.stringify({
-    keyboard: [
+    inline_keyboard: [
       [
         {
           text: "📢 Join Channel",
-          url: `https://t.me/wuwagp}`,
+          url: `https://t.me/somerandomchnltotestbot`,
+          // TODO change this
         },
       ],
     ],
-    resize_keyboard: true,
-    one_time_keyboard: true,
   }),
 };
 /**
