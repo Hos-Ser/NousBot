@@ -32,6 +32,7 @@ const {
   deleteSelectionKbFunction,
   pityCounterkb,
   gachaHistorySaveKb,
+  joinChannelsKb,
 } = require("./util/keyboardOptions");
 const processPrimoCode = require("./util/processPrimoCode");
 const processSavingAdmin = require("./util/processSavingAdmin");
@@ -128,8 +129,6 @@ async function createQueryResult(userUid) {
 }
 
 //sesson management
-const emseFuncion = () => {};
-function esmeFunciton() {}
 const addSession = (chatId, valueString) => {
   sessions[chatId] = valueString;
 };
@@ -287,6 +286,19 @@ async function answerInlineQuery(inlineQueryId, results) {
     .catch((ex) => {
       errorHandler(ex, "answerInlineQuery", "axios");
     });
+}
+async function isUserInChannel(userId, channelUsername) {
+  try {
+    const res = await axiosInstance.post("getChatMember", {
+      chat_id: channelUsername,
+      user_id: userId,
+    });
+
+    const status = res.data.result.status;
+    return ["creator", "administrator", "member"].includes(status);
+  } catch (error) {
+    errorHandler(error, "getMembership", "axios");
+  }
 }
 // const handleGpMessages = async (gpName, cache) => {
 
@@ -525,12 +537,24 @@ const handleGpMessages = async (
   }
   return;
 };
+async function checkUserInChannels(userId, chatId) {
+  const REQUIRED_CHANNELS = ["@wuwagp"];
+  for (const channel of REQUIRED_CHANNELS) {
+    const isMember = await isUserInChannel(userId, channel);
+    if (!isMember) {
+      await sendKeyboard(chatId, joinChannelsKb);
+      return false;
+    }
+  }
+  return true;
+}
 // handling messages
 async function handleMessage(messageObj) {
   const messageText = messageObj.text || "";
   const chatId = messageObj.chat.id;
   const messageId = messageObj.message_id;
   const chatUsername = messageObj.chat.username;
+  const userId = messageId.from.id;
   if (messageObj.chat.type === "private") {
     try {
       // waiting for session handling
@@ -696,6 +720,16 @@ async function handleMessage(messageObj) {
       }
       // text handling:
       switch (messageText) {
+        case "°˖✧Event✧˖°":
+          try {
+            if (await checkUserInChannels(userId, chatId)) {
+              await sendMessage(chatId, `User is joined ${userId}`);
+            }
+            await sendMessage(chatId, `User is not joined ${userId}`);
+          } catch (error) {
+            await sendMessage(chatId, `${error}`);
+          }
+          return;
         case "⋆˚₊⋆Genshin Impact๑⋆˚₊⊹":
           await sendKeyboard(chatId, gameMenuKbFunction("⚝"));
           return;
@@ -1181,49 +1215,7 @@ async function handleChannelPost(postObj) {
   if (postObj.caption) {
     messageText = postObj.caption;
   }
-  const archiveChannelChatId = -1002171059188;
   try {
-    if (
-      ["IRWutheringWaves", "IRStarRail", "IRImpact"].includes(
-        postObj.chat.username
-      )
-    ) {
-      const head = messageText.substring(0, messageText.indexOf("\n"));
-      if (
-        head.includes("#𝐆𝐔𝐈𝐃𝐄") ||
-        head.includes("#𝐒𝐓𝐎𝐑𝐘") ||
-        head.includes("#𝐂𝐎𝐃𝐄") ||
-        head.includes("#𝐂𝐇𝐀𝐑𝐀𝐂𝐓𝐄𝐑𝐒")
-      ) {
-        const meh = messageText.substring(messageText.indexOf("\n") + 1).trim();
-        const title = meh.substring(0, meh.indexOf("\n"));
-        await sendMessage(
-          archiveChannelChatId,
-          `${title}\nhttps://t.me/${postObj.chat.username}/${postObj.message_id}`
-        );
-      }
-      return;
-    }
-    if (postObj.chat.username === "NousBot_archive") {
-      if (postObj.forward_from_chat) {
-        const meh = messageText.substring(messageText.indexOf("\n") + 1).trim();
-        const title = meh.substring(0, meh.indexOf("\n"));
-        await sendMessage(
-          archiveChannelChatId,
-          `${title}\nhttps://t.me/${postObj.forward_from_chat.username}/${postObj.forward_from_message_id}`
-        );
-        await deleteMessage(postObj.chat.id, postObj.message_id);
-      }
-      return;
-    }
-    // if (postObj.chat.username === "NousTheBot_Archive") {
-    //   await sendMessage(
-    //     archiveChannelChatId,
-    //     `${messageText}\nhttps://t.me/${postObj.chat.username}/${postObj.message_id}`
-    //   );
-    //   return;
-    // }
-    return;
   } catch (error) {
     errorHandler(error, "handleChannelPost");
   }

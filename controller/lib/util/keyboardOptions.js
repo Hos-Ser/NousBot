@@ -2,10 +2,26 @@ const startKb = {
   text: "خوش اومدی! درباره کدوم بازی میخوای بدونی؟",
   reply_markup: JSON.stringify({
     keyboard: [
+      [{ text: "°˖✧Event✧˖°" }],
       [{ text: "⋆˚₊⋆Genshin Impact๑⋆˚₊⊹" }],
       [{ text: "༶⋆˙⊹｡Honkai Starrail✯ ˛˚" }],
       [{ text: "˚⋆˙✧⋆Wuthering Waves˚ ⋆·˚" }],
       [{ text: "دنبال یکی میگردی که تو بازیت بهت کمک کنه؟" }],
+    ],
+    resize_keyboard: true,
+    one_time_keyboard: true,
+  }),
+};
+const joinChannelsKb = {
+  text: "برای شرکت در نظر سنجی باید تو چنلای ما جوین باشی",
+  reply_markup: JSON.stringify({
+    keyboard: [
+      [
+        {
+          text: "📢 Join Channel",
+          url: `https://t.me/wuwagp}`,
+        },
+      ],
     ],
     resize_keyboard: true,
     one_time_keyboard: true,
@@ -203,6 +219,7 @@ const redoKb = (gameInfo) => {
 
 module.exports = {
   startKb,
+  joinChannelsKb,
   gameMenuKbFunction,
   lookingForHelpKb,
   wannaHelpKb,
