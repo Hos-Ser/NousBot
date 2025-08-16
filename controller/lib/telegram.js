@@ -724,8 +724,9 @@ async function handleMessage(messageObj) {
           try {
             if (await checkUserInChannels(userId, chatId)) {
               await sendMessage(chatId, `User is joined ${userId}`);
+            } else {
+              await sendMessage(chatId, `User is not joined ${userId}`);
             }
-            await sendMessage(chatId, `User is not joined ${userId}`);
           } catch (error) {
             await sendMessage(chatId, `${error}`);
           }
