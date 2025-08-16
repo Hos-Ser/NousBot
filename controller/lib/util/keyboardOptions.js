@@ -205,6 +205,14 @@ const adminApprovalKbFunction = (text) => {
     }),
   };
 };
+const savedGachaSwitchKb = {
+  text: "ذخیره شد",
+  reply_markup: JSON.stringify({
+    inline_keyboard: [
+      [{ text: "امتحانش کن!", switch_inline_query_current_chat: "" }],
+    ],
+  }),
+};
 
 const redoKb = (gameInfo) => {
   return {
@@ -232,5 +240,6 @@ module.exports = {
   gachaHistorySaveKb,
   adminApprovalKbFunction,
   deleteSelectionKbFunction,
+  savedGachaSwitchKb,
   redoKb,
 };

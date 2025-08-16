@@ -33,6 +33,7 @@ const {
   pityCounterkb,
   gachaHistorySaveKb,
   joinChannelsKb,
+  savedGachaSwitchKb,
 } = require("./util/keyboardOptions");
 const processPrimoCode = require("./util/processPrimoCode");
 const processSavingAdmin = require("./util/processSavingAdmin");
@@ -1015,10 +1016,7 @@ async function handleCallbackQuery(cbqObj) {
         gachaHistoryCache.set(userUID, gachas);
         await processSavingGachaHistory(userUID, gachas);
         await updateMessage(chatId, messageId, messageText);
-        await sendMessage(
-          chatId,
-          "ذخیره شد.\nبا نوشتن @NousTheBot اطلاعااتت بهت نمایش داده میشه و میتونی هرجایی دوست داشتی به اشتراکشون بزاری."
-        );
+        await sendKeyboard(chatId, savedGachaSwitchKb);
       }
       return;
     }
