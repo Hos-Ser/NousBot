@@ -966,6 +966,7 @@ async function handleCallbackQuery(cbqObj) {
   const messageId = cbqObj.message.message_id;
   const cbqData = cbqObj.data;
   const userUID = cbqObj.from.id;
+  const userUname = cbqObj.from.username;
   try {
     if (cbqData === "close") {
       await deleteMessage(chatId, messageId);
@@ -1123,9 +1124,9 @@ async function handleCallbackQuery(cbqObj) {
     }
     if (cbqData.startsWith("voter|")) {
       const [_, contestId, optionId] = cbqData.split("|");
-      await voteOption(contestId, optionId, userUID)
+      await voteOption(contestId, optionId, userUname)
         .then(() => {
-          return answerCallbackQuery(cbqId, "تبت شد");
+          return answerCallbackQuery(cbqId, "ثبت شد");
         })
         .catch((err) => {
           return answerCallbackQuery(cbqId, err.message);
