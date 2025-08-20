@@ -352,7 +352,9 @@ const deleteContest = async (contestId) => {
 };
 const addOption = async (contestId) => {
   const options = await getContestOptions(contestId);
-  const nextNumber = options.length + 1;
+  const maxIndex =
+    options.length > 0 ? Math.max(...options.map((o) => o.index)) : 0;
+  const nextNumber = maxIndex + 1;
 
   const optionRef = doc(
     collection(firestoreDb, "contests", contestId, "options")
@@ -384,7 +386,7 @@ const voteOption = async (contestId, optionId, username) => {
     const data = optionSnap.data();
 
     if (data.voters.includes(username)) {
-      throw new Error("User already voted for this option");
+      throw new Error("قبلا به این رای دادی!");
     }
 
     t.update(optionRef, {

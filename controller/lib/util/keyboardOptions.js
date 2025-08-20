@@ -224,8 +224,8 @@ const redoKb = (gameInfo) => {
   };
 };
 
-const contestsKbFunction = (contestList) => {
-  const keyboard = contestList.map((c) => [
+const contestsKbFunction = (contests) => {
+  const keyboard = contests.map((c) => [
     { text: c.name, callback_data: `contest|${c.id}` },
   ]);
   keyboard.push([{ text: "Create New Contest", callback_data: "contest|new" }]);
@@ -246,7 +246,7 @@ const contestOptionKbFunction = (options, contestId) => {
       callback_data: `option|${contestId}|${o.id}`,
     });
 
-    if (row.length === 6 || i === options.length - 1) {
+    if (row.length === 4 || i === options.length - 1) {
       rows.push(row);
       row = [];
     }
@@ -272,8 +272,42 @@ const optionDeleteKbFunction = (contestId, optionId) => {
             callback_data: `deleteOption|${contestId}|${optionId}`,
           },
         ],
-        [{ text: "Close", callback_data: `close` }],
+        [{ text: "⬅ Back", callback_data: `contest|${contestId}` }],
       ],
+    }),
+  };
+};
+
+const voterContestKbFunction = (contests) => {
+  const keyboard = contests.map((c) => [
+    { text: c.name, callback_data: `voterCon|${c.id}|${c.name}` },
+  ]);
+  return {
+    text: "لیست مسابقات",
+    reply_markup: JSON.stringify({
+      inline_keyboard: keyboard,
+    }),
+  };
+};
+const voterOptionKbFunction = (options, contestId, contestName) => {
+  const rows = [];
+  let row = [];
+
+  options.forEach((o, i) => {
+    row.push({
+      text: `${o.index}`,
+      callback_data: `voter|${contestId}|${o.id}`,
+    });
+
+    if (row.length === 5 || i === options.length - 1) {
+      rows.push(row);
+      row = [];
+    }
+  });
+  return {
+    text: `🎉 ${contestName}`,
+    reply_markup: JSON.stringify({
+      inline_keyboard: rows,
     }),
   };
 };
@@ -299,4 +333,6 @@ module.exports = {
   contestsKbFunction,
   contestOptionKbFunction,
   optionDeleteKbFunction,
+  voterContestKbFunction,
+  voterOptionKbFunction,
 };

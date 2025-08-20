@@ -20,6 +20,7 @@ const {
   getContestOptions,
   addOption,
   deleteOption,
+  voteOption,
 } = require("./firebase");
 const { errorHandler } = require("./helper");
 const {
@@ -42,6 +43,8 @@ const {
   contestsKbFunction,
   contestOptionKbFunction,
   optionDeleteKbFunction,
+  voterContestKbFunction,
+  voterOptionKbFunction,
 } = require("./util/keyboardOptions");
 const processPrimoCode = require("./util/processPrimoCode");
 const processSavingAdmin = require("./util/processSavingAdmin");
@@ -562,7 +565,6 @@ async function checkUserInChannels(userId, chatId) {
   for (const channel of REQUIRED_CHANNELS) {
     const isMember = await isUserInChannel(userId, channel);
     if (!isMember) {
-      await sendKeyboard(chatId, joinChannelsKb);
       return false;
     }
   }
@@ -742,15 +744,12 @@ async function handleMessage(messageObj) {
       }
       // text handling:
       switch (messageText) {
-        case "°˖✧Event✧˖°":
-          try {
-            if (await checkUserInChannels(userId, chatId)) {
-              await sendMessage(chatId, `User is joined ${userId}`);
-            } else {
-              await sendMessage(chatId, `User is not joined ${userId}`);
-            }
-          } catch (error) {
-            await sendMessage(chatId, `${error}`);
+        case "°˖✧مسابقات✧˖°":
+          if (await checkUserInChannels(userId, chatId)) {
+            const contests = await getContests();
+            await sendKeyboard(chatId, voterContestKbFunction(contests));
+          } else {
+            await sendKeyboard(chatId, joinChannelsKb);
           }
           return;
         case "⋆˚₊⋆Genshin Impact๑⋆˚₊⊹":
@@ -1051,7 +1050,12 @@ async function handleCallbackQuery(cbqObj) {
         return;
       }
       const options = await getContestOptions(contestId);
-      await sendKeyboard(chatId, contestOptionKbFunction(options, contestId));
+      await updateMessage(
+        chatId,
+        messageId,
+        "",
+        contestOptionKbFunction(options, contestId)
+      );
       await answerCallbackQuery(cbqId);
       return;
     }
@@ -1094,6 +1098,29 @@ async function handleCallbackQuery(cbqObj) {
         contestOptionKbFunction(options, contestId)
       );
       await answerCallbackQuery(cbqId, "Option deleted ✅");
+    }
+    if (cbqData.startsWith("voterCon|")) {
+      const [_, contestId, contestName] = cbqData.split("|");
+      const options = await getContestOptions(contestId);
+      await updateMessage(
+        chatId,
+        messageId,
+        "",
+        voterOptionKbFunction(options, contestId, contestName)
+      );
+      await answerCallbackQuery(cbqId);
+      return;
+    }
+    if (cbqData.startsWith("voter|")) {
+      const [_, contestId, optionId] = cbqData.split("|");
+      await voteOption(contestId, optionId, userUID).then(
+        () => {
+          return answerCallbackQuery(cbqId, "تبت شد");
+        },
+        (err) => {
+          return answerCallbackQuery(cbqId, err);
+        }
+      );
     }
     if (messageText === "پنل ادمین") {
       switch (cbqcbqData) {
