@@ -624,6 +624,7 @@ async function handleMessage(messageObj) {
           await sendKeyboardMarkdown(chatId, gachaHistorySaveKb(summary));
           return;
         } else if (sessions[chatId].includes("contest")) {
+          deleteSession(chatId);
           await createContest(messageText);
           await sendMessage(chatId, "Done");
         } else {
