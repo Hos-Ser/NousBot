@@ -258,13 +258,12 @@ const contestOptionKbFunction = (options, contestId) => {
   return {
     text: "Contest Options:",
     reply_markup: JSON.stringify({
-      inline_keyboard: keyboard,
+      inline_keyboard: rows,
     }),
   };
 };
-const optionDeleteKbFunction = (contestId, optionId, optionObj) => {
+const optionDeleteKbFunction = (contestId, optionId) => {
   return {
-    text: `${optionObj.index}. ${optionObj.votesCount}❤ \nWanna Delete?!?!`,
     reply_markup: JSON.stringify({
       inline_keyboard: [
         [

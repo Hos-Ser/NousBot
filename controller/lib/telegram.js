@@ -1072,9 +1072,11 @@ async function handleCallbackQuery(cbqObj) {
       }
       const options = await getContestOptions(contestId);
       const option = options.find((o) => o.id === optionId);
-      await sendKeyboard(
+      await updateMessage(
         chatId,
-        optionDeleteKbFunction(contestId, optionId, option)
+        messageId,
+        `${option.index}. ${option.votesCount}❤ \nWanna Delete?!?!`,
+        optionDeleteKbFunction(contestId, optionId)
       );
 
       await answerCallbackQuery(cbqId);
@@ -1085,9 +1087,10 @@ async function handleCallbackQuery(cbqObj) {
 
       await deleteOption(contestId, optionId);
       const options = await getContestOptions(contestId);
-      await updateInlineKeyboard(
+      await updateMessage(
         chatId,
         messageId,
+        "",
         contestOptionKbFunction(options, contestId)
       );
       await answerCallbackQuery(cbqId, "Option deleted ✅");
