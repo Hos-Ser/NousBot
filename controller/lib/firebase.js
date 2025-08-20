@@ -12,6 +12,7 @@ const {
   where,
   Timestamp,
   runTransaction,
+  arrayUnion,
 } = require("firebase/firestore");
 const { errorHandler } = require("./helper");
 
