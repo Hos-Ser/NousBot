@@ -1113,14 +1113,13 @@ async function handleCallbackQuery(cbqObj) {
     }
     if (cbqData.startsWith("voter|")) {
       const [_, contestId, optionId] = cbqData.split("|");
-      await voteOption(contestId, optionId, userUID).then(
-        () => {
+      await voteOption(contestId, optionId, userUID)
+        .then(() => {
           return answerCallbackQuery(cbqId, "تبت شد");
-        },
-        (err) => {
-          return answerCallbackQuery(cbqId, err);
-        }
-      );
+        })
+        .catch((err) => {
+          return answerCallbackQuery(cbqId, err.message);
+        });
     }
     if (messageText === "پنل ادمین") {
       switch (cbqcbqData) {
