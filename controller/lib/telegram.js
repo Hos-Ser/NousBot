@@ -15,6 +15,11 @@ const {
   deleteMedia,
   getGachaHistory,
   checkAndResetExpiredEvents,
+  createContest,
+  getContests,
+  getContestOptions,
+  addOption,
+  deleteOption,
 } = require("./firebase");
 const { errorHandler } = require("./helper");
 const {
@@ -34,6 +39,9 @@ const {
   gachaHistorySaveKb,
   joinChannelsKb,
   savedGachaSwitchKb,
+  contestsKbFunction,
+  contestOptionKbFunction,
+  optionDeleteKbFunction,
 } = require("./util/keyboardOptions");
 const processPrimoCode = require("./util/processPrimoCode");
 const processSavingAdmin = require("./util/processSavingAdmin");
@@ -241,6 +249,16 @@ async function sendKeyboard(chatId, keyboardOptions) {
     .catch((ex) => {
       errorHandler(ex, "sendKeyboard", "axios");
     });
+}
+async function answerCallbackQuery(cbqId, text) {
+  const payload = {
+    callback_query_id: cbqId,
+  };
+  if (text) payload.text = text;
+
+  return axiosInstance.post("answerCallbackQuery", payload).catch((ex) => {
+    errorHandler(ex, "sendKeyboard", "axios");
+  });
 }
 async function sendKeyboardMarkdown(chatId, keyboardOptions) {
   return axiosInstance
@@ -605,6 +623,9 @@ async function handleMessage(messageObj) {
           const summary = generateSummary(records);
           await sendKeyboardMarkdown(chatId, gachaHistorySaveKb(summary));
           return;
+        } else if (sessions[chatId].includes("contest")) {
+          await createContest(messageText);
+          await sendMessage(chatId, "Done");
         } else {
           const [gameType, contentType] = sessions[chatId].split(" ");
           deleteSession(chatId);
@@ -679,16 +700,7 @@ async function handleMessage(messageObj) {
         }
       }
       // hadnling my commands
-      if (chatUsername === "emoedgy") {
-        if (messageObj.photo) {
-          await sendMessage(
-            chatId,
-            messageObj.photo[messageObj.photo.length - 1].file_id
-          );
-        }
-        if (messageObj.video) {
-          await sendMessage(chatId, messageObj.video.file_id);
-        }
+      if (chatUsername === "emoedgy" || chatUsername === "MirrorOfBadSoul") {
         if (messageText.toLowerCase() === "admin" || messageText === "ادمین") {
           await sendKeyboard(chatId, mainPanelKb);
         }
@@ -706,6 +718,13 @@ async function handleMessage(messageObj) {
             await sendMessage(chatId, error.message);
           }
           return;
+        } else if (messageText === "vote") {
+          try {
+            const contestList = await getContests();
+            await sendKeyboard(chatId, contestsKbFunction(contestList));
+          } catch (error) {
+            await sendMessage(chatId, error);
+          }
         } else if (
           messageText.toLowerCase().startsWith("add admin") ||
           messageText.toLowerCase().startsWith("set admin")
@@ -933,6 +952,7 @@ async function handleMessage(messageObj) {
 }
 // handling inline keyboards
 async function handleCallbackQuery(cbqObj) {
+  const cbqId = cbqObj.id;
   const messageText = cbqObj.message.text;
   const chatId = cbqObj.message.chat.id;
   const messageId = cbqObj.message.message_id;
@@ -956,7 +976,7 @@ async function handleCallbackQuery(cbqObj) {
       await updateMessage(chatId, messageId, `${messageText}\nREJECTED`);
       return;
     }
-    if (cbqData == "genshinpity") {
+    if (cbqData === "genshinpity") {
       //FIXME fix this after implenting genshin datas
       await sendMessage(chatId, "هنوز کامل نشده");
       return;
@@ -982,7 +1002,7 @@ async function handleCallbackQuery(cbqObj) {
       addSession(chatId, "genshinpity");
       return;
     }
-    if (cbqData == "wuwapity") {
+    if (cbqData === "wuwapity") {
       await sendMessage(
         chatId,
         `
@@ -1004,7 +1024,7 @@ async function handleCallbackQuery(cbqObj) {
       addSession(chatId, "wuwapity");
       return;
     }
-    if (cbqData == "save_gacha") {
+    if (cbqData === "save_gacha") {
       const gachas = splitTextByDiceToObject(messageText);
       if (gachaHistoryCache.has(userUID)) {
         gachaHistoryCache.del(userUID);
@@ -1019,6 +1039,57 @@ async function handleCallbackQuery(cbqObj) {
         await sendKeyboard(chatId, savedGachaSwitchKb);
       }
       return;
+    }
+    if (cbqData.startsWith("contest|")) {
+      const contestId = data.split("|")[1];
+
+      if (contestId === "new") {
+        await sendMessage(chatId, "What would be the name of contest?");
+        addSession(chatId, "contest");
+        await answerCallbackQuery(cbqId);
+        return;
+      }
+      const options = await getContestOptions(contestId);
+      await sendKeyboard(chatId, contestOptionKbFunction(options, contestId));
+      await answerCallbackQuery(cbqId);
+      return;
+    }
+    if (data.startsWith("option|")) {
+      const [_, contestId, optionId] = data.split("|");
+
+      if (optionId === "new") {
+        await addOption(contestId);
+
+        const options = await getContestOptions(contestId);
+        await updateInlineKeyboard(
+          chatId,
+          messageId,
+          contestOptionKbFunction(options, contestId)
+        );
+        await answerCallbackQuery(cbqId, "Added");
+        return;
+      }
+      const options = await getContestOptions(contestId);
+      const option = options.find((o) => o.id === optionId);
+      await sendKeyboard(
+        chatId,
+        optionDeleteKbFunction(contestId, optionId, option)
+      );
+
+      await answerCallbackQuery(cbqId);
+      return;
+    }
+    if (data.startsWith("deleteOption|")) {
+      const [_, contestId, optionId] = data.split("|");
+
+      await deleteOption(contestId, optionId);
+      const options = await getContestOptions(contestId);
+      await updateInlineKeyboard(
+        chatId,
+        messageId,
+        contestOptionKbFunction(options, contestId)
+      );
+      await answerCallbackQuery(cbqId, "Option deleted ✅");
     }
     if (messageText === "پنل ادمین") {
       switch (cbqData) {

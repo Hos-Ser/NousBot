@@ -3,7 +3,7 @@ const {
   deleteDoc,
   getFirestore,
   doc,
-  // setDoc,
+  setDoc,
   getDocs,
   addDoc,
   updateDoc,
@@ -11,6 +11,7 @@ const {
   query,
   where,
   Timestamp,
+  runTransaction,
 } = require("firebase/firestore");
 const { errorHandler } = require("./helper");
 
@@ -46,6 +47,7 @@ const initializeFirebaseApp = () => {
     errorHandler(error, "firebase-initializeFirebaseApp");
   }
 };
+const getFirebaseApp = () => app;
 
 const uploadProcessedData = async (DataToUpload, collectionName) => {
   try {
@@ -334,7 +336,78 @@ const getAllMedia = async (gpName) => {
   }
 };
 
-const getFirebaseApp = () => app;
+const createContest = async (contestName) => {
+  const contestRef = doc(collection(firestoreDb, "contests"));
+
+  await setDoc(contestRef, { name: contestName });
+  return contestRef.id;
+};
+const getContests = async () => {
+  const snap = await getDocs(collection(firestoreDb, "contests"));
+  return snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+};
+const deleteContest = async (contestId) => {
+  await deleteDoc(doc(firestoreDb, "contests", contestId));
+  return true;
+};
+const addOption = async (contestId) => {
+  const options = await getContestOptions(contestId);
+  const nextNumber = options.length + 1;
+
+  const optionRef = doc(
+    collection(firestoreDb, "contests", contestId, "options")
+  );
+  await setDoc(optionRef, {
+    index: nextNumber,
+    votesCount: 0,
+    voters: [],
+  });
+
+  return optionRef.id;
+};
+const voteOption = async (contestId, optionId, username) => {
+  const optionRef = doc(
+    firestoreDb,
+    "contests",
+    contestId,
+    "options",
+    optionId
+  );
+
+  await runTransaction(firestoreDb, async (t) => {
+    const optionSnap = await t.get(optionRef);
+
+    if (!optionSnap.exists()) {
+      throw new Error("Option not found");
+    }
+
+    const data = optionSnap.data();
+
+    if (data.voters.includes(username)) {
+      throw new Error("User already voted for this option");
+    }
+
+    t.update(optionRef, {
+      votesCount: data.votesCount + 1,
+      voters: arrayUnion(username),
+    });
+  });
+};
+const getContestOptions = async (contestId) => {
+  const snap = await getDocs(
+    collection(firestoreDb, "contests", contestId, "options")
+  );
+  const options = snap.docs.map((docSnap) => ({
+    id: docSnap.id,
+    ...docSnap.data(),
+  }));
+
+  return options.sort((a, b) => a.index - b.index);
+};
+const deleteOption = async (contestId, optionId) => {
+  await deleteDoc(doc(firestoreDb, "contests", contestId, "options", optionId));
+  return true;
+};
 
 module.exports = {
   initializeFirebaseApp,
@@ -355,4 +428,11 @@ module.exports = {
   getEvent,
   deleteMedia,
   checkAndResetExpiredEvents,
+  createContest,
+  addOption,
+  voteOption,
+  getContestOptions,
+  getContests,
+  deleteContest,
+  deleteOption,
 };

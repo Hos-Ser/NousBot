@@ -224,6 +224,61 @@ const redoKb = (gameInfo) => {
   };
 };
 
+const contestsKbFunction = async (contestList) => {
+  const keyboard = contestList.map((c) => [
+    { text: c.name, callback_data: `contest|${c.id}` },
+  ]);
+  keyboard.push([{ text: "Create New Contest", callback_data: "contest|new" }]);
+  return {
+    text: "Vote Contest",
+    reply_markup: JSON.stringify({
+      inline_keyboard: keyboard,
+    }),
+  };
+};
+const contestOptionKbFunction = async (options, contestId) => {
+  const rows = [];
+  let row = [];
+
+  options.forEach((o, i) => {
+    row.push({
+      text: `${o.index} (${o.votesCount}❤)`,
+      callback_data: `option|${contestId}|${o.id}`,
+    });
+
+    if (row.length === 6 || i === options.length - 1) {
+      rows.push(row);
+      row = [];
+    }
+  });
+
+  rows.push([
+    { text: "Add New Option", callback_data: `option|${contestId}|new` },
+  ]);
+  return {
+    text: "Contest Options:",
+    reply_markup: JSON.stringify({
+      inline_keyboard: keyboard,
+    }),
+  };
+};
+const optionDeleteKbFunction = (contestId, optionId, optionObj) => {
+  return {
+    text: `${optionObj.index}. ${optionObj.votesCount}❤ \nWanna Delete?!?!`,
+    reply_markup: JSON.stringify({
+      inline_keyboard: [
+        [
+          {
+            text: "❌ Delete",
+            callback_data: `deleteOption|${contestId}|${optionId}`,
+          },
+        ],
+        [{ text: "Close", callback_data: `close` }],
+      ],
+    }),
+  };
+};
+
 module.exports = {
   startKb,
   joinChannelsKb,
@@ -242,4 +297,7 @@ module.exports = {
   deleteSelectionKbFunction,
   savedGachaSwitchKb,
   redoKb,
+  contestsKbFunction,
+  contestOptionKbFunction,
+  optionDeleteKbFunction,
 };
