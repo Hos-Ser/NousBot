@@ -570,6 +570,14 @@ async function checkUserInChannels(userId, chatId) {
   }
   return true;
 }
+function formatVotersInline(option) {
+  if (!option.voters || option.voters.length === 0) {
+    return "هیچ رأیی ثبت نشده ❌";
+  }
+
+  return option.voters.map((u) => `@${u}`).join(", ");
+}
+
 // handling messages
 async function handleMessage(messageObj) {
   const messageText = messageObj.text || "";
@@ -1079,7 +1087,9 @@ async function handleCallbackQuery(cbqObj) {
       await updateMessage(
         chatId,
         messageId,
-        `${option.index}. ${option.votesCount}❤ \nWanna Delete?!?!`,
+        `${option.index}. ${option.votesCount}❤\n${formatVotersInline(
+          option
+        )} \nWanna Delete?!?!`,
         optionDeleteKbFunction(contestId, optionId)
       );
 
