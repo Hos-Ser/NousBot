@@ -1041,7 +1041,7 @@ async function handleCallbackQuery(cbqObj) {
       return;
     }
     if (cbqData.startsWith("contest|")) {
-      const contestId = data.split("|")[1];
+      const contestId = cbqData.split("|")[1];
 
       if (contestId === "new") {
         await sendMessage(chatId, "What would be the name of contest?");
@@ -1054,8 +1054,8 @@ async function handleCallbackQuery(cbqObj) {
       await answerCallbackQuery(cbqId);
       return;
     }
-    if (data.startsWith("option|")) {
-      const [_, contestId, optionId] = data.split("|");
+    if (cbqData.startsWith("option|")) {
+      const [_, contestId, optionId] = cbqData.split("|");
 
       if (optionId === "new") {
         await addOption(contestId);
@@ -1079,8 +1079,8 @@ async function handleCallbackQuery(cbqObj) {
       await answerCallbackQuery(cbqId);
       return;
     }
-    if (data.startsWith("deleteOption|")) {
-      const [_, contestId, optionId] = data.split("|");
+    if (cbqData.startsWith("deleteOption|")) {
+      const [_, contestId, optionId] = cbqData.split("|");
 
       await deleteOption(contestId, optionId);
       const options = await getContestOptions(contestId);
@@ -1092,12 +1092,12 @@ async function handleCallbackQuery(cbqObj) {
       await answerCallbackQuery(cbqId, "Option deleted ✅");
     }
     if (messageText === "پنل ادمین") {
-      switch (cbqData) {
+      switch (cbqcbqData) {
         case "wuwa":
           await updateInlineKeyboard(
             chatId,
             messageId,
-            gamesOptionKbFunction(cbqData)
+            gamesOptionKbFunction(cbqcbqData)
           );
           return;
         case "genshin":
