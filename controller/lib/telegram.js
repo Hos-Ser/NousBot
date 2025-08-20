@@ -720,7 +720,7 @@ async function handleMessage(messageObj) {
           return;
         } else if (messageText === "vote") {
           try {
-            const contestList = []; //await getContests();
+            const contestList = await getContests();
             await sendKeyboard(chatId, contestsKbFunction(contestList));
           } catch (error) {
             await sendMessage(chatId, error);

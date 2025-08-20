@@ -224,7 +224,7 @@ const redoKb = (gameInfo) => {
   };
 };
 
-const contestsKbFunction = async (contestList) => {
+const contestsKbFunction = (contestList) => {
   const keyboard = contestList.map((c) => [
     { text: c.name, callback_data: `contest|${c.id}` },
   ]);
@@ -236,7 +236,7 @@ const contestsKbFunction = async (contestList) => {
     }),
   };
 };
-const contestOptionKbFunction = async (options, contestId) => {
+const contestOptionKbFunction = (options, contestId) => {
   const rows = [];
   let row = [];
 
