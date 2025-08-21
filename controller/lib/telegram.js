@@ -1124,7 +1124,7 @@ async function handleCallbackQuery(cbqObj) {
     }
     if (cbqData.startsWith("voter|")) {
       const [_, contestId, optionId] = cbqData.split("|");
-      await voteOption(contestId, optionId, userUname)
+      await voteOption(contestId, optionId, userUname ?? userUID)
         .then(() => {
           return answerCallbackQuery(cbqId, "ثبت شد");
         })
@@ -1133,12 +1133,12 @@ async function handleCallbackQuery(cbqObj) {
         });
     }
     if (messageText === "پنل ادمین") {
-      switch (cbqcbqData) {
+      switch (cbqData) {
         case "wuwa":
           await updateInlineKeyboard(
             chatId,
             messageId,
-            gamesOptionKbFunction(cbqcbqData)
+            gamesOptionKbFunction(cbqData)
           );
           return;
         case "genshin":

@@ -381,7 +381,7 @@ const voteOption = async (contestId, optionId, username) => {
     const optionSnap = await t.get(optionRef);
 
     if (!optionSnap.exists()) {
-      throw new Error("Option not found");
+      throw new Error("این گزینه حذف شده!");
     }
 
     const data = optionSnap.data();
