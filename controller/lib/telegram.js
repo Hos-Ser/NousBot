@@ -559,9 +559,14 @@ const handleGpMessages = async (
   }
   return;
 };
-async function checkUserInChannels(userId, chatId) {
-  const REQUIRED_CHANNELS = ["@somerandomchnltotestbot"];
-  // TODO change this
+async function checkUserInChannels(userId) {
+  const REQUIRED_CHANNELS = [
+    "@IRImpact",
+    "@IRStarRail",
+    "@IRWutheringWaves",
+    "@IRHonakaiImpact",
+    "@IRZenless",
+  ];
   for (const channel of REQUIRED_CHANNELS) {
     const isMember = await isUserInChannel(userId, channel);
     if (!isMember) {

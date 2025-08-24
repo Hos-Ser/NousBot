@@ -19,8 +19,31 @@ const joinChannelsKb = {
       [
         {
           text: "📢 Join Channel",
-          url: `https://t.me/somerandomchnltotestbot`,
-          // TODO change this
+          url: "https://t.me/IRImpact",
+        },
+      ],
+      [
+        {
+          text: "📢 Join Channel",
+          url: "https://t.me/IRStarRail",
+        },
+      ],
+      [
+        {
+          text: "📢 Join Channel",
+          url: "https://t.me/IRWutheringWaves",
+        },
+      ],
+      [
+        {
+          text: "📢 Join Channel",
+          url: "https://t.me/IRHonakaiImpact",
+        },
+      ],
+      [
+        {
+          text: "📢 Join Channel",
+          url: "https://t.me/IRZenless",
         },
       ],
     ],
