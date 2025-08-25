@@ -562,7 +562,7 @@ const handleGpMessages = async (
 async function checkUserInChannels(userId) {
   const REQUIRED_CHANNELS = [
     "@IRImpact",
-    // "@IRStarRail",
+    "@IRStarRail",
     "@IRWutheringWaves",
     "@IRHonakaiImpact",
     "@IRZenless",
