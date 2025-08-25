@@ -565,7 +565,7 @@ async function checkUserInChannels(userId) {
     // "@IRStarRail",
     "@IRWutheringWaves",
     "@IRHonakaiImpact",
-    // "@IRZenless",
+    "@IRZenless",
   ];
   for (const channel of REQUIRED_CHANNELS) {
     const isMember = await isUserInChannel(userId, channel);
