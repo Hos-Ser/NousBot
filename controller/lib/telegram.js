@@ -561,11 +561,11 @@ const handleGpMessages = async (
 };
 async function checkUserInChannels(userId) {
   const REQUIRED_CHANNELS = [
-    "@IRImpact",
-    "@IRStarRail",
+    // "@IRImpact",
+    // "@IRStarRail",
     "@IRWutheringWaves",
-    "@IRHonakaiImpact",
-    "@IRZenless",
+    // "@IRHonakaiImpact",
+    // "@IRZenless",
   ];
   for (const channel of REQUIRED_CHANNELS) {
     const isMember = await isUserInChannel(userId, channel);
