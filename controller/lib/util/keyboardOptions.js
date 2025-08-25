@@ -18,31 +18,31 @@ const joinChannelsKb = {
     inline_keyboard: [
       [
         {
-          text: "📢 Join Channel",
+          text: "- Genshin Impact -",
           url: "https://t.me/IRImpact",
         },
       ],
       [
         {
-          text: "📢 Join Channel",
+          text: "- Honkai: Star Rail -",
           url: "https://t.me/IRStarRail",
         },
       ],
       [
         {
-          text: "📢 Join Channel",
+          text: "- Wuthering Waves -",
           url: "https://t.me/IRWutheringWaves",
         },
       ],
       [
         {
-          text: "📢 Join Channel",
+          text: "- Honkai Impact 3rd -",
           url: "https://t.me/IRHonakaiImpact",
         },
       ],
       [
         {
-          text: "📢 Join Channel",
+          text: "- Zenless Zone Zero -",
           url: "https://t.me/IRZenless",
         },
       ],
