@@ -760,6 +760,10 @@ async function handleMessage(messageObj) {
         case "°˖✧مسابقات✧˖°":
           if (await checkUserInChannels(userId, chatId)) {
             const contests = await getContests();
+            if (contests.length === 0) {
+              await sendMessage(chatId, "فعلا مسابقه ای نداریم :(");
+              return;
+            }
             await sendKeyboard(chatId, voterContestKbFunction(contests));
           } else {
             await sendKeyboard(chatId, joinChannelsKb);
