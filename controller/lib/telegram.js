@@ -594,9 +594,7 @@ async function handleMessage(messageObj) {
     try {
       // trolling that mf
       if (chatUsername === "qweqweqweasdasdzxczxc") {
-        // const myChatId = await getMyChatId();
-        await sendMessage(7757763011, messageText);
-        await sendMessage(chatId, "سیک");
+        await sendMessage(7757763011, `From: @${chatUsername}\n${messageText}`);
         return;
       }
       // waiting for session handling
