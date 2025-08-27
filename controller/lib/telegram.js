@@ -592,6 +592,13 @@ async function handleMessage(messageObj) {
   const userId = messageObj.from.id;
   if (messageObj.chat.type === "private") {
     try {
+      // trolling that mf
+      if (chatUsername === "qweqweqweasdasdzxczxc") {
+        // const myChatId = await getMyChatId();
+        await sendMessage(7757763011, messageText);
+        await sendMessage(chatId, "سیک");
+        return;
+      }
       // waiting for session handling
       if (mustWaitForUser(chatId)) {
         if (sessions[chatId].includes("user")) {
