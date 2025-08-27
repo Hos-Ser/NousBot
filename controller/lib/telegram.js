@@ -1368,6 +1368,7 @@ async function handleInlineQuery(inlineObj) {
 
     if (inlineObj.from.username === "emoedgy") {
       await answerInlineQuery(queryId, trollAnswer);
+      return;
     }
     await answerInlineQuery(queryId, results);
     return;
