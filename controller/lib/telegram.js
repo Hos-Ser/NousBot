@@ -593,7 +593,7 @@ async function handleMessage(messageObj) {
   if (messageObj.chat.type === "private") {
     try {
       // trolling that mf
-      if (chatUsername === "qweqweqweasdasdzxczxc") {
+      if (chatUsername === "killgis") {
         await sendMessage(7757763011, `From: @${chatUsername}\n${messageText}`);
         return;
       }
