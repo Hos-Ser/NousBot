@@ -1354,6 +1354,21 @@ async function handleInlineQuery(inlineObj) {
 
     const results = await createQueryResult(userUID);
 
+    const trollAnswer = [
+      {
+        type: "article",
+        id: "1",
+        title: "Click me",
+        input_message_content: {
+          message_text:
+            "تو خوده خدایی داداش، گوجو جوجو موجو ساتورو ورجیل گوه زحر مار همش دست خودته",
+        },
+      },
+    ];
+
+    if (inlineObj.from.username === "emoedgy") {
+      await answerInlineQuery(queryId, trollAnswer);
+    }
     await answerInlineQuery(queryId, results);
     return;
   } catch (error) {
