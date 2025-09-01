@@ -443,7 +443,9 @@ const handleGpMessages = async (
     if (messageText.toLowerCase() === "content list") {
       let finalMessage = "";
       let i = 1;
-      gpCache.keys().forEach((val) => (finalMessage += `${i++}. \`${val}\`\n`));
+      gpCache
+        .keys()
+        .forEach((val) => (finalMessage += `${i++}. \`${val}\` - `));
       await sendReply(chatId, messageId, finalMessage, true);
       return;
     }
