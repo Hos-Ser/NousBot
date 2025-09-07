@@ -6,16 +6,16 @@ const RETRY_DELAY = 300;
 
 const defaultHeaders = {
   //prettier-ignore
-  "authority": "gmserver-api.aki-game2.net", // ← Often required
+  "authority": "gmserver-api.aki-game2.net",
   //prettier-ignore
   "accept": "application/json",
-  "accept-encoding": "gzip, deflate, br", // ← Missing in your code
+  "accept-encoding": "gzip, deflate, br",
   "content-type": "application/json",
   //prettier-ignore
   "origin": "https://wuwatracker.com",
   //prettier-ignore
   "referer": "https://wuwatracker.com/",
-  "sec-fetch-site": "cross-site", // ← Critical for CORS
+  "sec-fetch-site": "cross-site",
   "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)", // ← Must match
 };
 

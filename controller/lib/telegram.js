@@ -168,6 +168,34 @@ const renewCache = async (cache, gpName) => {
   return;
 };
 
+async function sendLongMessage(chatId, messageText, isParseMode = false) {
+  const MAX_MESSAGE_LENGTH = 4096;
+  if (messageText.length <= MAX_MESSAGE_LENGTH) {
+    await sendMessage(chatId, messageText, isParseMode);
+  } else {
+    const chunks = [];
+    let offset = 0;
+
+    while (offset < messageText.length) {
+      let chunkEnd = offset + MAX_MESSAGE_LENGTH;
+
+      if (chunkEnd < messageText.length && messageText[chunkEnd] !== "\n") {
+        const lastNewline = messageText.lastIndexOf("\n", chunkEnd - 1);
+        if (lastNewline > offset) {
+          chunkEnd = lastNewline;
+        }
+      }
+
+      chunks.push(messageText.slice(offset, chunkEnd));
+      offset = chunkEnd;
+    }
+
+    for (const chunk of chunks) {
+      await sendMessage(chatId, chunk, isParseMode);
+    }
+  }
+}
+
 // axios things
 async function sendMessage(chatId, messageText, isParseMode = false) {
   return axiosInstance
@@ -443,9 +471,7 @@ const handleGpMessages = async (
     if (messageText.toLowerCase() === "content list") {
       let finalMessage = "";
       let i = 1;
-      gpCache
-        .keys()
-        .forEach((val) => (finalMessage += `${i++}. \`${val}\` - `));
+      gpCache.keys().forEach((val) => (finalMessage += `${i++}. \`${val}\`\n`));
       await sendReply(chatId, messageId, finalMessage, true);
       return;
     }
@@ -647,8 +673,14 @@ async function handleMessage(messageObj) {
           return;
         } else if (sessions[chatId].includes("contest")) {
           deleteSession(chatId);
-          await createContest(messageText);
-          await sendMessage(chatId, "Done");
+          if (isEnglish(messageText)) {
+            await createContest(messageText);
+            await sendMessage(chatId, "Done");
+            return;
+          } else {
+            await sendMessage(chatId, "Only English names are accepted");
+            return;
+          }
         } else {
           const [gameType, contentType] = sessions[chatId].split(" ");
           deleteSession(chatId);
@@ -723,7 +755,11 @@ async function handleMessage(messageObj) {
         }
       }
       // hadnling my commands
-      if (chatUsername === "emoedgy" || chatUsername === "MirrorOfBadSoul") {
+      if (
+        chatUsername === "emoedgy" ||
+        chatUsername === "MirrorOfBadSoul" ||
+        chatUsername === "Kevinarges_Editor"
+      ) {
         if (messageText.toLowerCase() === "admin" || messageText === "ادمین") {
           await sendKeyboard(chatId, mainPanelKb);
         }
