@@ -472,7 +472,7 @@ const handleGpMessages = async (
       let finalMessage = "";
       let i = 1;
       gpCache.keys().forEach((val) => (finalMessage += `${i++}. \`${val}\`\n`));
-      await sendReply(chatId, messageId, finalMessage, true);
+      await sendLongMessage(chatId, finalMessage, true);
       return;
     }
     if (messageText.toLowerCase().startsWith("add")) {
