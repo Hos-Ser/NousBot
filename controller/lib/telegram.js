@@ -849,6 +849,10 @@ async function handleMessage(messageObj) {
           return;
         case "✧ آموزش":
           try {
+            await sendMessage(
+              chatId,
+              "برای آموزش های بیشتر حتما به گروه سر بزن بخش اصلی محتوا و بیلد ها اونجا قرار داره: @IRWutheringWaves"
+            );
             await handleContents(chatId, "wuwa", "guide", messageText);
           } catch (error) {
             await sendMessage(chatId, error.message);
@@ -891,6 +895,10 @@ async function handleMessage(messageObj) {
           return;
         case "✧ بنر":
           try {
+            await sendMessage(
+              chatId,
+              "برای طلاعات بیشتر و بررسی از تایمر ایونت ها وبنر ها برو داخل گروه و کلمه بنر رو بنویس: @IRWutheringWaves"
+            );
             await handleContents(chatId, "wuwa", "banner", messageText);
           } catch (error) {
             await sendMessage(chatId, error.message);
@@ -933,6 +941,10 @@ async function handleMessage(messageObj) {
           return;
         case "✧ بیلد کرکتر":
           try {
+            await sendMessage(
+              chatId,
+              "برای آموزش های بیشتر حتما به گروه سر بزن بخش اصلی محتوا و بیلد ها اونجا قرار داره: @IRWutheringWaves"
+            );
             await handleContents(chatId, "wuwa", "build", messageText);
           } catch (error) {
             await sendMessage(chatId, error.message);
