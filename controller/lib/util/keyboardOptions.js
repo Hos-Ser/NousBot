@@ -2,6 +2,7 @@ const startKb = {
   text: "خوش اومدی! درباره کدوم بازی میخوای بدونی؟",
   reply_markup: JSON.stringify({
     keyboard: [
+      [{ text: "🙋‍♀️سوالاتو بفرست🙋‍♂️" }],
       [{ text: "°˖✧مسابقات✧˖°" }],
       [{ text: "⋆˚₊⋆Genshin Impact๑⋆˚₊⊹" }],
       [{ text: "༶⋆˙⊹｡Honkai Starrail✯ ˛˚" }],
@@ -228,6 +229,19 @@ const adminApprovalKbFunction = (text) => {
     }),
   };
 };
+const quizApprovalKbFunction = (text) => {
+  return {
+    text,
+    reply_markup: JSON.stringify({
+      inline_keyboard: [
+        [
+          { text: "✅", callback_data: "approve" },
+          { text: "❌", callback_data: "deny" },
+        ],
+      ],
+    }),
+  };
+};
 const savedGachaSwitchKb = {
   text: "ذخیره شد",
   reply_markup: JSON.stringify({
@@ -334,6 +348,18 @@ const voterOptionKbFunction = (options, contestId, contestName) => {
     }),
   };
 };
+const questionKb = {
+  text: "سوالت درباره کدوم بازیه؟؟",
+  reply_markup: JSON.stringify({
+    keyboard: [
+      [{ text: "❓ WuWa Lore" }],
+      [{ text: "❓ Genshin Lore" }],
+      [{ text: "❓ Other Games" }],
+    ],
+    resize_keyboard: true,
+    one_time_keyboard: true,
+  }),
+};
 
 module.exports = {
   startKb,
@@ -350,6 +376,7 @@ module.exports = {
   pityCounterkb,
   gachaHistorySaveKb,
   adminApprovalKbFunction,
+  quizApprovalKbFunction,
   deleteSelectionKbFunction,
   savedGachaSwitchKb,
   redoKb,
@@ -358,4 +385,5 @@ module.exports = {
   optionDeleteKbFunction,
   voterContestKbFunction,
   voterOptionKbFunction,
+  questionKb,
 };

@@ -45,6 +45,8 @@ const {
   optionDeleteKbFunction,
   voterContestKbFunction,
   voterOptionKbFunction,
+  questionKb,
+  quizApprovalKbFunction,
 } = require("./util/keyboardOptions");
 const processPrimoCode = require("./util/processPrimoCode");
 const processSavingAdmin = require("./util/processSavingAdmin");
@@ -58,6 +60,7 @@ const extractAuthParams = require("./pity_counter_utlls/extractAuthParams");
 const getAllGachaRecords = require("./pity_counter_utlls/getAllGachaRecords");
 const generateSummary = require("./pity_counter_utlls/generateSummary");
 const processSavingGachaHistory = require("./util/processSavingGachaHistory");
+const STRINGS = require("./util/StringLiterals");
 
 const MY_TOKEN = process.env.TG_BOT_TOKEN;
 const BASE_URL = `https://api.telegram.org/bot${MY_TOKEN}`;
@@ -643,6 +646,14 @@ async function handleMessage(messageObj) {
             await sendMessage(chatId, "یه مشکلی پیش اومده یبار دیگه امتحان کن");
           }
           return;
+        } else if (sessions[chatId].includes("quiz")) {
+          const [subject, _] = sessions[chatId].split(" ");
+          deleteSession(chatId);
+          const myChatId = await getMyChatId();
+          await sendKeyboard(
+            myChatId,
+            quizApprovalKbFunction(`${messageText}\n${subject}`)
+          );
         } else if (sessions[chatId].includes("genshinpity")) {
           deleteSession(chatId);
           return;
@@ -800,6 +811,9 @@ async function handleMessage(messageObj) {
       }
       // text handling:
       switch (messageText) {
+        case "🙋‍♀️سوالاتو بفرست🙋‍♂️":
+          await sendKeyboard(chatId, questionKb);
+          return;
         case "°˖✧مسابقات✧˖°":
           if (await checkUserInChannels(userId, chatId)) {
             const contests = await getContests();
@@ -953,6 +967,18 @@ async function handleMessage(messageObj) {
         case "𓇻 منوی اصلی":
           await sendKeyboard(chatId, startKb);
           return;
+        case "❓ WuWa Lore":
+          await sendMessage(chatId, STRINGS.questionStruction);
+          addSession(chatId, "wuwa quiz");
+          return;
+        case "❓ Genshin Lore":
+          await sendMessage(chatId, STRINGS.questionStruction);
+          addSession(chatId, "genshin quiz");
+          return;
+        case "❓ Other Games":
+          await sendMessage(chatId, STRINGS.questionStruction);
+          addSession(chatId, "other quiz");
+          return;
         default:
           return;
       }
@@ -1049,52 +1075,26 @@ async function handleCallbackQuery(cbqObj) {
       await updateMessage(chatId, messageId, `${messageText}\nREJECTED`);
       return;
     }
+    if (cbqData === "approve") {
+      await answerCallbackQuery(cbqId);
+      return;
+    }
+    if (cbqData === "deny") {
+      await answerCallbackQuery(cbqId);
+      return;
+    }
     if (cbqData === "genshinpity") {
       //FIXME fix this after implenting genshin datas
       await sendMessage(chatId, "هنوز کامل نشده");
-      return;
-      await sendMessage(
-        chatId,
-        `
-آموزش مراحل برای پیسی
-1. بازی رو باز کن
-2. داخل بازی قسمت ویش History رو باز کن و بزار کامل لود شه
-3. داخل ویندوز powershell رو باز کن و متن زیر رو داخلش کپی کن
-\`Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex "&{$((New-Object System.Net.WebClient).DownloadString('https://gist.github.com/MadeBaruna/1d75c1d37d19eca71591ec8a31178235/raw/getlink.ps1'))} global"\`
-4. متن دریافتی رو برام بفرست
-
-
-آموزش مراحل برای گوشی
-1. بازی رو باز کن
-2. داخل قسمت کانوین برو و بعدش گوشیتو بزار روی حالت هواپیما
-3. فسمت History رو باز کن و با پیام مشکل اینترنت برمیخوری
-4. یه متن نامرئی بالای اون پیام هست انگشتت رو روش نگه دار و select all رو بزن و همش رو کپی کن
-5. متن رو برام بفرست`,
-        true
-      );
-      addSession(chatId, "genshinpity");
+      // await sendMessage(chatId, STRINGS.genshinPityIns, true);
+      // addSession(chatId, "genshinpity");
+      await answerCallbackQuery(cbqId);
       return;
     }
     if (cbqData === "wuwapity") {
-      await sendMessage(
-        chatId,
-        `
-واسه اینکه بتونم پیتی بازیتو بگیرم کار های زیر رو انجام بده
-1. بازی رو باز کن
-2. داخل بازی قسمت کانوین History رو باز کن و بزار کامل لود شه
-3. داخل ویندوز powershell رو باز کن و متن زیر رو داخلش کپی کن
-\`iwr -useb "https://wuwatracker.com/import.ps1" | iex\`
-4. متن دریافتی رو برام بفرست
-
-آموزش مراحل برای گوشی
-1. بازی رو باز کن
-2. داخل قسمت کانوین برو و بعدش گوشیتو بزار روی حالت هواپیما
-3. فسمت History رو باز کن و با پیام مشکل اینترنت برمیخوری
-4. یه متن نامرئی بالای اون پیام هست انگشتت رو روش نگه دار و select all رو بزن و همش رو کپی کن
-5. متن رو برام بفرست`,
-        true
-      );
+      await sendMessage(chatId, STRINGS.pityInstruction, true);
       addSession(chatId, "wuwapity");
+      await answerCallbackQuery(cbqId);
       return;
     }
     if (cbqData === "save_gacha") {
@@ -1111,6 +1111,7 @@ async function handleCallbackQuery(cbqObj) {
         await updateMessage(chatId, messageId, messageText);
         await sendKeyboard(chatId, savedGachaSwitchKb);
       }
+      await answerCallbackQuery(cbqId);
       return;
     }
     if (cbqData.startsWith("contest|")) {
