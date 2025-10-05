@@ -61,6 +61,7 @@ const getAllGachaRecords = require("./pity_counter_utlls/getAllGachaRecords");
 const generateSummary = require("./pity_counter_utlls/generateSummary");
 const processSavingGachaHistory = require("./util/processSavingGachaHistory");
 const STRINGS = require("./util/StringLiterals");
+const processSavingQuestion = require("./quiz_utils/processSavingQuestion");
 
 const MY_TOKEN = process.env.TG_BOT_TOKEN;
 const BASE_URL = `https://api.telegram.org/bot${MY_TOKEN}`;
@@ -652,7 +653,9 @@ async function handleMessage(messageObj) {
           const myChatId = await getMyChatId();
           await sendKeyboard(
             myChatId,
-            quizApprovalKbFunction(`${messageText}\n${subject}`)
+            quizApprovalKbFunction(
+              `${messageText}\n${subject}\n${messageObj.from.first_name}`
+            )
           );
         } else if (sessions[chatId].includes("genshinpity")) {
           deleteSession(chatId);
@@ -1076,10 +1079,13 @@ async function handleCallbackQuery(cbqObj) {
       return;
     }
     if (cbqData === "approve") {
+      await processSavingQuestion(messageText);
+      await updateMessage(chatId, messageId, `${messageText}\n✅ Approved`);
       await answerCallbackQuery(cbqId);
       return;
     }
     if (cbqData === "deny") {
+      await updateMessage(chatId, messageId, `${messageText}\n❌ Denied`);
       await answerCallbackQuery(cbqId);
       return;
     }
