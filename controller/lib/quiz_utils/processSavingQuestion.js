@@ -2,17 +2,15 @@ const { uploadProcessedData } = require("../firebase");
 
 const processSavingQuestion = async (message) => {
   const lines = message.split("\n");
-  const first5 = lines.slice(0, 5).join("\n");
-  const line6 = lines[5];
-  const line7 = lines[6];
-  const line8 = lines[7];
+  const remaining = lines.slice(0, -3).join("\n");
+  const lastThree = lines.slice(-3);
 
   await uploadProcessedData(
     {
-      question: first5,
-      correct: line6,
-      subject: line7,
-      name: line8,
+      question: remaining,
+      correct: lastThree[0],
+      subject: lastThree[1],
+      name: lastThree[2],
     },
     "quiz"
   );
