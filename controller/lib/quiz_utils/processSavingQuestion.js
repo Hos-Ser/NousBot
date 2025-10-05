@@ -2,7 +2,7 @@ const { uploadProcessedData } = require("../firebase");
 
 const processSavingQuestion = async (message) => {
   const lines = message.split("\n");
-  const remaining = lines.slice(0, -3).join("\n");
+  const remaining = lines.slice(0, -3).join("\n").trim();
   const lastThree = lines.slice(-3);
 
   await uploadProcessedData(

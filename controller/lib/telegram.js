@@ -21,6 +21,7 @@ const {
   addOption,
   deleteOption,
   voteOption,
+  getQuizSubject,
 } = require("./firebase");
 const { errorHandler } = require("./helper");
 const {
@@ -73,6 +74,7 @@ const wuwaCache = new NodeCache();
 const genshinCache = new NodeCache();
 const honkaiCache = new NodeCache();
 const gachaHistoryCache = new NodeCache();
+const quizSubjectCache = new NodeCache();
 
 function isEnglish(input) {
   const englishRegex = /^[A-Za-z\s]+$/;
@@ -116,13 +118,12 @@ function splitTextByDiceToObject(text) {
 
   return result;
 }
-async function createQueryResult(userUid) {
+async function createPityResult(userUid) {
   if (!gachaHistoryCache.has(userUid)) {
     try {
       const gachaHistory = await getGachaHistory(userUid);
-      if (gachaHistory.length === 0) {
-        return false;
-      }
+      if (gachaHistory.length === 0) return [];
+
       gachaHistoryCache.set(
         gachaHistory[0].user_uid,
         gachaHistory[0].gacha_data
@@ -133,13 +134,36 @@ async function createQueryResult(userUid) {
   }
 
   const cacheData = gachaHistoryCache.get(userUid);
-  console.log(cacheData);
   return Object.entries(cacheData).map(([key, value], index) => ({
     type: "article",
     id: `${userUid}_${index}`,
     title: key,
     input_message_content: {
       message_text: String(value),
+    },
+  }));
+}
+async function createQuizResult() {
+  if (quizSubjectCache.keys().length === 0) {
+    const subjects = await getQuizSubject();
+    if (subjects.length === 0) return [];
+    subjects.forEach((value, index) => {
+      quizSubjectCache.set(value, index);
+    });
+  }
+  return quizSubjectCache.keys().map((subj, idx) => ({
+    type: "article",
+    id: `${idx}`,
+    title: subj,
+    input_message_content: {
+      message_text: `📚 *${subj}* کوییز!\nبرای شرکت روی Join کلیک کن و برای شروع مسابقه فرستندهیام باید روی Start بزنه`,
+      parse_mode: "Markdown",
+    },
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: "Join ➕", callback_data: `join:${subj}` }],
+        [{ text: "Start ▶️", callback_data: `start:${subj}` }],
+      ],
     },
   }));
 }
@@ -972,15 +996,15 @@ async function handleMessage(messageObj) {
           return;
         case "❓ WuWa Lore":
           await sendMessage(chatId, STRINGS.questionStruction);
-          addSession(chatId, "wuwa quiz");
+          addSession(chatId, "WutheringWaves quiz");
           return;
         case "❓ Genshin Lore":
           await sendMessage(chatId, STRINGS.questionStruction);
-          addSession(chatId, "genshin quiz");
+          addSession(chatId, "GenshinImpact quiz");
           return;
         case "❓ Other Games":
           await sendMessage(chatId, STRINGS.questionStruction);
-          addSession(chatId, "other quiz");
+          addSession(chatId, "OtherGames quiz");
           return;
         default:
           return;
@@ -1409,9 +1433,10 @@ async function handleInlineQuery(inlineObj) {
     const queryId = inlineObj.id;
     const userUID = inlineObj.from.id;
 
-    const results = await createQueryResult(userUID);
+    const pityResult = await createPityResult(userUID);
+    const subjectsResult = await createQuizResult();
 
-    await answerInlineQuery(queryId, results);
+    await answerInlineQuery(queryId, [...pityResult, ...subjectsResult]);
     return;
   } catch (error) {
     errorHandler(error, "handleInlineQuery", "");

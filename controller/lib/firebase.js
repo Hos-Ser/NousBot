@@ -411,6 +411,11 @@ const deleteOption = async (contestId, optionId) => {
   await deleteDoc(doc(firestoreDb, "contests", contestId, "options", optionId));
   return true;
 };
+const getQuizSubject = async () => {
+  const docSnap = await getDocs(collection(firestoreDb, "quiz"));
+  const subjects = [...new Set(docSnap.docs.map((doc) => doc.data().subject))];
+  return subjects;
+};
 
 module.exports = {
   initializeFirebaseApp,
@@ -438,4 +443,5 @@ module.exports = {
   getContests,
   deleteContest,
   deleteOption,
+  getQuizSubject,
 };
