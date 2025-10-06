@@ -412,10 +412,132 @@ const deleteOption = async (contestId, optionId) => {
   return true;
 };
 const getQuizSubject = async () => {
-  const docSnap = await getDocs(collection(firestoreDb, "quiz"));
+  const docSnap = await getDocs(collection(firestoreDb, "questions"));
   const subjects = [...new Set(docSnap.docs.map((doc) => doc.data().subject))];
   return subjects;
 };
+const handleQuizJoin = async (cb, subject) => {
+  const chatId = cb.message.chat.id;
+  const from = cb.from;
+  const quizRef = doc(firestoreDb, "quizzes", chatId.toString());
+
+  await runTransaction(firestoreDb, async (t) => {
+    const quizSnap = await t.get(quizRef);
+    if (!quizSnap.exists()) {
+      // create new quiz session
+      t.set(quizRef, {
+        subject,
+        players: {
+          [from.id]: { username: from.username, score: 0 },
+        },
+        questions: [],
+        current: 0,
+        answers: {},
+        status: "waiting",
+      });
+    } else {
+      const quiz = quizSnap.data();
+      if (quiz.players?.[from.id]) {
+        throw new Error("قبلا جوین دادی!");
+      }
+      t.update(quizRef, {
+        [`players.${from.id}`]: { username: from.username, score: 0 },
+      });
+    }
+  });
+};
+
+const handleQuizStart = async (cb, subject) => {
+  const chatId = cb.message.chat.id;
+  const quizRef = doc(firestoreDb, "quizzes", chatId.toString());
+
+  // get 5 random questions
+  const qSnap = await getDocs(collection(firestoreDb, "questions"));
+  const allQ = qSnap.docs
+    .map((d) => ({ id: d.id, ...d.data() }))
+    .filter((q) => q.subject === subject);
+
+  const randomQ = allQ.sort(() => 0.5 - Math.random()).slice(0, 5);
+
+  await updateDoc(quizRef, {
+    questions: randomQ,
+    current: 0,
+    status: "running",
+    messageId: cb.message.message_id,
+  });
+
+  runNextQuestion(chatId);
+};
+
+async function handleQuizAnswer(cb) {
+  const [_, qId, ans] = cb.data.split(":"); // ans:qId:2
+  const from = cb.from;
+  const chatId = cb.message.chat.id;
+  const quizRef = doc(firestoreDb, "quizzes", chatId.toString());
+
+  const quizSnap = await getDoc(quizRef);
+  if (!quizSnap.exists()) return;
+  const quiz = quizSnap.data();
+
+  // already answered?
+  if (quiz.answers?.[qId]?.[from.id]) {
+    await answerCallback(cb.id, "⚠️ You already answered this question!");
+    return;
+  }
+
+  const question = quiz.questions.find((q) => q.id === qId);
+  if (!question) return;
+
+  const isCorrect = ans === question.correct;
+
+  const updates = {
+    [`answers.${qId}.${from.id}`]: ans,
+  };
+  if (isCorrect) {
+    updates[`players.${from.id}.score`] =
+      (quiz.players[from.id]?.score || 0) + 1;
+  }
+
+  await updateDoc(quizRef, updates);
+
+  await answerCallback(cb.id, isCorrect ? "✅ Correct!" : "❌ Wrong");
+}
+
+async function runNextQuestion(chatId) {
+  const quizRef = doc(firestoreDb, "quizzes", chatId.toString());
+  const quizSnap = await getDoc(quizRef);
+  if (!quizSnap.exists()) return;
+  const quiz = quizSnap.data();
+
+  if (quiz.current >= quiz.questions.length) {
+    // quiz finished
+    let results = Object.values(quiz.players)
+      .sort((a, b) => b.score - a.score)
+      .map((p) => `${p.username}: ${p.score}`)
+      .join("\n");
+
+    await editMessage(
+      chatId,
+      quiz.messageId,
+      `🏆 Quiz finished!\n\n${results}`
+    );
+    await updateDoc(quizRef, { status: "finished" });
+    return;
+  }
+
+  const q = quiz.questions[quiz.current];
+  const options = ["1", "2", "3", "4"].map((num) => [
+    { text: num, callback_data: `ans:${q.id}:${num}` },
+  ]);
+
+  await editMessage(chatId, quiz.messageId, `❓ ${q.question}`, options);
+
+  // wait 10s then move on
+  setTimeout(async () => {
+    await updateDoc(quizRef, { current: quiz.current + 1 });
+    runNextQuestion(chatId);
+  }, 10000);
+}
 
 module.exports = {
   initializeFirebaseApp,
@@ -444,4 +566,44 @@ module.exports = {
   deleteContest,
   deleteOption,
   getQuizSubject,
+  handleQuizJoin,
+  handleQuizStart,
+  handleQuizAnswer,
 };
+
+async function sendMessage(chatId, text, keyboard) {
+  const res = await axios.post(
+    `https://api.telegram.org/bot${process.env.TG_BOT_TOKEN}/sendMessage`,
+    {
+      chat_id: chatId,
+      text,
+      reply_markup: keyboard ? { inline_keyboard: keyboard } : undefined,
+      parse_mode: "Markdown",
+    }
+  );
+  return res.data.result.message_id; // return message id so we can store it
+}
+
+async function editMessage(chatId, messageId, text, keyboard) {
+  await axios.post(
+    `https://api.telegram.org/bot${process.env.TG_BOT_TOKEN}/editMessageText`,
+    {
+      chat_id: chatId,
+      message_id: messageId,
+      text,
+      reply_markup: keyboard ? { inline_keyboard: keyboard } : undefined,
+      parse_mode: "Markdown",
+    }
+  );
+}
+
+async function answerCallback(cbId, text) {
+  await axios.post(
+    `https://api.telegram.org/bot${process.env.TG_BOT_TOKEN}/answerCallbackQuery`,
+    {
+      callback_query_id: cbId,
+      text,
+      show_alert: false,
+    }
+  );
+}

@@ -2,7 +2,7 @@ const startKb = {
   text: "خوش اومدی! درباره کدوم بازی میخوای بدونی؟",
   reply_markup: JSON.stringify({
     keyboard: [
-      [{ text: "🙋‍♀️سوالاتو بفرست🙋‍♂️" }],
+      [{ text: "⁉ سوالاتو بفرست ⁉" }],
       [{ text: "°˖✧مسابقات✧˖°" }],
       [{ text: "⋆˚₊⋆Genshin Impact๑⋆˚₊⊹" }],
       [{ text: "༶⋆˙⊹｡Honkai Starrail✯ ˛˚" }],

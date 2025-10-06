@@ -22,6 +22,9 @@ const {
   deleteOption,
   voteOption,
   getQuizSubject,
+  handleQuizJoin,
+  handleQuizStart,
+  handleQuizAnswer,
 } = require("./firebase");
 const { errorHandler } = require("./helper");
 const {
@@ -156,13 +159,15 @@ async function createQuizResult() {
     id: `${idx}`,
     title: subj,
     input_message_content: {
-      message_text: `📚 *${subj}* کوییز!\nبرای شرکت روی Join کلیک کن و برای شروع مسابقه فرستندهیام باید روی Start بزنه`,
+      message_text: `📚 کوییز *${subj}*!\nبرای شرکت روی Join کلیک کن و برای شروع مسابقه فرستنده پیام باید روی Start بزنه`,
       parse_mode: "Markdown",
     },
     reply_markup: {
       inline_keyboard: [
-        [{ text: "Join ➕", callback_data: `join:${subj}` }],
-        [{ text: "Start ▶️", callback_data: `start:${subj}` }],
+        [
+          { text: "Join", callback_data: `join:${subj}` },
+          { text: "Start", callback_data: `start:${subj}` },
+        ],
       ],
     },
   }));
@@ -838,7 +843,7 @@ async function handleMessage(messageObj) {
       }
       // text handling:
       switch (messageText) {
-        case "🙋‍♀️سوالاتو بفرست🙋‍♂️":
+        case "⁉ سوالاتو بفرست ⁉":
           await sendKeyboard(chatId, questionKb);
           return;
         case "°˖✧مسابقات✧˖°":
@@ -1112,6 +1117,23 @@ async function handleCallbackQuery(cbqObj) {
       await updateMessage(chatId, messageId, `${messageText}\n❌ Denied`);
       await answerCallbackQuery(cbqId);
       return;
+    }
+    if (cbqData.startsWith("join:")) {
+      const subject = cbqData.split(":")[1];
+      await handleQuizJoin(cbqData, subject)
+        .then(() => {
+          return answerCallbackQuery(cbqId, "اوکی جوین دادی");
+        })
+        .catch((err) => {
+          return answerCallbackQuery(cbqId, err.message);
+        });
+    }
+    if (cbqData.startsWith("start:")) {
+      const subject = cbqData.split(":")[1];
+      await handleQuizStart(cbqData, subject);
+    }
+    if (cbqData.startsWith("ans:")) {
+      await handleQuizAnswer(cbqData);
     }
     if (cbqData === "genshinpity") {
       //FIXME fix this after implenting genshin datas

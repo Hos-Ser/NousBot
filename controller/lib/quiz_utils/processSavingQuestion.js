@@ -12,7 +12,7 @@ const processSavingQuestion = async (message) => {
       subject: lastThree[1],
       name: lastThree[2],
     },
-    "quiz"
+    "questions"
   );
   return;
 };
