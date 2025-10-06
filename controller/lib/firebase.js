@@ -466,7 +466,7 @@ async function handleQuizJoin(cb) {
 
     await answerCallback(cb.id, "✅ You joined the quiz!");
   } catch (err) {
-    errorHandler(err, "handleJoin");
+    console.error("Error in handleJoin:", err);
     await answerCallback(cb.id, "⚠️ Could not join the quiz.");
   }
 }
@@ -515,44 +515,60 @@ async function handleQuizStart(cb) {
 
     await runNextQuestion(inlineMessageId);
   } catch (err) {
-    errorHandler(err, "handleQuizStart:");
+    console.error("Error in handleQuizStart:", err);
   }
 }
 
 async function handleQuizAnswer(cb) {
-  const [_, qId, ans] = cb.data.split(":"); // ans:qId:2
-  const from = cb.from;
-  const inlineMessageId = cb.inline_message_id;
-  const quizRef = doc(firestoreDb, "quizzes", inlineMessageId);
+  try {
+    const [_, qId, ans] = cb.data.split(":"); // callback_data = ans:<questionId>:<answerNumber>
+    const user = cb.from;
+    const inlineMessageId = cb.inline_message_id;
 
-  const quizSnap = await getDoc(quizRef);
-  if (!quizSnap.exists()) return;
-  const quiz = quizSnap.data();
+    if (!inlineMessageId) return;
 
-  // already answered?
-  if (quiz.answers?.[qId]?.[from.id]) {
-    await answerCallback(cb.id, "⚠️ You already answered this question!");
-    return;
-  }
+    const quizRef = doc(firestoreDb, "quizzes", inlineMessageId);
+    const quizSnap = await getDoc(quizRef);
+    if (!quizSnap.exists()) return;
 
-  const question = quiz.questions.find((q) => q.id === qId);
-  if (!question) return;
+    const quiz = quizSnap.data();
 
-  const isCorrect = ans === question.correct;
+    // prevent answering if question already answered
+    if (quiz.answers?.[qId]?.[user.id]) {
+      await answerCallback(cb.id, "⚠️ You already answered this question!");
+      return;
+    }
 
-  const updates = {
-    [`answers.${qId}.${from.id}`]: ans,
-  };
-  if (isCorrect) {
-    updates[`players.${from.id}.score`] =
-      (quiz.players[from.id]?.score || 0) + 1;
-  } else if (!quiz.players[from.id]) {
+    const question = quiz.questions.find((q) => q.id === qId);
+    if (!question) return;
+
+    const isCorrect = ans === question.correct;
+
+    // prepare Firestore update
+    const updates = {
+      [`answers.${qId}.${user.id}`]: ans,
+    };
+
     // ensure player exists in players map
-    updates[`players.${from.id}`] = { username: from.username, score: 0 };
-  }
+    if (!quiz.players?.[user.id]) {
+      updates[`players.${user.id}`] = {
+        username: user.username || user.first_name,
+        score: 0,
+      };
+    }
 
-  await updateDoc(quizRef, updates);
-  await answerCallback(cb.id, isCorrect ? "✅ Correct!" : "❌ Wrong");
+    if (isCorrect) {
+      updates[`players.${user.id}.score`] =
+        (quiz.players?.[user.id]?.score || 0) + 1;
+    }
+
+    await updateDoc(quizRef, updates);
+
+    await answerCallback(cb.id, isCorrect ? "✅ Correct!" : "❌ Wrong");
+  } catch (err) {
+    console.error("Error in handleQuizAnswer:", err);
+    if (cb.id) await answerCallback(cb.id, "⚠️ Something went wrong!");
+  }
 }
 
 async function runNextQuestion(inlineMessageId) {
