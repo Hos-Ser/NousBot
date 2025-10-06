@@ -418,62 +418,105 @@ const getQuizSubject = async () => {
   const subjects = [...new Set(docSnap.docs.map((doc) => doc.data().subject))];
   return subjects;
 };
-const handleQuizJoin = async (cb, subject) => {
-  const chatId = cb.inline_message_id;
-  const from = cb.from;
-  const quizRef = doc(firestoreDb, "quizzes", chatId.toString());
+async function handleQuizJoin(cb) {
+  try {
+    const inlineMessageId = cb.inline_message_id;
+    const user = cb.from;
+    const quizRef = doc(firestoreDb, "quizzes", inlineMessageId);
 
-  await runTransaction(firestoreDb, async (t) => {
-    const quizSnap = await t.get(quizRef);
-    if (!quizSnap.exists()) {
-      // create new quiz session
-      t.set(quizRef, {
-        subject,
-        players: {
-          [from.id]: { username: from.username, score: 0 },
-        },
-        questions: [],
-        current: 0,
-        answers: {},
-        status: "waiting",
-      });
-    } else {
-      const quiz = quizSnap.data();
-      if (quiz.players?.[from.id]) {
-        throw new Error("قبلا جوین دادی!");
+    await runTransaction(firestoreDb, async (t) => {
+      const snap = await t.get(quizRef);
+      if (!snap.exists()) return;
+      const quiz = snap.data();
+
+      if (quiz.status === "running" || quiz.status === "finished") {
+        throw new Error("Quiz already started or finished.");
       }
-      t.update(quizRef, {
-        [`players.${from.id}`]: { username: from.username, score: 0 },
-      });
+
+      const players = quiz.players || {};
+      if (players[user.id]) return; // already joined
+
+      players[user.id] = {
+        username: user.first_name,
+        score: 0,
+      };
+
+      t.update(quizRef, { players });
+    });
+
+    // update participant list in inline message
+    const snap = await getDoc(quizRef);
+    if (snap.exists()) {
+      const quiz = snap.data();
+      const players = Object.values(quiz.players || {});
+      const playerList =
+        players.length > 0
+          ? players.map((p) => `• ${p.username}`).join("\n")
+          : "_No one yet_";
+
+      const text = `📚 *Subject:* ${quiz.subject}\n\n👥 *Players Joined:*\n${playerList}\n\nPress ▶️ Start when ready!`;
+
+      const keyboard = [
+        [{ text: "Join 🏃", callback_data: `join:${quiz.subject}` }],
+        [{ text: "Start ▶️", callback_data: `start:${quiz.subject}` }],
+      ];
+
+      await editMessage(inlineMessageId, text, keyboard);
     }
-  });
-};
+
+    await answerCallback(cb.id, "✅ You joined the quiz!");
+  } catch (err) {
+    errorHandler(err, "handleJoin");
+    await answerCallback(cb.id, "⚠️ Could not join the quiz.");
+  }
+}
 
 async function handleQuizStart(cb) {
-  const subject = cb.data.split(":")[1];
-  const inlineMessageId = cb.inline_message_id; // only inline case
+  try {
+    const subject = cb.data.split(":")[1];
+    const inlineMessageId = cb.inline_message_id;
 
-  const quizRef = doc(firestoreDb, "quizzes", inlineMessageId); // use inline_message_id as doc id
+    if (!inlineMessageId) {
+      console.error("No inline_message_id in callback_query");
+      return;
+    }
 
-  // pick 5 random questions
-  const qSnap = await getDocs(collection(firestoreDb, "questions"));
-  const allQ = qSnap.docs
-    .map((d) => ({ id: d.id, ...d.data() }))
-    .filter((q) => q.subject === subject);
+    const quizRef = doc(firestoreDb, "quizzes", inlineMessageId);
 
-  const randomQ = allQ.sort(() => 0.5 - Math.random()).slice(0, 5);
+    // fetch questions
+    const qSnap = await getDocs(collection(firestoreDb, "questions"));
+    const allQ = qSnap.docs
+      .map((d) => ({ id: d.id, ...d.data() }))
+      .filter((q) => q.subject === subject);
 
-  await setDoc(quizRef, {
-    inline_message_id: inlineMessageId,
-    subject,
-    players: {},
-    questions: randomQ,
-    current: 0,
-    answers: {},
-    status: "running",
-  });
+    if (allQ.length < 5) {
+      await editMessage(
+        inlineMessageId,
+        `⚠️ Not enough questions in subject *${subject}* (need 5).`
+      );
+      return;
+    }
 
-  runNextQuestion(inlineMessageId);
+    const randomQ = [...allQ].sort(() => Math.random() - 0.5).slice(0, 5);
+
+    // don’t overwrite players, just update quiz state
+    await setDoc(
+      quizRef,
+      {
+        inline_message_id: inlineMessageId,
+        subject,
+        questions: randomQ,
+        current: 0,
+        answers: {},
+        status: "running",
+      },
+      { merge: true }
+    );
+
+    await runNextQuestion(inlineMessageId);
+  } catch (err) {
+    errorHandler(err, "handleQuizStart:");
+  }
 }
 
 async function handleQuizAnswer(cb) {
@@ -531,9 +574,12 @@ async function runNextQuestion(inlineMessageId) {
   }
 
   const q = quiz.questions[quiz.current];
-  const options = ["1", "2", "3", "4"].map((num) => [
-    { text: num, callback_data: `ans:${q.id}:${num}` },
-  ]);
+  const options = [
+    ["1", "2", "3", "4"].map((num) => ({
+      text: num,
+      callback_data: `ans:${q.id}:${num}`,
+    })),
+  ];
 
   await editMessage(inlineMessageId, `❓ ${q.question}`, options);
 

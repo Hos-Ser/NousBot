@@ -1124,8 +1124,7 @@ async function handleCallbackQuery(cbqObj) {
       return;
     }
     if (cbqData.startsWith("join:")) {
-      const subject = cbqData.split(":")[1];
-      await handleQuizJoin(cbqObj, subject)
+      await handleQuizJoin(cbqObj)
         .then(() => {
           return answerCallbackQuery(cbqId, "اوکی جوین دادی");
         })
@@ -1134,8 +1133,7 @@ async function handleCallbackQuery(cbqObj) {
         });
     }
     if (cbqData.startsWith("start:")) {
-      const subject = cbqData.split(":")[1];
-      await handleQuizStart(cbqObj, subject);
+      await handleQuizStart(cbqObj);
     }
     if (cbqData.startsWith("ans:")) {
       await handleQuizAnswer(cbqObj);
