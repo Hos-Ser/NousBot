@@ -13,8 +13,10 @@ const {
   Timestamp,
   runTransaction,
   arrayUnion,
+  getDoc,
 } = require("firebase/firestore");
 const { errorHandler } = require("./helper");
+const { default: axios } = require("axios");
 
 const {
   FIREBASE_API_KEY,
@@ -417,7 +419,7 @@ const getQuizSubject = async () => {
   return subjects;
 };
 const handleQuizJoin = async (cb, subject) => {
-  const chatId = cb.message.chat.id;
+  const chatId = cb.inline_message_id;
   const from = cb.from;
   const quizRef = doc(firestoreDb, "quizzes", chatId.toString());
 
@@ -447,11 +449,13 @@ const handleQuizJoin = async (cb, subject) => {
   });
 };
 
-const handleQuizStart = async (cb, subject) => {
-  const chatId = cb.message.chat.id;
-  const quizRef = doc(firestoreDb, "quizzes", chatId.toString());
+async function handleQuizStart(cb) {
+  const subject = cb.data.split(":")[1];
+  const inlineMessageId = cb.inline_message_id; // only inline case
 
-  // get 5 random questions
+  const quizRef = doc(firestoreDb, "quizzes", inlineMessageId); // use inline_message_id as doc id
+
+  // pick 5 random questions
   const qSnap = await getDocs(collection(firestoreDb, "questions"));
   const allQ = qSnap.docs
     .map((d) => ({ id: d.id, ...d.data() }))
@@ -459,21 +463,24 @@ const handleQuizStart = async (cb, subject) => {
 
   const randomQ = allQ.sort(() => 0.5 - Math.random()).slice(0, 5);
 
-  await updateDoc(quizRef, {
+  await setDoc(quizRef, {
+    inline_message_id: inlineMessageId,
+    subject,
+    players: {},
     questions: randomQ,
     current: 0,
+    answers: {},
     status: "running",
-    messageId: cb.message.message_id,
   });
 
-  runNextQuestion(chatId);
-};
+  runNextQuestion(inlineMessageId);
+}
 
 async function handleQuizAnswer(cb) {
   const [_, qId, ans] = cb.data.split(":"); // ans:qId:2
   const from = cb.from;
-  const chatId = cb.message.chat.id;
-  const quizRef = doc(firestoreDb, "quizzes", chatId.toString());
+  const inlineMessageId = cb.inline_message_id;
+  const quizRef = doc(firestoreDb, "quizzes", inlineMessageId);
 
   const quizSnap = await getDoc(quizRef);
   if (!quizSnap.exists()) return;
@@ -496,31 +503,29 @@ async function handleQuizAnswer(cb) {
   if (isCorrect) {
     updates[`players.${from.id}.score`] =
       (quiz.players[from.id]?.score || 0) + 1;
+  } else if (!quiz.players[from.id]) {
+    // ensure player exists in players map
+    updates[`players.${from.id}`] = { username: from.username, score: 0 };
   }
 
   await updateDoc(quizRef, updates);
-
   await answerCallback(cb.id, isCorrect ? "✅ Correct!" : "❌ Wrong");
 }
 
-async function runNextQuestion(chatId) {
-  const quizRef = doc(firestoreDb, "quizzes", chatId.toString());
+async function runNextQuestion(inlineMessageId) {
+  const quizRef = doc(firestoreDb, "quizzes", inlineMessageId);
   const quizSnap = await getDoc(quizRef);
   if (!quizSnap.exists()) return;
   const quiz = quizSnap.data();
 
   if (quiz.current >= quiz.questions.length) {
     // quiz finished
-    let results = Object.values(quiz.players)
+    let results = Object.values(quiz.players || {})
       .sort((a, b) => b.score - a.score)
       .map((p) => `${p.username}: ${p.score}`)
       .join("\n");
 
-    await editMessage(
-      chatId,
-      quiz.messageId,
-      `🏆 Quiz finished!\n\n${results}`
-    );
+    await editMessage(inlineMessageId, `🏆 Quiz finished!\n\n${results}`);
     await updateDoc(quizRef, { status: "finished" });
     return;
   }
@@ -530,12 +535,11 @@ async function runNextQuestion(chatId) {
     { text: num, callback_data: `ans:${q.id}:${num}` },
   ]);
 
-  await editMessage(chatId, quiz.messageId, `❓ ${q.question}`, options);
+  await editMessage(inlineMessageId, `❓ ${q.question}`, options);
 
-  // wait 10s then move on
   setTimeout(async () => {
     await updateDoc(quizRef, { current: quiz.current + 1 });
-    runNextQuestion(chatId);
+    runNextQuestion(inlineMessageId);
   }, 10000);
 }
 
@@ -571,28 +575,14 @@ module.exports = {
   handleQuizAnswer,
 };
 
-async function sendMessage(chatId, text, keyboard) {
-  const res = await axios.post(
-    `https://api.telegram.org/bot${process.env.TG_BOT_TOKEN}/sendMessage`,
-    {
-      chat_id: chatId,
-      text,
-      reply_markup: keyboard ? { inline_keyboard: keyboard } : undefined,
-      parse_mode: "Markdown",
-    }
-  );
-  return res.data.result.message_id; // return message id so we can store it
-}
-
-async function editMessage(chatId, messageId, text, keyboard) {
+async function editMessage(inlineMessageId, text, keyboard) {
   await axios.post(
     `https://api.telegram.org/bot${process.env.TG_BOT_TOKEN}/editMessageText`,
     {
-      chat_id: chatId,
-      message_id: messageId,
+      inline_message_id: inlineMessageId,
       text,
-      reply_markup: keyboard ? { inline_keyboard: keyboard } : undefined,
       parse_mode: "Markdown",
+      reply_markup: keyboard ? { inline_keyboard: keyboard } : undefined,
     }
   );
 }

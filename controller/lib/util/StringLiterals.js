@@ -1,4 +1,4 @@
-export const pityInstruction = `
+const pityInstruction = `
 واسه اینکه بتونم پیتی بازیتو بگیرم کار های زیر رو انجام بده
 1. بازی رو باز کن
 2. داخل بازی قسمت کانوین History رو باز کن و بزار کامل لود شه
@@ -13,7 +13,7 @@ export const pityInstruction = `
 4. یه متن نامرئی بالای اون پیام هست انگشتت رو روش نگه دار و select all رو بزن و همش رو کپی کن
 5. متن رو برام بفرست`;
 
-export const genshinPityIns = `
+const genshinPityIns = `
 آموزش مراحل برای پیسی
 1. بازی رو باز کن
 2. داخل بازی قسمت ویش History رو باز کن و بزار کامل لود شه
@@ -29,7 +29,7 @@ export const genshinPityIns = `
 4. یه متن نامرئی بالای اون پیام هست انگشتت رو روش نگه دار و select all رو بزن و همش رو کپی کن
 5. متن رو برام بفرست`;
 
-export const questionStruction = `
+const questionStruction = `
 لطفا سوالتو تو این فرمت برام ارسال کن، دفت کن سوالت توسط ادمین باید تایید بشه پس فرمت و موضوعی که انتخاب کردی باید درست باشه.
 --------
 صورت سوال
@@ -40,3 +40,5 @@ export const questionStruction = `
 عدد گزینه درست
 ---------
 `;
+
+module.exports = { genshinPityIns, questionStruction, pityInstruction };

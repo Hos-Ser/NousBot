@@ -1082,10 +1082,15 @@ async function handleMessage(messageObj) {
 }
 // handling inline keyboards
 async function handleCallbackQuery(cbqObj) {
+  var messageText = "";
+  var chatId = 0;
+  var messageId = 0;
+  if (cbqObj.message) {
+    messageText = cbqObj.message.text;
+    chatId = cbqObj.message.chat.id;
+    messageId = cbqObj.message.message_id;
+  }
   const cbqId = cbqObj.id;
-  const messageText = cbqObj.message.text;
-  const chatId = cbqObj.message.chat.id;
-  const messageId = cbqObj.message.message_id;
   const cbqData = cbqObj.data;
   const userUID = cbqObj.from.id;
   const userUname = cbqObj.from.username;
@@ -1120,7 +1125,7 @@ async function handleCallbackQuery(cbqObj) {
     }
     if (cbqData.startsWith("join:")) {
       const subject = cbqData.split(":")[1];
-      await handleQuizJoin(cbqData, subject)
+      await handleQuizJoin(cbqObj, subject)
         .then(() => {
           return answerCallbackQuery(cbqId, "اوکی جوین دادی");
         })
@@ -1130,10 +1135,10 @@ async function handleCallbackQuery(cbqObj) {
     }
     if (cbqData.startsWith("start:")) {
       const subject = cbqData.split(":")[1];
-      await handleQuizStart(cbqData, subject);
+      await handleQuizStart(cbqObj, subject);
     }
     if (cbqData.startsWith("ans:")) {
-      await handleQuizAnswer(cbqData);
+      await handleQuizAnswer(cbqObj);
     }
     if (cbqData === "genshinpity") {
       //FIXME fix this after implenting genshin datas
