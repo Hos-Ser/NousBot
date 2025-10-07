@@ -418,72 +418,14 @@ const getQuizSubject = async () => {
   const subjects = [...new Set(docSnap.docs.map((doc) => doc.data().subject))];
   return subjects;
 };
-async function handleQuizJoin(cb) {
-  try {
-    const inlineMessageId = cb.inline_message_id;
-    const user = cb.from;
-    const quizRef = doc(firestoreDb, "quizzes", inlineMessageId);
-
-    await runTransaction(firestoreDb, async (t) => {
-      const snap = await t.get(quizRef);
-      if (!snap.exists()) return;
-      const quiz = snap.data();
-
-      if (quiz.status === "running" || quiz.status === "finished") {
-        throw new Error("Quiz already started or finished.");
-      }
-
-      const players = quiz.players || {};
-      if (players[user.id]) return; // already joined
-
-      players[user.id] = {
-        username: user.first_name,
-        score: 0,
-      };
-
-      t.update(quizRef, { players });
-    });
-
-    // update participant list in inline message
-    const snap = await getDoc(quizRef);
-    if (snap.exists()) {
-      const quiz = snap.data();
-      const players = Object.values(quiz.players || {});
-      const playerList =
-        players.length > 0
-          ? players.map((p) => `• ${p.username}`).join("\n")
-          : "_No one yet_";
-
-      const text = `📚 *Subject:* ${quiz.subject}\n\n👥 *Players Joined:*\n${playerList}\n\nPress ▶️ Start when ready!`;
-
-      const keyboard = [
-        [{ text: "Join 🏃", callback_data: `join:${quiz.subject}` }],
-        [{ text: "Start ▶️", callback_data: `start:${quiz.subject}` }],
-      ];
-
-      await editMessage(inlineMessageId, text, keyboard);
-    }
-
-    await answerCallback(cb.id, "✅ You joined the quiz!");
-  } catch (err) {
-    console.error("Error in handleJoin:", err);
-    await answerCallback(cb.id, "⚠️ Could not join the quiz.");
-  }
-}
-
 async function handleQuizStart(cb) {
   try {
     const subject = cb.data.split(":")[1];
     const inlineMessageId = cb.inline_message_id;
-
-    if (!inlineMessageId) {
-      console.error("No inline_message_id in callback_query");
-      return;
-    }
+    if (!inlineMessageId) return;
 
     const quizRef = doc(firestoreDb, "quizzes", inlineMessageId);
 
-    // fetch questions
     const qSnap = await getDocs(collection(firestoreDb, "questions"));
     const allQ = qSnap.docs
       .map((d) => ({ id: d.id, ...d.data() }))
@@ -492,36 +434,31 @@ async function handleQuizStart(cb) {
     if (allQ.length < 5) {
       await editMessage(
         inlineMessageId,
-        `⚠️ Not enough questions in subject *${subject}* (need 5).`
+        `⚠️ Not enough questions for *${subject}* (need 5).`
       );
       return;
     }
 
     const randomQ = [...allQ].sort(() => Math.random() - 0.5).slice(0, 5);
 
-    // don’t overwrite players, just update quiz state
-    await setDoc(
-      quizRef,
-      {
-        inline_message_id: inlineMessageId,
-        subject,
-        questions: randomQ,
-        current: 0,
-        answers: {},
-        status: "running",
-      },
-      { merge: true }
-    );
+    await setDoc(quizRef, {
+      inline_message_id: inlineMessageId,
+      subject,
+      questions: randomQ,
+      current: 0,
+      players: {},
+      status: "running",
+    });
 
     await runNextQuestion(inlineMessageId);
   } catch (err) {
-    console.error("Error in handleQuizStart:", err);
+    errorHandler(err, "Error in handleQuizStart:");
   }
 }
 
 async function handleQuizAnswer(cb) {
   try {
-    const [_, qId, ans] = cb.data.split(":"); // callback_data = ans:<questionId>:<answerNumber>
+    const [_, qId, ans] = cb.data.split(":"); // "ans:<questionId>:<answerNumber>"
     const user = cb.from;
     const inlineMessageId = cb.inline_message_id;
 
@@ -532,37 +469,31 @@ async function handleQuizAnswer(cb) {
     if (!quizSnap.exists()) return;
 
     const quiz = quizSnap.data();
+    const questionIndex = quiz.questions.findIndex((q) => q.id === qId);
+    if (questionIndex === -1) return;
 
-    // prevent answering if question already answered
-    if (quiz.answers?.[qId]?.[user.id]) {
+    const question = quiz.questions[questionIndex];
+    const isCorrect = ans === question.correct;
+
+    const player = quiz.players?.[user.id] || {
+      username: user.username || user.first_name,
+      score: 0,
+      answers: {},
+    };
+
+    // If player already answered this question, skip
+    if (player.answers[qId] !== undefined) {
       await answerCallback(cb.id, "⚠️ You already answered this question!");
       return;
     }
 
-    const question = quiz.questions.find((q) => q.id === qId);
-    if (!question) return;
+    // Record answer result
+    player.answers[qId] = isCorrect;
+    if (isCorrect) player.score += 1;
 
-    const isCorrect = ans === question.correct;
-
-    // prepare Firestore update
-    const updates = {
-      [`answers.${qId}.${user.id}`]: ans,
-    };
-
-    // ensure player exists in players map
-    if (!quiz.players?.[user.id]) {
-      updates[`players.${user.id}`] = {
-        username: user.username || user.first_name,
-        score: 0,
-      };
-    }
-
-    if (isCorrect) {
-      updates[`players.${user.id}.score`] =
-        (quiz.players?.[user.id]?.score || 0) + 1;
-    }
-
-    await updateDoc(quizRef, updates);
+    await updateDoc(quizRef, {
+      [`players.${user.id}`]: player,
+    });
 
     await answerCallback(cb.id, isCorrect ? "✅ Correct!" : "❌ Wrong");
   } catch (err) {
@@ -578,17 +509,31 @@ async function runNextQuestion(inlineMessageId) {
   const quiz = quizSnap.data();
 
   if (quiz.current >= quiz.questions.length) {
-    // quiz finished
-    let results = Object.values(quiz.players || {})
-      .sort((a, b) => b.score - a.score)
-      .map((p) => `${p.username}: ${p.score}`)
+    // Quiz finished
+    const resultLines = Object.values(quiz.players || {})
+      .map((p) => {
+        // order answers according to question order
+        const emojis = quiz.questions.map((q) =>
+          p.answers?.[q.id] === true
+            ? "✔"
+            : p.answers?.[q.id] === false
+            ? "❌"
+            : "➖"
+        );
+        return `@${p.username}: ${emojis.join("")}`;
+      })
       .join("\n");
 
-    await editMessage(inlineMessageId, `🏆 Quiz finished!\n\n${results}`);
+    await editMessage(
+      inlineMessageId,
+      `🏁 *Quiz finished!*\n\n${resultLines || "_No participants yet_"}`
+    );
+
     await updateDoc(quizRef, { status: "finished" });
     return;
   }
 
+  // show next question
   const q = quiz.questions[quiz.current];
   const options = [
     ["1", "2", "3", "4"].map((num) => ({
@@ -599,6 +544,7 @@ async function runNextQuestion(inlineMessageId) {
 
   await editMessage(inlineMessageId, `❓ ${q.question}`, options);
 
+  // wait 10s then move on
   setTimeout(async () => {
     await updateDoc(quizRef, { current: quiz.current + 1 });
     runNextQuestion(inlineMessageId);

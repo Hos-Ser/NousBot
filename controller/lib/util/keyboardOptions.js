@@ -115,7 +115,6 @@ const subToNewsKb = {
     ],
   }),
 };
-
 const mainPanelKb = {
   text: "پنل ادمین",
   reply_markup: JSON.stringify({
@@ -160,7 +159,6 @@ const otherPanelKb = {
     inline_keyboard: [[{ text: "↩ Menu", callback_data: "menu" }]],
   }),
 };
-
 const helperKbFunction = (arrayOfkeyboards) => {
   return {
     reply_markup: JSON.stringify({
@@ -205,7 +203,6 @@ const pityCounterkb = {
     ],
   }),
 };
-
 const gachaHistorySaveKb = (text) => {
   return {
     text,
@@ -250,7 +247,6 @@ const savedGachaSwitchKb = {
     ],
   }),
 };
-
 const redoKb = (gameInfo) => {
   return {
     reply_markup: JSON.stringify({
@@ -260,7 +256,6 @@ const redoKb = (gameInfo) => {
     }),
   };
 };
-
 const contestsKbFunction = (contests) => {
   const keyboard = contests.map((c) => [
     { text: c.name, callback_data: `contest|${c.id}` },
@@ -314,7 +309,6 @@ const optionDeleteKbFunction = (contestId, optionId) => {
     }),
   };
 };
-
 const voterContestKbFunction = (contests) => {
   const keyboard = contests.map((c) => [
     { text: c.name, callback_data: `voterCon|${c.id}|${c.name}` },

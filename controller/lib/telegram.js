@@ -1123,15 +1123,6 @@ async function handleCallbackQuery(cbqObj) {
       await answerCallbackQuery(cbqId);
       return;
     }
-    if (cbqData.startsWith("join:")) {
-      await handleQuizJoin(cbqObj)
-        .then(() => {
-          return answerCallbackQuery(cbqId, "اوکی جوین دادی");
-        })
-        .catch((err) => {
-          return answerCallbackQuery(cbqId, err.message);
-        });
-    }
     if (cbqData.startsWith("start:")) {
       await handleQuizStart(cbqObj);
     }
