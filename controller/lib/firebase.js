@@ -476,7 +476,7 @@ async function handleQuizAnswer(cb) {
     const isCorrect = ans === question.correct;
 
     const player = quiz.players?.[user.id] || {
-      username: user.username || user.first_name,
+      username: user.first_name,
       score: 0,
       answers: {},
     };
@@ -542,7 +542,11 @@ async function runNextQuestion(inlineMessageId) {
     })),
   ];
 
-  await editMessage(inlineMessageId, `❓ ${q.question}`, options);
+  const progress = `📖 Question ${quiz.current + 1} of ${
+    quiz.questions.length
+  }`;
+  const questionText = `❓ *${q.question}*\n\n${progress}`;
+  await editMessage(inlineMessageId, questionText, options);
 
   // wait 10s then move on
   setTimeout(async () => {

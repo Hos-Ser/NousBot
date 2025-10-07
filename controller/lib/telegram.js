@@ -162,12 +162,7 @@ async function createQuizResult() {
       parse_mode: "Markdown",
     },
     reply_markup: {
-      inline_keyboard: [
-        [
-          { text: "Join", callback_data: `join:${subj}` },
-          { text: "Start", callback_data: `start:${subj}` },
-        ],
-      ],
+      inline_keyboard: [[{ text: "Start", callback_data: `start:${subj}` }]],
     },
   }));
 }
@@ -1444,10 +1439,9 @@ async function handleChannelPost(postObj) {
 }
 // handling inline queries
 async function handleInlineQuery(inlineObj) {
+  const queryId = inlineObj.id;
+  const userUID = inlineObj.from.id;
   try {
-    const queryId = inlineObj.id;
-    const userUID = inlineObj.from.id;
-
     const pityResult = await createPityResult(userUID);
     const subjectsResult = await createQuizResult();
 
