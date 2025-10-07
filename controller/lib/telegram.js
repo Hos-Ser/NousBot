@@ -158,7 +158,7 @@ async function createQuizResult() {
     id: `${idx}`,
     title: subj,
     input_message_content: {
-      message_text: `📚 کوییز *${subj}*!\nبرای شرکت روی Join کلیک کن و برای شروع مسابقه فرستنده پیام باید روی Start بزنه`,
+      message_text: `📚 کوییز *${subj}*!\nهروقت آماده بودین رو Start بزن`,
       parse_mode: "Markdown",
     },
     reply_markup: {

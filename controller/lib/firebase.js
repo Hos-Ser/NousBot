@@ -1,4 +1,4 @@
-const { initializeApp } = require("firebase/app");
+const { initializeApp, getApps } = require("firebase/app");
 const {
   deleteDoc,
   getFirestore,
@@ -39,18 +39,12 @@ const firebaseConfig = {
 };
 
 let app;
-let firestoreDb;
-
-const initializeFirebaseApp = () => {
-  try {
-    app = initializeApp(firebaseConfig);
-    firestoreDb = getFirestore();
-    return app;
-  } catch (error) {
-    errorHandler(error, "firebase-initializeFirebaseApp");
-  }
-};
-const getFirebaseApp = () => app;
+if (!getApps().length) {
+  app = initializeApp(firebaseConfig);
+} else {
+  app = getApps()[0];
+}
+const firestoreDb = getFirestore(app);
 
 const uploadProcessedData = async (DataToUpload, collectionName) => {
   try {
@@ -520,7 +514,7 @@ async function runNextQuestion(inlineMessageId) {
             ? "❌"
             : "➖"
         );
-        return `@${p.username}: ${emojis.join("")}`;
+        return `${p.username}: ${emojis.join("")}`;
       })
       .join("\n");
 
@@ -548,16 +542,12 @@ async function runNextQuestion(inlineMessageId) {
   const questionText = `❓ *${q.question}*\n\n${progress}`;
   await editMessage(inlineMessageId, questionText, options);
 
-  // wait 10s then move on
-  setTimeout(async () => {
-    await updateDoc(quizRef, { current: quiz.current + 1 });
-    runNextQuestion(inlineMessageId);
-  }, 10000);
+  const nextAt = Timestamp.fromMillis(Date.now() + 10000);
+  await updateDoc(quizRef, { current: quiz.current + 1, nextAt });
 }
 
 module.exports = {
-  initializeFirebaseApp,
-  getFirebaseApp,
+  firestoreDb,
   uploadProcessedData,
   getPrimoCode,
   getSavedChatId,
@@ -584,6 +574,7 @@ module.exports = {
   getQuizSubject,
   handleQuizStart,
   handleQuizAnswer,
+  runNextQuestion,
 };
 
 async function editMessage(inlineMessageId, text, keyboard) {
