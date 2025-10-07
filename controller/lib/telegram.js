@@ -22,7 +22,6 @@ const {
   deleteOption,
   voteOption,
   getQuizSubject,
-  handleQuizJoin,
   handleQuizStart,
   handleQuizAnswer,
 } = require("./firebase");

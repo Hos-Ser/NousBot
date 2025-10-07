@@ -578,7 +578,6 @@ module.exports = {
   deleteContest,
   deleteOption,
   getQuizSubject,
-  handleQuizJoin,
   handleQuizStart,
   handleQuizAnswer,
 };
