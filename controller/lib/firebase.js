@@ -540,7 +540,11 @@ async function runNextQuestion(inlineMessageId) {
     quiz.questions.length
   }`;
   const questionText = `❓ *${q.question}*\n\n${progress}`;
-  await editMessage(inlineMessageId, questionText, options);
+  try {
+    await editMessage(inlineMessageId, questionText, options);
+  } catch (err) {
+    errorHandler(err, "runNextQuestion_editingMessage");
+  }
 
   setTimeout(() => {
     runNextQuestion(inlineMessageId);
