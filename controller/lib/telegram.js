@@ -24,6 +24,7 @@ const {
   getQuizSubject,
   handleQuizStart,
   handleQuizAnswer,
+  sendQuizDetails,
 } = require("./firebase");
 const { errorHandler } = require("./helper");
 const {
@@ -782,6 +783,13 @@ async function handleMessage(messageObj) {
             );
             return;
           default:
+            if (command.startsWith("start view_")) {
+              const quizId = command.split("view_")[1];
+              const ans = await sendQuizDetails(chatId, quizId);
+              await sendMessage(chatId, ans, true);
+              return;
+            }
+
             if (command.startsWith("start")) {
               const linkParam = command.substring(5).trim();
               const theEvent = await getEvent(linkParam);
@@ -995,11 +1003,11 @@ async function handleMessage(messageObj) {
         case "𓇻 منوی اصلی":
           await sendKeyboard(chatId, startKb);
           return;
-        case "❓ WuWa Lore":
+        case "❓ Wuthering Waves":
           await sendMessage(chatId, STRINGS.questionStruction);
           addSession(chatId, "WutheringWaves quiz");
           return;
-        case "❓ Genshin Lore":
+        case "❓ Genshin Impact":
           await sendMessage(chatId, STRINGS.questionStruction);
           addSession(chatId, "GenshinImpact quiz");
           return;

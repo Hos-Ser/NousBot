@@ -522,9 +522,15 @@ async function runNextQuestion(inlineMessageId) {
     try {
       await editMessage(
         inlineMessageId,
-        `🏁 * تموم شد! نتایج: *\n\n${
-          resultLines.join("\n") || "_No participants yet_"
-        }`
+        `🏁 *نتایج:*\n\n${resultLines.join("\n") || "_No participants yet_"}`,
+        [
+          [
+            {
+              text: "📜 دیدن جزییات سوالات",
+              url: `https://t.me/nousthebot?start=view_${inlineMessageId}`,
+            },
+          ],
+        ]
       );
     } catch (err) {
       if (
@@ -595,6 +601,31 @@ async function runNextQuestion(inlineMessageId) {
   // 🕒 schedule next question after 10 s
   setTimeout(() => runNextQuestion(inlineMessageId), 15_000);
 }
+async function sendQuizDetails(quizId) {
+  try {
+    const quizRef = doc(firestoreDb, "quizzes", quizId);
+    const quizSnap = await getDoc(quizRef);
+
+    if (!quizSnap.exists()) {
+      return "❌ اطلاعات کوییز پیدا نشد.";
+    }
+
+    const quiz = quizSnap.data();
+
+    let message = `📘 موضوع: ${quiz.subject}\n\n`;
+
+    quiz.questions.forEach((q, i) => {
+      message += `*${i + 1}. ${q.question}*\n`;
+      message += `✅ جواب درست: ${q.correct}\n`;
+      message += `👤 ارسالی توسط: ${q.name || "_Unknown_"}\n\n`;
+    });
+
+    return message;
+  } catch (err) {
+    console.error("❌ Error in sendQuizDetails:", err);
+    return "⚠️ Failed to load quiz details.";
+  }
+}
 
 module.exports = {
   firestoreDb,
@@ -625,6 +656,7 @@ module.exports = {
   handleQuizStart,
   handleQuizAnswer,
   runNextQuestion,
+  sendQuizDetails,
 };
 
 async function editMessage(inlineMessageId, text, keyboard) {

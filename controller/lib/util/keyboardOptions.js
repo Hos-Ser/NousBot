@@ -346,9 +346,10 @@ const questionKb = {
   text: "سوالت درباره کدوم بازیه؟؟",
   reply_markup: JSON.stringify({
     keyboard: [
-      [{ text: "❓ WuWa Lore" }],
-      [{ text: "❓ Genshin Lore" }],
+      [{ text: "❓ Wuthering Waves" }],
+      [{ text: "❓ Genshin Impact" }],
       [{ text: "❓ Other Games" }],
+      [{ text: "𓇻 منوی اصلی" }],
     ],
     resize_keyboard: true,
     one_time_keyboard: true,
