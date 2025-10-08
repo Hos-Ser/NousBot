@@ -21,7 +21,7 @@ app.get("/api/check-quizzes", async (req, res) => {
       return res.status(403).send("Forbidden");
     }
 
-    const result = await runCronJob(); // call the quiz checker
+    const result = await runCronJob();
     res.json(result);
   } catch (err) {
     console.error("Cron route error:", err);
