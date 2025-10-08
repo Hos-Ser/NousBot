@@ -502,33 +502,73 @@ async function runNextQuestion(inlineMessageId) {
   if (!quizSnap.exists()) return;
   const quiz = quizSnap.data();
 
+  // 🟩 if already finished, stop
   if (quiz.current >= quiz.questions.length) {
-    // Quiz finished
-    const resultLines = Object.values(quiz.players || {})
-      .map((p) => {
-        // order answers according to question order
-        const emojis = quiz.questions.map((q) =>
-          p.answers?.[q.id] === true
-            ? "✔"
-            : p.answers?.[q.id] === false
-            ? "❌"
-            : "➖"
-        );
-        return `${p.username}: ${emojis.join("")}`;
-      })
-      .join("\n");
+    const resultLines = Object.values(quiz.players || {}).map((p) => {
+      const emojis = quiz.questions.map((q) =>
+        p.answers?.[q.id] === true
+          ? "✔"
+          : p.answers?.[q.id] === false
+          ? "❌"
+          : "➖"
+      );
+      return `${p.username}: ${emojis.join("")}`;
+    });
 
-    await editMessage(
-      inlineMessageId,
-      `🏁 *Quiz finished!*\n\n${resultLines || "_No participants yet_"}`
-    );
+    try {
+      await editMessage(
+        inlineMessageId,
+        `🏁 *Quiz finished!*\n\n${
+          resultLines.join("\n") || "_No participants yet_"
+        }`
+      );
+    } catch (err) {
+      if (
+        !err.response?.data?.description?.includes("message is not modified")
+      ) {
+        console.error(
+          "❌ Failed to edit final message:",
+          err.response?.data || err
+        );
+      }
+    }
 
     await updateDoc(quizRef, { status: "finished" });
     return;
   }
 
-  // show next question
-  const q = quiz.questions[quiz.current];
+  // 🟦 determine if there are active players
+  const activePlayers = Object.values(quiz.players || {}).filter(
+    (p) => Object.keys(p.answers || {}).length > 0
+  );
+
+  // 🟨 if no players yet and not the first question, finish early
+  if (quiz.current > 0 && activePlayers.length === 0) {
+    console.log(`⚠️ No active players for quiz ${inlineMessageId}, ending.`);
+    try {
+      await editMessage(
+        inlineMessageId,
+        "⚠️ *Quiz ended early due to no participants.*"
+      );
+    } catch (err) {
+      if (
+        !err.response?.data?.description?.includes("message is not modified")
+      ) {
+        console.error(
+          "❌ Failed to end empty quiz:",
+          err.response?.data || err
+        );
+      }
+    }
+    await updateDoc(quizRef, { status: "finished" });
+    return;
+  }
+
+  // 🟧 move to next question (increment)
+  const newIndex = quiz.current + 1;
+  await updateDoc(quizRef, { current: newIndex });
+
+  const q = quiz.questions[newIndex - 1];
   const options = [
     ["1", "2", "3", "4"].map((num) => ({
       text: num,
@@ -536,19 +576,21 @@ async function runNextQuestion(inlineMessageId) {
     })),
   ];
 
-  const progress = `📖 Question ${quiz.current + 1} of ${
-    quiz.questions.length
-  }`;
+  const progress = `📖 Question ${newIndex} of ${quiz.questions.length}`;
   const questionText = `❓ *${q.question}*\n\n${progress}`;
+
   try {
     await editMessage(inlineMessageId, questionText, options);
   } catch (err) {
-    errorHandler(err, "runNextQuestion_editingMessage");
+    if (err.response?.data?.description?.includes("message is not modified")) {
+      console.warn("⚠️ Message not modified, skipping edit.");
+    } else {
+      console.error("❌ Failed to edit message:", err.response?.data || err);
+    }
   }
 
-  setTimeout(() => {
-    runNextQuestion(inlineMessageId);
-  }, 10_000);
+  // 🕒 schedule next question after 10 s
+  setTimeout(() => runNextQuestion(inlineMessageId), 10_000);
 }
 
 module.exports = {
