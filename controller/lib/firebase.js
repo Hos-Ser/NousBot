@@ -542,8 +542,9 @@ async function runNextQuestion(inlineMessageId) {
   const questionText = `❓ *${q.question}*\n\n${progress}`;
   await editMessage(inlineMessageId, questionText, options);
 
-  const nextAt = Timestamp.fromMillis(Date.now() + 10000);
-  await updateDoc(quizRef, { current: quiz.current + 1, nextAt });
+  setTimeout(() => {
+    runNextQuestion(inlineMessageId);
+  }, 10_000);
 }
 
 module.exports = {
