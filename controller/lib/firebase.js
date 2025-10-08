@@ -489,7 +489,7 @@ async function handleQuizAnswer(cb) {
       [`players.${user.id}`]: player,
     });
 
-    await answerCallback(cb.id, isCorrect ? "✅ ذرست!" : "❌ اشتباه");
+    await answerCallback(cb.id, isCorrect ? "✅ درست!" : "❌ اشتباه!");
   } catch (err) {
     console.error("Error in handleQuizAnswer:", err);
     if (cb.id) await answerCallback(cb.id, "⚠️ Something went wrong!");
@@ -599,7 +599,7 @@ async function runNextQuestion(inlineMessageId) {
   }
 
   // 🕒 schedule next question after 10 s
-  setTimeout(() => runNextQuestion(inlineMessageId), 15_000);
+  setTimeout(() => runNextQuestion(inlineMessageId), 18_000);
 }
 async function sendQuizDetails(quizId) {
   try {

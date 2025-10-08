@@ -785,7 +785,7 @@ async function handleMessage(messageObj) {
           default:
             if (command.startsWith("start view_")) {
               const quizId = command.split("view_")[1];
-              const ans = await sendQuizDetails(chatId, quizId);
+              const ans = await sendQuizDetails(quizId);
               await sendMessage(chatId, ans, true);
               return;
             }
