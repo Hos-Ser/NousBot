@@ -158,11 +158,11 @@ async function createQuizResult() {
     id: `${idx}`,
     title: subj,
     input_message_content: {
-      message_text: `📚 کوییز *${subj}*!\nهروقت آماده بودین رو Start بزن`,
+      message_text: `📚 کوییز *${subj}*!\nهروقت آماده بودین روی شروع بزن`,
       parse_mode: "Markdown",
     },
     reply_markup: {
-      inline_keyboard: [[{ text: "Start", callback_data: `start:${subj}` }]],
+      inline_keyboard: [[{ text: "شروع", callback_data: `start:${subj}` }]],
     },
   }));
 }
@@ -347,7 +347,7 @@ async function answerInlineQuery(inlineQueryId, results) {
         inline_query_id: inlineQueryId,
         results: [],
         cache_time: 0,
-        switch_pm_text: "برای شروع وارد بات شو و دستور /pity رو بزن",
+        switch_pm_text: "📝 ارسال سوال به بات",
         switch_pm_parameter: "x",
       })
       .catch((ex) => {
@@ -359,6 +359,8 @@ async function answerInlineQuery(inlineQueryId, results) {
       inline_query_id: inlineQueryId,
       results: JSON.stringify(results),
       cache_time: 0,
+      switch_pm_text: "📝 ارسال سوال به بات",
+      switch_pm_parameter: "x",
     })
     .catch((ex) => {
       errorHandler(ex, "answerInlineQuery", "axios");

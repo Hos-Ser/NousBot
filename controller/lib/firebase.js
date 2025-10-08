@@ -477,7 +477,7 @@ async function handleQuizAnswer(cb) {
 
     // If player already answered this question, skip
     if (player.answers[qId] !== undefined) {
-      await answerCallback(cb.id, "⚠️ You already answered this question!");
+      await answerCallback(cb.id, "⚠️ به این سوال جواب دادی!");
       return;
     }
 
@@ -489,7 +489,7 @@ async function handleQuizAnswer(cb) {
       [`players.${user.id}`]: player,
     });
 
-    await answerCallback(cb.id, isCorrect ? "✅ Correct!" : "❌ Wrong");
+    await answerCallback(cb.id, isCorrect ? "✅ ذرست!" : "❌ اشتباه");
   } catch (err) {
     console.error("Error in handleQuizAnswer:", err);
     if (cb.id) await answerCallback(cb.id, "⚠️ Something went wrong!");
@@ -504,7 +504,11 @@ async function runNextQuestion(inlineMessageId) {
 
   // 🟩 if already finished, stop
   if (quiz.current >= quiz.questions.length) {
-    const resultLines = Object.values(quiz.players || {}).map((p) => {
+    const sortedPlayers = Object.values(quiz.players || {}).sort(
+      (a, b) => (b.score || 0) - (a.score || 0)
+    );
+
+    const resultLines = sortedPlayers.map((p, i) => {
       const emojis = quiz.questions.map((q) =>
         p.answers?.[q.id] === true
           ? "✔"
@@ -518,7 +522,7 @@ async function runNextQuestion(inlineMessageId) {
     try {
       await editMessage(
         inlineMessageId,
-        `🏁 *Quiz finished!*\n\n${
+        `🏁 * تموم شد! نتایج: *\n\n${
           resultLines.join("\n") || "_No participants yet_"
         }`
       );
@@ -544,7 +548,6 @@ async function runNextQuestion(inlineMessageId) {
 
   // 🟨 if no players yet and not the first question, finish early
   if (quiz.current > 0 && activePlayers.length === 0) {
-    console.log(`⚠️ No active players for quiz ${inlineMessageId}, ending.`);
     try {
       await editMessage(
         inlineMessageId,
@@ -576,7 +579,7 @@ async function runNextQuestion(inlineMessageId) {
     })),
   ];
 
-  const progress = `📖 Question ${newIndex} of ${quiz.questions.length}`;
+  const progress = `📖 سوال ${newIndex} از ${quiz.questions.length}`;
   const questionText = `❓ *${q.question}*\n\n${progress}`;
 
   try {
@@ -590,7 +593,7 @@ async function runNextQuestion(inlineMessageId) {
   }
 
   // 🕒 schedule next question after 10 s
-  setTimeout(() => runNextQuestion(inlineMessageId), 10_000);
+  setTimeout(() => runNextQuestion(inlineMessageId), 15_000);
 }
 
 module.exports = {
