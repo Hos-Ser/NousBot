@@ -3,7 +3,7 @@ const pityInstruction = `
 1. بازی رو باز کن
 2. داخل بازی قسمت کانوین History رو باز کن و بزار کامل لود شه
 3. داخل ویندوز powershell رو باز کن و متن زیر رو داخلش کپی کن
-\`iwr -useb "https://wuwatracker.com/import.ps1" | iex\`
+\`iwr -UseBasicParsing -Headers @{"User-Agent"="Mozilla/5.0"} https://raw.githubusercontent.com/wuwatracker/wuwatracker/refs/heads/main/import.ps1 | iex\`
 4. متن دریافتی رو برام بفرست
 
 آموزش مراحل برای گوشی

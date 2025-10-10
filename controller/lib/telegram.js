@@ -676,6 +676,10 @@ async function handleMessage(messageObj) {
         } else if (sessions[chatId].includes("quiz")) {
           const [subject, _] = sessions[chatId].split(" ");
           deleteSession(chatId);
+          await sendMessage(
+            chatId,
+            "اوکی! سوالت بعد از تایید ادمین اضافه میشه"
+          );
           const myChatId = await getMyChatId();
           await sendKeyboard(
             myChatId,
