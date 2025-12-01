@@ -7,9 +7,9 @@ const app = express();
 app.use(express.json());
 
 app.post("*", async (req, res) => {
-  if (process.env.ENV === "DEV") {
-    console.log(req.body);
-  }
+  // if (process.env.ENV === "DEV") {
+  //   console.log(req.body);
+  // }
   res.send(await handler(req, "POST"));
 });
 
